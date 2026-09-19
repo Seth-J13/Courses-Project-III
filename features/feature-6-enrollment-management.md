@@ -88,9 +88,9 @@
 
 ## Edge Cases
 
-- Fetch or Update another user's `enrollment`s --> `404`
-- POST or Update `enrollment` with the same `semesterId`, `sectionId`, AND `userId` --> `400`
-- PUT with incorrect database types --> `500`
+- Fetch or Update another user's `enrollment`s -> `404`
+- POST or Update `enrollment` with the same `semesterId`, `sectionId`, AND `userId` -> `400`
+- PUT in general. Enrollments are not overwritten and should not use PUT -> `400`
 
 ## Success Criteria
 
@@ -101,25 +101,25 @@
 
 ---
 
-## Data Ownership & Isolation **LOOK AT THIS FIRST WHEN RETURNING**
+## Data Ownership & Isolation
 
 Each user owns their enrollments. Enrollments belong to one user, and a user can have many enrollments. The shared ingredient catalog is not owned by this feature.
 
-| Rule                  | Requirement                                                                                                                                                                                              |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Read scope**        | The edit page loads one recipe by route id (`GET /courseapi/enrollments/:id`) plus that recipe’s ingredients and steps. The ingredient dropdown uses the shared catalog (`GET /courseapi/ingredients/`). |
-| **Write scope**       | `PUT /courseapi/enrollments/:id` succeeds only when the row exists and `userId = req.user.id`. Creating a recipe ingredient checks the parent recipe the same way.                                       |
-| **Create scope**      | New `recipeIngredient` and `recipeStep` rows are created for the recipe being edited; they are not assigned a separate owner.                                                                            |
-| **Cross-user access** | Another user’s recipe on update → `404` `{ "message": "Cannot find Recipe with id=${id}." }` (not `403`). Missing/invalid Bearer token on write routes → `401`.                                          |
-| **UI scope**          | `EditRecipe.vue` shows the recipe for `route.params.id`. Navigation to edit comes from the signed-in user’s recipe cards.                                                                                |
-| **Implementation**    | Recipe update and recipe-ingredient create already check `req.user.id`. Prefer a shared helper in `app/authorization/` for recipe ownership rather than duplicating the check in every controller.       |
+| Rule                  | Requirement                                                                                                                                                                                  |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Read scope**        | For student users only, the semester page loads a list of enrollments by route id (`GET /courseapi/enrollments/:userId/:semesterId`)                                                         |
+| **Write scope**       | Enrollments cannot be manually edited since they consist of only foreign keys. They should be created and removed instead                                                                    |
+| **Create scope**      | `POST /courseapi/enrollments/:userId/*` succeeds only when the row does not already exist and `:userId = req.user.id`.                                                                       |
+| **Cross-user access** | Another user’s enrollment on read/create/delete → `404` `{ "message": "Cannot find Enrollment with userId=${userId}." }` (not `403`). Missing/invalid Bearer token on routes → `401`.        |
+| **UI scope**          | `Semester.vue` shows the enrollments for `route.params.id`. Navigation to `Semester.vue` comes from signing into the application as a student.                                               |
+| **Implementation**    | Enrollment operations already check for auth (`req.user.id`). Prefer a shared helper in `app/authorization/` for enrollment ownership rather than duplicating the check in every controller. |
 
 ---
 
 ## Key Entities
 
 - **User**: registered account (name, id, role, email, password); owns enrollments.
-- **Enrollment**: Entity collecting `semester.semesterId`, `section.sectionId`, and `user.userId`; shows users what sections they're signed up for and when
+- **Enrollment**: Entity collecting `semester.semesterId`, `section.sectionId`, and `user.id`; shows users what sections they're signed up for and when
 
 ---
 
@@ -127,127 +127,89 @@ Each user owns their enrollments. Enrollments belong to one user, and a user can
 
 Mount prefix: `/courseapi`. Flat JSON (no `{ success, data }` envelope). Errors: `{ "message": "Human-readable explanation." }`. Authenticated writes send `Authorization: Bearer <token>`.
 
-This feature uses the edit-enrollments endpoints below (create/delete recipe and catalog CRUD stay in other features).
+This feature uses the enrollments endpoints below (CUD sections and CUD semesters stay in other features).
 
-| Method   | Endpoint                                                | Auth | Purpose                                                                                            |
-| -------- | ------------------------------------------------------- | ---- | -------------------------------------------------------------------------------------------------- |
-| `GET`    | `/courseapi/enrollments/:userId/`                       | Yes  | List the enrollments for the user with the `userId` `:userId`                                      |
-| `POST`   | `/courseapi/enrollments/:userId/`                       | Yes  | Add an `enrollment` to the user with the `userId` `:userId`                                        |
-| `GET`    | `/courseapi/enrollments/:userId/:semesterId`            | No   | List only the enrollments the user with the userId `:userId` has with the semesterId `:semesterId` |
-| `GET`    | `/courseapi/enrollments/:userId/:semesterId/:sectionId` | Yes  | List the details of the `section` whose sectionId is `:sectionId`                                  |
-| `DELETE` | `/courseapi/enrollments/:userId/:semesterId/:sectionId` | Yes  | Remove the specified enrollment from the user with the userId `:userId`                            |
+| Method   | Endpoint                                                                   | Auth | Purpose                                                                                                                                         |
+| -------- | -------------------------------------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/courseapi/enrollments/:userId/`                                          | Yes  | List the enrollments for the user where `:userId = req.user.id`                                                                                 |
+| `POST`   | `/courseapi/enrollments/:userId/`                                          | Yes  | Add an `enrollment` to the user where `:userId = req.user.id`                                                                                   |
+| `GET`    | `/courseapi/enrollments/:userId/semesters/:semesterId`                     | Yes  | List only the enrollments the user `:userId = req.user.id` and `:semesterId = req.semester.id`                                                  |
+| `GET`    | `/courseapi/sections/:sectionId`                                           | Yes  | List the details of the `section` where `:sectionId = req.section.id`                                                                           |
+| `DELETE` | `/courseapi/enrollments/:userId/semesters/:semesterId/sections/:sectionId` | Yes  | Remove the specified enrollment from the user where `:userId = req.user.id`, `:semesterId = req.semester.id`, and `:sectionId = req.section.id` |
 
 **Unauthenticated write:** `401` `{ "message": "Unauthorized! No Auth Header" }` (or expired-token message).
 
-### Load recipe (`GET /courseapi/enrollments/:id`)
+### Load enrollment (`GET /courseapi/enrollments/:userId`)
 
-Success (`200`) — array with one recipe (frontend uses index `0`):
+**Success** (`200`): array with all enrollments for that user (frontend uses index `0`)
 
 ```json
 [
   {
-    "id": 1,
-    "name": "Pancakes",
-    "description": "Weekend breakfast",
-    "servings": 4,
-    "time": 20,
-    "isPublished": false,
-    "userId": 42,
-    "recipeStep": []
+    "semesterId": "2",
+    "sectionId": "CMSC-2011-91",
+    "userId": 42
+  },
+  {
+    "semesterId": "3",
+    "sectionId": "CMSC-3023-02",
+    "userId": 42
   }
 ]
 ```
 
-### Update recipe (`PUT /courseapi/enrollments/:id`)
+**Server error:** `500` `{ "message": "…" }`.
 
-**Request body** (fields the edit form sends):
+### Add enrollment (`POST /courseapi/enrollments/:userId`)
+
+**Request body** (fields the add request sends):
 
 ```json
 {
-  "name": "Pancakes",
-  "description": "Weekend breakfast",
-  "servings": 4,
-  "time": 20,
-  "isPublished": true
+  "semesterId": "2",
+  "sectionId": "CMSC-2011-91",
+  "userId": 42
 }
 ```
+
+Missing `semesterId`, `sectionId`, or `recipeId` → `400` bad request.
+Duplicate combination of all three → `409` conflict.
+
+**Success** (`200`): created `enrollment` row (includes `semesterId`, `sectionId`, and `recipeId`).
+
+**Server error:** `500` `{ "message": "…" }`.
+
+### Remove Enrollment (`DELETE /courseapi/enrollments/:userId/:semesterId/:sectionId`)
 
 **Success** (`200`):
 
 ```json
-{ "message": "Recipe was updated successfully." }
+{ "message": "Enrollment was removed successfully." }
 ```
 
-**Not found / not owned:** `404`
+**Not owned:** `404`
 
 ```json
-{ "message": "Cannot find Recipe with id=1." }
+{ "message": "Cannot find enrollment for userId=1." }
+```
+
+or
+
+```json
+{ "message": "Cannot find enrollment for userId=1 and semesterId=2." }
+```
+
+or
+
+```json
+{ "message": "Cannot find enrollment for userId=1 and sectionId=CMSC-2023-28." }
 ```
 
 **Server error:** `500` `{ "message": "…" }`.
 
-Name, description, servings, time, and `isPublished` edits stay in the form until this `PUT` (no API on each keystroke).
-
-### Add recipe ingredient (`POST /courseapi/enrollments/:userId/recipeIngredients/`)
-
-**Request body:**
-
-```json
-{
-  "quantity": 2,
-  "recipeId": 1,
-  "recipeStepId": null,
-  "ingredientId": 5
-}
-```
-
-Missing `quantity`, `recipeId`, or `ingredientId` → `400`. Parent recipe missing or not owned → `404`.
-
-**Success** (`200`): created `recipeIngredient` row (includes `id`, `quantity`, `recipeId`, `recipeStepId`, `ingredientId`).
-
-### Update recipe ingredient (`PUT /courseapi/enrollments/:userId/recipeIngredients/:id`)
-
-**Request body:** `{ "quantity", "recipeId", "recipeStepId", "ingredientId" }`
-
-**Success** (`200`): `{ "message": "RecipeIngredient was updated successfully." }`
-
-### Delete recipe ingredient (`DELETE /courseapi/enrollments/:userId/recipeIngredients/:id`)
-
-**Success** (`200`): `{ "message": "RecipeIngredient was deleted successfully!" }`
-
-**Failure:** `500` `{ "message": "…" }`.
-
-### Add recipe step (`POST /courseapi/enrollments/:userId/recipeSteps/`)
-
-**Request body:**
-
-```json
-{
-  "stepNumber": 1,
-  "instruction": "Mix dry ingredients",
-  "recipeId": 1
-}
-```
-
-Missing `stepNumber`, `instruction`, or `recipeId` → `400`.
-
-**Success** (`200`): created `recipeStep` row (`id`, `stepNumber`, `instruction`, `recipeId`). Linking catalog ingredients to the step is a follow-up `PUT` on each `recipeIngredient` (`recipeStepId`).
-
-### Update recipe step (`PUT /courseapi/enrollments/:userId/recipeSteps/:id`)
-
-**Success** (`200`): `{ "message": "RecipeStep was updated successfully." }`
-
-### Delete recipe step (`DELETE /courseapi/enrollments/:userId/recipeSteps/:id`)
-
-**Success** (`200`): `{ "message": "RecipeStep was deleted successfully!" }`
-
-### List steps with ingredients (`GET /courseapi/enrollments/:userId/recipeStepsWithIngredients/`)
-
-**Success** (`200`): array of steps ordered by `stepNumber` ascending; each may include `recipeIngredient` with nested `ingredient`. Duplicate `stepNumber` values are allowed by the current API and sort next to each other.
-
 ---
 
-## Screen Requirements
+## Screen Requirements **CHECK THIS FIRST WHEN RETURNING**
 
 Follow [ui-style-system.mdc](../.cursor/rules/ui-style-system.mdc). Primary labeled actions use class `oc-cta`. Icon-only row actions need `aria-label`s.
 
