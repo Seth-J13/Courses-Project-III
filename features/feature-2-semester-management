@@ -1,18 +1,18 @@
 # Feature: Semester Management
 
-**Feature ID:** 3
-**Branch pattern:** `feature/3-semester-management`
+**Feature ID:** 2
+**Branch pattern:** `feature/2-semester-management`
 **Status:** Draft
 **Created:** 2026-09-21
-**Input:** signed in admin users CRUD semesters. signed in student users can see what enrollments they have in a semester
-**Depends on:** [Feature 1 -- User Auth & Sessions](feature-1-user-auth-session-management.md), [Feature 2 -- Courses](feature-2-course-management.md)
+**Input:** signed in admin users CRUD semesters.
+**Depends on:** [Feature 1 -- User Auth & Sessions](feature-1-user-auth-session-management.md)
 **Related:** `backend/app/routes/users.routes.js`
 
 ---
 
 ## User Stories
 
-### US-3.1: Create semesters (admin)
+### US-2.1: Create semesters
 
 **As a** signed-in admin user  
 **I want to** create named semesters (e.g. "SP2024", "FA2027")  
@@ -20,9 +20,9 @@
 
 **Priority:** P1  
 **Independent test:** Open add-list dialog, create a list; it appears in the lists view  
-**Acceptance scenarios:** see ### US-3.1 under Acceptance Criteria
+**Acceptance scenarios:** see ### US-2.1 under Acceptance Criteria
 
-### US-3.2: View my lists
+### US-2.2: View my lists
 
 **As a** signed-in user  
 **I want to** see all of my semesters on one screen  
@@ -30,9 +30,9 @@
 
 **Priority:** P1  
 **Independent test:** Dashboard loads a single list of owned lists (no sidebar split)  
-**Acceptance scenarios:** see ### US-3.2 under Acceptance Criteria
+**Acceptance scenarios:** see ### US-2.2 under Acceptance Criteria
 
-### US-3.3: Manage list rows
+### US-2.3: Manage list rows
 
 **As a** signed-in user  
 **I want** each list row to show **edit** and **delete** actions  
@@ -40,9 +40,9 @@
 
 **Priority:** P1  
 **Independent test:** Each list row exposes edit and delete icon actions  
-**Acceptance scenarios:** see ### US-3.3 under Acceptance Criteria
+**Acceptance scenarios:** see ### US-2.3 under Acceptance Criteria
 
-### US-3.4: Rename and delete lists
+### US-2.4: Rename and delete lists
 
 **As a** signed-in user  
 **I want to** rename or delete a semester  
@@ -50,9 +50,9 @@
 
 **Priority:** P2  
 **Independent test:** Rename and delete an owned list from row actions; lists view updates  
-**Acceptance scenarios:** see ### US-3.4 under Acceptance Criteria
+**Acceptance scenarios:** see ### US-2.4 under Acceptance Criteria
 
-### US-3.5: Private lists only
+### US-2.5: Private lists only
 
 **As a** signed-in user  
 **I want** my lists visible only to me  
@@ -60,7 +60,7 @@
 
 **Priority:** P1  
 **Independent test:** Cross-user list access returns `404`; `GET /todo/lists` never returns another user's rows  
-**Acceptance scenarios:** see ### US-3.5 under Acceptance Criteria
+**Acceptance scenarios:** see ### US-2.5 under Acceptance Criteria
 
 ---
 
@@ -204,7 +204,7 @@ Replaces the Feature 1 placeholder home page. **Single Vue view** (`Dashboard.vu
 
 ## Acceptance Criteria (Gherkin)
 
-### US-3.1 — Create semesters
+### US-2.1 — Create semesters
 
 #### Scenario: User creates a new list
 
@@ -236,7 +236,7 @@ Replaces the Feature 1 placeholder home page. **Single Vue view** (`Dashboard.vu
 
 ---
 
-### US-3.2 — View my lists
+### US-2.2 — View my lists
 
 #### Scenario: Dashboard loads with existing lists
 
@@ -264,7 +264,7 @@ Replaces the Feature 1 placeholder home page. **Single Vue view** (`Dashboard.vu
 
 ---
 
-### US-3.3 — Manage list rows
+### US-2.3 — Manage list rows
 
 #### Scenario: List rows show edit and delete actions
 
@@ -276,7 +276,7 @@ Replaces the Feature 1 placeholder home page. **Single Vue view** (`Dashboard.vu
 
 ---
 
-### US-3.4 — Rename and delete lists
+### US-2.4 — Rename and delete lists
 
 #### Scenario: User renames a list
 
@@ -299,7 +299,7 @@ Replaces the Feature 1 placeholder home page. **Single Vue view** (`Dashboard.vu
 
 ---
 
-### US-3.5 — Private lists only
+### US-2.5 — Private lists only
 
 #### Scenario: User attempts to rename another user's list
 
@@ -342,19 +342,19 @@ Replaces the Feature 1 placeholder home page. **Single Vue view** (`Dashboard.vu
 
 | Story  | Scenario                                              | Test file                                                         | Test name                                               |
 | ------ | ----------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------- |
-| US-3.1 | User creates a new list                               | `backend/tests/lists.test.js`, `frontend/tests/Dashboard.test.js` | `User creates a new list`                               |
-| US-3.1 | User creates a list with an empty name                | `backend/tests/lists.test.js`, `frontend/tests/Dashboard.test.js` | `User creates a list with an empty name`                |
-| US-3.1 | User creates a list with a name that is too long      | `backend/tests/lists.test.js`                                     | `User creates a list with a name that is too long`      |
-| US-3.2 | Dashboard loads with existing lists                   | `backend/tests/lists.test.js`, `frontend/tests/Dashboard.test.js` | `Dashboard loads with existing lists`                   |
-| US-3.2 | User has no lists                                     | `frontend/tests/Dashboard.test.js`                                | `User has no lists`                                     |
-| US-3.2 | User cannot see another user's lists                  | `backend/tests/lists.test.js`                                     | `User cannot see another user's lists`                  |
-| US-3.3 | List rows show edit and delete actions                | `frontend/tests/Dashboard.test.js`                                | `List rows show edit and delete actions`                |
-| US-3.4 | User renames a list                                   | `backend/tests/lists.test.js`, `frontend/tests/Dashboard.test.js` | `User renames a list`                                   |
-| US-3.4 | User deletes a list                                   | `backend/tests/lists.test.js`, `frontend/tests/Dashboard.test.js` | `User deletes a list`                                   |
-| US-3.5 | User attempts to rename another user's list           | `backend/tests/lists.test.js`                                     | `User attempts to rename another user's list`           |
-| US-3.5 | User attempts to delete another user's list           | `backend/tests/lists.test.js`                                     | `User attempts to delete another user's list`           |
-| US-3.5 | Client cannot assign a list to another user on create | `backend/tests/lists.test.js`                                     | `Client cannot assign a list to another user on create` |
-| US-3.5 | Unauthenticated API request to lists                  | `backend/tests/lists.test.js`                                     | `Unauthenticated API request to lists`                  |
+| US-2.1 | User creates a new list                               | `backend/tests/lists.test.js`, `frontend/tests/Dashboard.test.js` | `User creates a new list`                               |
+| US-2.1 | User creates a list with an empty name                | `backend/tests/lists.test.js`, `frontend/tests/Dashboard.test.js` | `User creates a list with an empty name`                |
+| US-2.1 | User creates a list with a name that is too long      | `backend/tests/lists.test.js`                                     | `User creates a list with a name that is too long`      |
+| US-2.2 | Dashboard loads with existing lists                   | `backend/tests/lists.test.js`, `frontend/tests/Dashboard.test.js` | `Dashboard loads with existing lists`                   |
+| US-2.2 | User has no lists                                     | `frontend/tests/Dashboard.test.js`                                | `User has no lists`                                     |
+| US-2.2 | User cannot see another user's lists                  | `backend/tests/lists.test.js`                                     | `User cannot see another user's lists`                  |
+| US-2.3 | List rows show edit and delete actions                | `frontend/tests/Dashboard.test.js`                                | `List rows show edit and delete actions`                |
+| US-2.4 | User renames a list                                   | `backend/tests/lists.test.js`, `frontend/tests/Dashboard.test.js` | `User renames a list`                                   |
+| US-2.4 | User deletes a list                                   | `backend/tests/lists.test.js`, `frontend/tests/Dashboard.test.js` | `User deletes a list`                                   |
+| US-2.5 | User attempts to rename another user's list           | `backend/tests/lists.test.js`                                     | `User attempts to rename another user's list`           |
+| US-2.5 | User attempts to delete another user's list           | `backend/tests/lists.test.js`                                     | `User attempts to delete another user's list`           |
+| US-2.5 | Client cannot assign a list to another user on create | `backend/tests/lists.test.js`                                     | `Client cannot assign a list to another user on create` |
+| US-2.5 | Unauthenticated API request to lists                  | `backend/tests/lists.test.js`                                     | `Unauthenticated API request to lists`                  |
 
 ---
 
