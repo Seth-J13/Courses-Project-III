@@ -327,7 +327,7 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 - **When** I select a `section` in the `Section` combobox
 - **Then** I see the `section` details beneath the combobox
 
-#### Scenario: Create a enrollment with an empty course
+#### Scenario: Create an enrollment with an empty course
 
 - **Given** I am viewing the `Add Enrollment` modal
 - **When** I leave the `Course` combobox in its default state or empty
@@ -336,7 +336,7 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 - **And** I see the message **"Course and Section are both required."**
 - **And** no API request is sent
 
-#### Scenario: Create a enrollment with an empty section
+#### Scenario: Create an enrollment with an empty section
 
 - **Given** I am viewing the `Add Enrollment` modal
 - **And** I have selected a `course` already in the `Course` combobox
@@ -346,7 +346,7 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 - **And** I see the message **"Section is required."**
 - **And** no API request is sent
 
-#### Scenario: Create a enrollment with duplicate data
+#### Scenario: Create an enrollment with duplicate data
 
 - **Given** I am viewing the `Add Enrollment` modal
 - **And** I have an existing `enrollment`
@@ -356,30 +356,87 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 - **And** I see the message **"Can't enroll in the same section twice in one semester."**
 - **And** no API request is sent
 
-#### Scenario: Admin creates a semester with a name that is too long **RETURN TO HERE WHEN EDITING**
+#### Scenario: Create enrollment with improper course ID
 
-- **Given** I am signed in as an admin on the semester view
-- **When** I submit a semester name longer than 6 characters
-- **Then** the API returns `400` with `{ "message": "semester name must be 100 characters or fewer." }`
-- **And** the error is displayed in a `<v-alert type="error">`
+- **Given** I am viewing the `Add Enrollment` modal
+- **When** I input a `courseId` in the `Course` combobox that does not exist
+- **Or** the `courseId` I inputted is not offered this semester
+- **And** I attempt to confirm
+- **Then** inline validation blocks the request
+- **And** I see the message **"Please select a course offered this semester"**
+- **And** no API request is sent
+- **And** no `Section` combo box appears
 
-#### Scenario: Admin creates a semester with a name that is improperly formatted
+#### Scenario: Create enrollment with improper section ID
 
-- **Given** I am signed in as an admin on the semester view
-- **When** I submit a semester name that does not follow the AAYYYY convention (AA being `FA`, `WI`, `SP`, or `SU`) and YYYY being 4 integers
-- **Then** the API returns `400` with `{ "message": "semester name must be of the form AAYYYY (e.g. SP2026)." }`
-- **And** the error is displayed in a `<v-alert type="error">`
-
-#### Scenario: Admin creates a semester with a start date or end date that is improperly formatted
-
-- **Given** I am signed in as an admin on the semester view
-- **When** I submit a start date or end date that does not follow the YYYY-MM-DD convention
-- **Then** the API returns `400` with `{ "message": "dates must be of the form YYYY-MM-DD." }`
-- **And** the error is displayed in a `<v-alert type="error">`
+- **Given** I am viewing the `Add Enrollment` modal
+- **And** I have selected a valid `courseId` in the `course` combobox
+- **When** I input a `sectionId` in the `Section` combobox that does not belong to the selected `course`
+- **And** I attempt to confirm
+- **Then** inline validation blocks the request
+- **And** I see the message **"Please select a valid section from this course"**
+- **And** no API request is sent
+- **And** no `section` details appear beneath the `Section` combobox
 
 ### US-6.4: Remove Enrollment
 
+#### Scenario: Select enrollment delete icon
+
+- **Given** I am viewing the `EnrollmentList` view
+- **When** I select the **Delete** icon on an `enrollment`
+- **Then** I see a **Drop this class?** modal with **Drop** and **Cancel** buttons
+
+#### Scenario: Confirm delete icon
+
+- **Given** I am viewing the **Drop this class?** modal
+- **When** I select **Drop**
+- **Then** the API returns `204`
+- **And** the selected `enrollment` is no longer in the `EnrollmentList`
+- **And** the **Drop this class?** modal closes
+
+#### Scenario: Cancel delete
+
+- **Given** I am viewing the **Drop this class?** modal
+- **When** I select **Cancel**
+- **Then** no API request is sent
+- **And** the **Drop this class?** modal closes
+- **And** the selected `enrollment` is still in the `EnrollmentList`
+
 ### US-6.5: Seek semesters pagination
+
+#### Scenario: EnrollmentList First Landing
+
+- **Given** I am viewing the **EnrollmentList** view
+- **When** the view loads for the first time this `session`
+- **Then** I see a list of my `enrollment`s for the current `semester`
+- **And** I do not see my `enrollment`s for any other `semester`
+
+#### Scenario: EnrollmentList Return Landing
+
+- **Given** I am viewing the **EnrollmentList** view
+- **When** I navigate away from the **EnrollmentList** view
+- **And** I navigate back to the **EnrollmentList** view
+- **Then** I see my `enrollment`s for the `semester` I most recently looked at
+
+#### Scenario: Navigate Semesters order forward
+
+- **Given** I am viewing the **EnrollmentList** view
+- **And** I am viewing my `enrollment`s for the `FA2026` `semester`
+- **When** I press the **Next** button four times
+- **Then** I see my `enrollment`s for the `WI2026` `semester`
+- **Then** I see my `enrollment`s for the `SP2027` `semester`
+- **Then** I see my `enrollment`s for the `SU2027` `semester`
+- **Then** I see my `enrollment`s for the `FA2027` `semester`
+
+#### Scenario: Navigate Semesters order backward
+
+- **Given** I am viewing the **EnrollmentList** view
+- **And** I am viewing my `enrollment`s for the `FA2026` `semester`
+- **When** I press the **Previous** button four times
+- **Then** I see my `enrollment`s for the `SU2026` `semester`
+- **Then** I see my `enrollment`s for the `SP2026` `semester`
+- **Then** I see my `enrollment`s for the `WI2025` `semester`
+- **Then** I see my `enrollment`s for the `FA2025` `semester`
 
 ---
 
