@@ -62,6 +62,16 @@
 **Independent test:** pressing `Previous` button shows the enrollments for the previous semester, pressing the `Next` button shows the enrollments for the next semester
 **Acceptance scenarios:** see ### US-6.5 under Acceptance Criteria
 
+### US-6.6: No editing enrollments
+
+**As any** authenticated student user
+**I want to** reject `PUT` on `enrollment` routes
+**So that** I can map `enrollment` accurately to the enroll/drop/withdraw process
+
+**Priority:** P3
+**Independent test:** send any `PUT` request to any `enrollment` api route, receive `405` error
+**Acceptance scenarios:** see ### US-6.5 under Acceptance Criteria
+
 ---
 
 ## Requirements
@@ -81,6 +91,8 @@
 - **FR-011**: A student user **MUST** be allowed to remove `enrollment`s from its ownership
 - **FR-012**: A student user **MUST NOT** be allowed to add `enrollment`s to other student users
 - **FR-013**: A student user **MUST NOT** be allowed to remove `enrollment`s from other student users' ownership
+- **FR-014**: Enrollment resources **MUST NOT** support `PUT` or in-place updates.
+- **FR-015**: A student user **MUST** use `DELETE` and `POST` to remove and add enrollments instead of overwriting.
 
 ---
 
@@ -90,14 +102,14 @@
 
 ## Edge Cases
 
-- Fetch or Update another user's `enrollment`s -> `404`
-- POST or Update `enrollment` with the same `semesterId`, `sectionId`, AND `userId` -> `400`
-- PUT in general. Enrollments are not overwritten and should not use PUT -> `400`
+- Fetch another user's `enrollment`s -> `404`
+- POST `enrollment` with the same `semesterId`, `sectionId`, AND `userId` -> `409`
+- PUT in general. Enrollments are not overwritten and should not use PUT -> `405`
 
 ## Success Criteria
 
 - **SC-001**: Every Gherkin scenario has at least one automated test before merge
-- **SC-002**: Student user can Create, Read, Update, and Delete their own `enrollment`s
+- **SC-002**: Student user can Create, Read, and Delete their own `enrollment`s
 - **SC-003**: Student user can **NOT** Create, Read, Update, or Delete from/to any other student user's `enrollment`s
 - **SC-004**: npm test passes for `frontend/tests/enrollment.test.js` and for `backend/tests/Enrollment.test.js`
 
@@ -245,7 +257,7 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 ### Associations
 
 - `User` hasMany `enrollments`
-- `enrollment` belongsTo `User`
+- `enrollment` belongsToOne `User`
 
 ---
 
@@ -438,16 +450,59 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 - **Then** I see my `enrollment`s for the `WI2025` `semester`
 - **Then** I see my `enrollment`s for the `FA2025` `semester`
 
+#### Scenario: Navigate Semesters combobox typing
+
+- **Given** I am viewing the **EnrollmentList** view
+- **When** I type anything into the `Semester` combobox without confirming
+- **Then** I see all `semester`s in the dropdown with the combobox content as a substring
+
+#### Scenario: Navigate Semesters combobox select
+
+- **Given** I am viewing the **EnrollmentList** view
+- **When** I select a `semester` from the `Semester` combobox
+- **Then** I see all my `enrollment`s for that selected `semester` only
+- **And** pressing the **Previous** or **Next** navigate `semester`s with the current one as a new starting position
+
+### US-6.6: No editing enrollments
+
+#### Scenario: PUT to enrollments is rejected
+
+- **Given** I am signed in as a student
+- **When** I send PUT /courses/enrollments/:userId/...
+- **Then** the API returns 405 with `{ "message": "Enrollments are dropped, not edited" }`
+
 ---
 
 ## Test Coverage Map
 
 Each scenario above must map to at least one automated test. `it` names must match the Gherkin **Scenario** titles exactly.
 
-| Story  | Scenario                                          | Test file                           | Test name                                           |
-| ------ | ------------------------------------------------- | ----------------------------------- | --------------------------------------------------- |
-| US-6.1 | User edits recipe name                            | `frontend/tests/EditRecipe.test.js` | `User edits recipe name`                            |
-| US-6.2 | User changes the number of servings with a number | `frontend/tests/EditRecipe.test.js` | `User changes the number of servings with a number` |
+| Story  | Scenario                                   | Test file                                                                    | Test name                                    |
+| ------ | ------------------------------------------ | ---------------------------------------------------------------------------- | -------------------------------------------- |
+| US-6.1 | view enrollment list with no enrollments   | `frontend/tests/EnrollmentList.test.js`                                      | `view enrollment list with no enrollments`   |
+| US-6.1 | view enrollment list with enrollments      | `backend/tests/enrollments.test.js`, `frontend/tests/EnrollmentList.test.js` | `view enrollment list with enrollments`      |
+| US-6.1 | view only enrollments matching semesterId  | `backend/tests/enrollments.test.js`, `frontend/tests/EnrollmentList.test.js` | `view only enrollments matching semesterId`  |
+| US-6.2 | view enrollment details                    | `frontend/tests/EnrollmentList.test.js`                                      | `view enrollment details`                    |
+| US-6.3 | Open add modal                             | `frontend/tests/EnrollmentList.test.js`                                      | `Open add modal`                             |
+| US-6.3 | Use course combobox                        | `frontend/tests/EnrollmentList.test.js`                                      | `Use course combobox`                        |
+| US-6.3 | Confirm course combobox                    | `frontend/tests/EnrollmentList.test.js`                                      | `Confirm course combobox`                    |
+| US-6.3 | Use section combobox                       | `frontend/tests/EnrollmentList.test.js`                                      | `Use section combobox`                       |
+| US-6.3 | Confirm section combobox                   | `frontend/tests/EnrollmentList.test.js`                                      | `Confirm section combobox`                   |
+| US-6.3 | Create an enrollment with an empty course  | `frontend/tests/EnrollmentList.test.js`                                      | `Create an enrollment with an empty course`  |
+| US-6.3 | Create an enrollment with an empty section | `frontend/tests/EnrollmentList.test.js`                                      | `Create an enrollment with an empty section` |
+| US-6.3 | Create an enrollment with duplicate data   | `frontend/tests/EnrollmentList.test.js`                                      | `Create an enrollment with duplicate data`   |
+| US-6.3 | Create enrollment with improper course ID  | `frontend/tests/EnrollmentList.test.js`                                      | `Create enrollment with improper course ID`  |
+| US-6.3 | Create enrollment with improper section ID | `frontend/tests/EnrollmentList.test.js`                                      | `Create enrollment with improper section ID` |
+| US-6.4 | Select enrollment delete icon              | `frontend/tests/EnrollmentList.test.js`                                      | `Select enrollment delete icon`              |
+| US-6.4 | Confirm delete icon                        | `backend/tests/enrollments.test.js`, `frontend/tests/EnrollmentList.test.js` | `Confirm delete icon`                        |
+| US-6.4 | Cancel delete                              | `frontend/tests/EnrollmentList.test.js`                                      | `Cancel delete`                              |
+| US-6.5 | EnrollmentList First Landing               | `backend/tests/enrollments.test.js`, `frontend/tests/EnrollmentList.test.js` | `EnrollmentList First Landing`               |
+| US-6.5 | EnrollmentList Return Landing              | `frontend/tests/EnrollmentList.test.js`                                      | `EnrollmentList Return Landing`              |
+| US-6.5 | Navigate Semesters order forward           | `frontend/tests/EnrollmentList.test.js`                                      | `Navigate Semesters order forward`           |
+| US-6.5 | Navigate Semesters order backward          | `frontend/tests/EnrollmentList.test.js`                                      | `Navigate Semesters order backward`          |
+| US-6.5 | Navigate Semesters combobox typing         | `frontend/tests/EnrollmentList.test.js`                                      | `Navigate Semesters combobox typing`         |
+| US-6.5 | Navigate Semesters combobox select         | `frontend/tests/EnrollmentList.test.js`                                      | `Navigate Semesters combobox select`         |
+| US-6.6 | PUT to enrollments is rejected             | `backend/tests/enrollments.test.js`                                          | `PUT to enrollments is rejected`             |
 
 ---
 
@@ -456,7 +511,7 @@ Each scenario above must map to at least one automated test. `it` names must mat
 Copy when asking Cursor to implement this feature (`@` this file):
 
 ```text
-Implement Feature 6 from @features/feature-6-recipe-enrollment-management.md on branch `feature/5-recipe-enrollment-management`.
+Implement Feature 6 from @features/feature-6-enrollment-management.md on branch `feature/6-enrollment-management`.
 
 Follow layer order in @features/framework.md (models → routes → backend tests → frontend → frontend tests).
 Map every Gherkin scenario in the Test Coverage Map; run `npm test` before finishing.
@@ -483,4 +538,17 @@ Do not implement behavior not in this spec.
 
 ## Out of Scope
 
--
+- Edit/rename UI
+- Admin modifying student enrollments
+
+---
+
+## Defer to Feature 7
+
+Student course listing (management, `REST`, `API`'s, views, components, student course catalog/browse)
+
+---
+
+## Defer to Feature 8
+
+Student section listing (management, `REST`, `API`'s, views, components, browse/list sections as a student)
