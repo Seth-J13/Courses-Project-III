@@ -208,10 +208,15 @@ Follow [ui-style-system.mdc](../.cursor/rules/ui-style-system.mdc). Primary labe
 - Heading: **My Enrollments**
 - Primary action: **+ New enrollment** opens a `<v-dialog>` with a name `<v-text-field>` and **Create** / **Cancel**. Use class `oc-cta` on **Create** and **+ New enrollment** (per [ui-style-system.mdc](../../.cursor/rules/ui-style-system.mdc)).
 - Display interactive search bar named `Find` above any lists
-- Display enrollments as rows (e.g. `<v-semester>` or table): each row shows the **enrollment section** and icon actions:
-  - **Edit** icon — opens rename `<v-dialog>` pre-filled with current course and section; **Save** / **Cancel**
-  - **Delete** icon — opens confirmation `<v-dialog>`
-- Icon-only row actions use `size="small"` and accessible `aria-label`s (**Edit enrollment**, **Delete enrollment**).
+- Display enrollments as rows (e.g. `<v-list>` or table). The following columns should be in the list:
+  - **SectionId** -- `XXXX-####-##` unique identifier code (e.g. `CMSC-1113`)
+  - **Name** -- The name of the course the section belongs to (e.g. `Programming I`)
+  - **Days** -- Which days of the week the section meets on (e.g. `M W F` or `T Th`)
+  - **Time** -- Start Time to End Time (e.g. `12:40pm - 1:30pm`)
+  - **Room** -- The room code a section meets in (e.g. `PEC-233`)
+  - **Instructor** -- The name of the `faculty` in the `section` (e.g. `David North`).
+  - Each row contains a **Delete** icon — opens confirmation `<v-dialog>`
+- Icon-only row action uses `size="small"` and accessible `aria-label` (**Drop Class**).
 - **Empty state:** **"No enrollments yet. Add an enrollment."** when no semesters exist in the database.
 - **Loading state:** skeleton or progress indicator while enrollments are fetching.
 - **Error state:** `<v-alert type="error">` for API failures.
@@ -246,15 +251,135 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 
 ## Acceptance Criteria (Gherkin)
 
-### US-6.1 — Edit Recipe Name
+### US-6.1: View Current Enrollments
 
-#### Scenario: User edits recipe name
+#### Scenario: view enrollment list with no enrollments
 
-- **Given** I am on the edit recipe page
-- **When** I view the `Recipe Name` text input
-- **And** I change the recipe name
-- **Then** the text input stores the potential new name
+- **Given** I am a signed in student user
+- **When** I view the `EnrollmentList` view
+- **And** I have no `enrollment`s
+- **Then** I see "No enrollments yet. Add an enrollment."
+- **And** no enrollments show up
+
+#### Scenario: view enrollment list with enrollments
+
+- **Given** I am a signed in student user
+- **When** I view the `EnrollmentList` view
+- **And** I have an `enrollment` for the `sectionId` `4` for the `semesterId` `105`
+- **Then** I see a row containing the details of `sectionId` `4`
+- **And** each row has a **Delete** icon
+- **And** I see a `Previous` button
+- **And** I see a `Next` button
+
+#### Scenario: view only enrollments matching semesterId
+
+- **Given** I am a signed in student user
+- **When** I view the `EnrollmentList` view
+- **And** I have an `enrollment` for the `sectionId` `4` for the `semesterId` `105`
+- **And** I have an `enrollment` for the `sectionId` `19` for the `semesterId` `105`
+- **And** I have an `enrollment` for the `sectionId` `28` for the `semesterId` `106`
+- **And** I am viewing my `enrollment` list for `semesterId` `105`
+- **Then** I see a header above the `enrollment` list with the name of `semesterId` `105`
+- **And** I see a row containing the `section` name of `sectionId` `4`
+- **And** I see a row containing the `section` name of `sectionId` `19`
+
+### US-6.2: Enrollment Details
+
+#### Scenario: view enrollment details
+
+- **Given** I am a signed in student user
+- **When** I view the `EnrollmentList` view
+- **And** I have an enrollment
+- **Then** I see the enrollment's details that fulfill the Screen Requirements
+
+### US-6.3: Add Enrollment
+
+#### Scenario: Open add modal
+
+- **Given** I am viewing the `EnrollmentList` view
+- **When** I click **+ New enrollment**
+- **Then** I see a combobox for `Courses`
+- **And** I see a `Cancel` and `Confirm` buttons
+
+#### Scenario: Use course combobox
+
+- **Given** I am viewing the `Add Enrollment` modal
+- **When** I type in the `Course` combobox
+- **Then** I see the course codes for _this semester_ that contain my typing as a substring
+
+#### Scenario: Confirm course combobox
+
+- **Given** I am viewing the `Add Enrollment` modal
+- **When** I select a `course` in the `Course` combobox
+- **Then** I see a combobox for `Section` containing all the `sections` for that course
+
+#### Scenario: Use section combobox
+
+- **Given** I am viewing the `Add Enrollment` modal
+- **And** I have selected a `course` already in the `Course` combobox
+- **When** I type in the `Section` combobox
+- **Then** I see the section codes that contain my typing as a substring
+
+#### Scenario: Confirm section combobox
+
+- **Given** I am viewing the `Add Enrollment` modal
+- **And** I have selected a `course` already in the `Course` combobox
+- **When** I select a `section` in the `Section` combobox
+- **Then** I see the `section` details beneath the combobox
+
+#### Scenario: Create a enrollment with an empty course
+
+- **Given** I am viewing the `Add Enrollment` modal
+- **When** I leave the `Course` combobox in its default state or empty
+- **And** I attempt to confirm
+- **Then** inline validation blocks the request
+- **And** I see the message **"Course and Section are both required."**
 - **And** no API request is sent
+
+#### Scenario: Create a enrollment with an empty section
+
+- **Given** I am viewing the `Add Enrollment` modal
+- **And** I have selected a `course` already in the `Course` combobox
+- **When** I leave the `Section` combobox in its default state or empty
+- **And** I attempt to confirm
+- **Then** inline validation blocks the request
+- **And** I see the message **"Section is required."**
+- **And** no API request is sent
+
+#### Scenario: Create a enrollment with duplicate data
+
+- **Given** I am viewing the `Add Enrollment` modal
+- **And** I have an existing `enrollment`
+- **When** I select a `course` and `section` that both match an existing `enrollment`
+- **And** I attempt to confirm
+- **Then** inline validation blocks the request
+- **And** I see the message **"Can't enroll in the same section twice in one semester."**
+- **And** no API request is sent
+
+#### Scenario: Admin creates a semester with a name that is too long **RETURN TO HERE WHEN EDITING**
+
+- **Given** I am signed in as an admin on the semester view
+- **When** I submit a semester name longer than 6 characters
+- **Then** the API returns `400` with `{ "message": "semester name must be 100 characters or fewer." }`
+- **And** the error is displayed in a `<v-alert type="error">`
+
+#### Scenario: Admin creates a semester with a name that is improperly formatted
+
+- **Given** I am signed in as an admin on the semester view
+- **When** I submit a semester name that does not follow the AAYYYY convention (AA being `FA`, `WI`, `SP`, or `SU`) and YYYY being 4 integers
+- **Then** the API returns `400` with `{ "message": "semester name must be of the form AAYYYY (e.g. SP2026)." }`
+- **And** the error is displayed in a `<v-alert type="error">`
+
+#### Scenario: Admin creates a semester with a start date or end date that is improperly formatted
+
+- **Given** I am signed in as an admin on the semester view
+- **When** I submit a start date or end date that does not follow the YYYY-MM-DD convention
+- **Then** the API returns `400` with `{ "message": "dates must be of the form YYYY-MM-DD." }`
+- **And** the error is displayed in a `<v-alert type="error">`
+
+### US-6.4: Remove Enrollment
+
+### US-6.5: Seek semesters pagination
 
 ---
 
