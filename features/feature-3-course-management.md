@@ -14,55 +14,55 @@
 
 ## User Stories
 
-### US-2.1: Create semesters
+### US-3.1: Create courses
 
 **As a** signed-in admin user  
-**I want to** create named semesters (e.g. "SP2024", "FA2027")  
-**So that** I can give students a list of semesters to enroll for
+**I want to** create named courses (e.g. "CMSC-4302", "ARTS-3453")  
+**So that** I can give students a list of courses to enroll for
 
 **Priority:** P1  
-**Independent test:** Open add-semester dialog, create a semester; it appears in the semesters view  
-**Acceptance scenarios:** see ### US-2.1 under Acceptance Criteria
+**Independent test:** Open add-course dialog, create a course; it appears in the courses view  
+**Acceptance scenarios:** see ### US-3.1 under Acceptance Criteria
 
-### US-2.2: View my semesters
+### US-3.2: View my courses
 
 **As a** signed-in admin user  
-**I want to** see all of my semesters on one screen  
+**I want to** see all of my courses on one screen  
 **So that** I can see
 
 **Priority:** P1  
-**Independent test:** Dashboard loads a single semester of owned semesters (no sidebar split)  
-**Acceptance scenarios:** see ### US-2.2 under Acceptance Criteria
+**Independent test:** Dashboard loads a single course of owned courses (no sidebar split)  
+**Acceptance scenarios:** see ### US-3.2 under Acceptance Criteria
 
-### US-2.3: Manage semester rows
+### US-3.3: Manage course rows
 
 **As a** signed-in admin user  
-**I want** each semester row to show **edit** and **delete** actions  
-**So that** I can manage semesters without leaving the semesters view
+**I want** each course row to show **edit** and **delete** actions  
+**So that** I can manage courses without leaving the courses view
 
 **Priority:** P1  
-**Independent test:** Each semester row exposes edit and delete icon actions, interact to open respective modals
-**Acceptance scenarios:** see ### US-2.3 under Acceptance Criteria
+**Independent test:** Each course row exposes edit and delete icon actions, interact to open respective modals
+**Acceptance scenarios:** see ### US-3.3 under Acceptance Criteria
 
-### US-2.4: Rename and delete semesters
+### US-3.4: Rename and delete courses
 
 **As a** signed-in admin user  
-**I want to** rename or delete a semester  
+**I want to** rename or delete a course  
 **So that** I can keep my workspace organized
 
 **Priority:** P2  
-**Independent test:** Rename and delete an owned semester from row actions; semesters view updates  
-**Acceptance scenarios:** see ### US-2.4 under Acceptance Criteria
+**Independent test:** Rename and delete an owned course from row actions; courses view updates  
+**Acceptance scenarios:** see ### US-3.4 under Acceptance Criteria
 
-### US-2.5: Search Semesters
+### US-2.5: Search Courses
 
 **As a** signed-in admin user  
-**I want** to search for semesters containing certain key characters
-**So that** I can quickly find which semester I'm looking for
+**I want** to search for courses containing certain key characters
+**So that** I can quickly find which course I'm looking for
 
 **Priority:** P2  
 **Independent test:**
-**Acceptance scenarios:** see ### US-2.5 under Acceptance Criteria
+**Acceptance scenarios:** see ### US-3.5 under Acceptance Criteria
 
 ---
 
@@ -70,14 +70,14 @@
 
 ### Functional Requirements
 
-- **FR-001**: All semester endpoints MUST require a valid session (`authenticate` middleware).
-- **FR-002**: semester names MUST be trimmed before save; empty strings MUST be rejected.
-- **FR-003**: semester names MUST follow the format `AAYYYY` where `AA` is a two-letter season code (`FA` for autumn, `WI` for winter, `SP` for spring, `SU` for summer) and `YYYY` is a four-digit year
-- **FR-004**: semesters MUST be listed in descending order by year as first order, second order factor is `FA` then `WI` then `SP` then `SU`.
-- **FR-005**: This feature MUST deliver semester CRUD and a **single-view** semesters UI in `Dashboard.vue` (dialog-based add/edit/delete). No sidebar/main split.
-- **FR-006**: typing in the on-screen semester search bar updates the semester list with only semesters containing the search bar's content as a substring.
-- **FR-007**: signed-out users MUST NOT have access to any `/courses/semesters` routes
-- **FR-008**: signed-in students MUST NOT have access to any non-`GET` `/courses/semesters` routes
+- **FR-001**: All course endpoints MUST require a valid session (`authenticate` middleware).
+- **FR-002**: course names MUST be trimmed before save; empty strings MUST be rejected.
+- **FR-003**: course Id's MUST follow the format `XXXX-####` where `XXXX` is a four-letter course code (`CMSC` for computer science, `ARTS` for an arts class, `BIBL` for a Bible class, `HIST` for history, etc.)
+- **FR-004**: course Id's MUST follow the format `XXXX-####` where `####` is a four-digit code for the course (The first digit stands for the difficulty. For example '1' is freshmen level, '2' is sophomore level, '3' is junior level, '4' is senior level, and '5' is graduate level. The second through fourth digits are mainly identifiers for which course is offered.) 
+- **FR-005**: This feature MUST deliver course CRUD and a **single-view** courses UI in `Dashboard.vue` (dialog-based add/edit/delete). No sidebar/main split.
+- **FR-006**: typing in the on-screen course search bar updates the course list with only courses containing the search bar's content as a substring.
+- **FR-007**: signed-out users MUST NOT have access to any `/courses` routes
+- **FR-008**: signed-in students MUST NOT have access to any non-`GET` `/courses` routes
 
 ---
 
