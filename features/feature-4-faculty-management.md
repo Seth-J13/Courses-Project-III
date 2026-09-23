@@ -147,99 +147,211 @@
     *   **Edit** icon — opens rename `<v-dialog>` pre-filled with current fname, lname, and dept; **Save** / **Cancel**
     *   **Delete** icon — opens confirmation `<v-dialog>`
     *   *(Feature 5 handles which faculty own which course sections)*
-*   Icon-only row actions use `size="small"` and accessible `aria-label`s (**Edit list**, **Delete list**).
-*   **Empty state:** **"No lists yet. Create your first list."** when the user has zero lists.
-*   **Loading state:** skeleton or progress indicator while lists are fetching.
+*   Icon-only row actions use `size="small"` and accessible `aria-label`s (**Edit Faculty**, **Delete Faculty**).
+*   **Empty state:** **"No faculty yet. Add your faculty member."** when the admin has zero faculty.
+*   **Loading state:** skeleton or progress indicator while faculty are fetching.
 *   **Error state:** `<v-alert type="error">` for API failures.
 
-**App chrome**
-*   Introduce `MenuBar` in this feature (not present in Feature 1): signed-in user's name and **Sign out**.
-*   `MenuBar` is hidden on login and register routes.
-
-**Implementation note:** one route/view for lists; list CRUD dialogs are child components or inline `<v-dialog>` blocks in `Dashboard.vue` unless the team splits presentational dialogs later.
+**Implementation note:** one route/view for faculty; faculty CRUD dialogs are child components or inline `<v-dialog>` blocks in `Dashboard.vue` unless the team splits presentational dialogs later.
 
 ---
 
 ## Key Entities
 
-- **User**: registered account (name, email, username, role); owns future lists and todos.
+- **User**: registered account (name, email, username, role); role must be admin to view page
 - **Session**: server-side record tying a JWT token to a user; expires after 24 hours.
 
 ---
 
-
-
 ## Data Model Requirements
-### Look under ./backend/app/models/(file name).js
-- This shows the table you will need to model
-
-## VVV Example table (Change or Delete) VVV
-### `users` table
+### `faculty` table
 
 
-| Field      | Type        | Rules                              |
-| ---------- | ----------- | ---------------------------------- |
-| `id`       | INTEGER PK  | Auto-increment                     |
-| `fName`    | STRING      | Required                           |
-| `lName`    | STRING      | Required                           |
-| `email`    | STRING      | Required, unique                   |
-| `username` | STRING(100) | Required, unique; stored lowercase |
-| `password` | STRING(255) | Required; bcrypt hash only         |
-| `role`     | STRING(20)  | Default `worker`                   |
-
-## ^^^ (Change or Delete) ^^^
+| Field          | Type        | Rules                              |
+| -------------- | ----------- | ---------------------------------- |
+| `universityId` | INTEGER PK  | NOT NULL, POSITIVE INT, MINIMUM 7 DIGITS, UNIQUE, Required |
+| `fName`        | STRING      | Required                           |
+| `lName`        | STRING      | Required                           |
+| `dept`         | STRING(255) | Required         |
 
 ---
 
 ## Acceptance Criteria (Gherkin)
+### US-4.1 — Add Faculty
 
+#### Scenario: Admin clicks the add faculty button
 
-
-### US-1.1 — {Related Functional Requirement}
-
-
-
-#### Scenario: {What is happening or has happend}
-
-- **Given** {Where are you on the website?}
-- **When** {Main action?}
-- **And** {What additional action did you take?}
-- **Then** {Website response}
-- **And** {additional response}
-- **And** 
-- **etc...** 
-
-
-## VVV Example AC (Change or Delete) VVV
-#### Scenario: User submits registration with missing email
-
-- **Given** I am on the registration page
-- **When** I leave the email field empty
-- **And** I submit the form
-- **Then** inline validation blocks the request
-- **And** I see the message **"Email is required."**
+- **Given** I am a admin and on the faculty page
+- **When** I click the `Add` faculty button
+- **Then** a modal pops up to allow me to enter data
 - **And** no API request is sent
-## ^^^ (Change or Delete) ^^^
+
+#### Scenario: Admin inputs faculty first name with correct values
+
+- **Given** I am a admin on the faculty page
+- **And** I have clicked the `Add` faculty button
+- **When** I input a correct value into the first name input text
+- **Then** the input text reflects the change I made
+- **And** no API request is sent
+
+#### Scenario: Admin inputs faculty first name with incorrect values
+
+- **Given** I am a admin on the faculty page
+- **And** I have clicked the `Add` faculty button
+- **When** I input a incorrect value into the first name input text
+- **Then** the input text reflects the change I made
+- **And** no API request is sent
+
+
+#### Scenario: Admin inputs faculty last name with correct values
+
+- **Given** I am a admin on the faculty page
+- **And** I have clicked the `Add` faculty button
+- **When** I input a correct value into the last name input text
+- **Then** the input text reflects the change I made
+- **And** no API request is sent
+
+#### Scenario: Admin inputs faculty last name with incorrect values
+
+- **Given** I am a admin on the faculty page
+- **And** I have clicked the `Add` faculty button
+- **When** I input a incorrect value into the last name input text
+- **Then** the input text reflects the change I made
+- **And** no API request is sent
+
+#### Scenario: Admin inputs faculty department with correct values
+
+- **Given** I am a admin on the faculty page
+- **And** I have clicked the `Add` faculty button
+- **When** I input a correct value into the department name input text
+- **Then** the input text reflects the change I made
+- **And** no API request is sent
+
+#### Scenario: Admin inputs faculty department with incorrect values
+
+- **Given** I am a admin on the faculty page
+- **And** I have clicked the `Add` faculty button
+- **When** I input a incorrect value into the department name input text
+- **Then** the input text reflects the change I made
+- **And** no API request is sent
+
+#### Scenario: Admin clicks the `Add Faculty` button with correct inputted values
+
+- **Given** I am a admin on the faculty page
+- **When** I have clicked the `Add Faculty` button
+- **Then** the API returns `200` with a payload containing `universityId`, `fname`, `lname`, and `dept`
+- **And** the add modal closes and the faculty list refreshes to show all faculty
+
+#### Scenario: Admin clicks the `Add Faculty` button with incorrect inputted values
+
+- **Given** I am a admin on the faculty page
+- **When** I have clicked the `Add Faculty` button
+- **Then** the API returns `400` with `{"message": "Invalid faculty information"}`
+- **And** I remain on the add modal 
+- **And** a error notification pops up for 5 seconds saying `Cannot add faculty`
+
+#### Scenario: Admin clicks the `Cancel` button
+
+- **Given** I am a admin on the faculty page
+- **When** I have clicked the `Cancel` button
+- **Then** input texts are cleared and the add modal closes 
+- **And** no API request is sent
+
+
+### US-4.2 — Edit Faculty 
+
+#### Scenario: Admin clicks the `Edit` icon button on a faculty record
+
+- **Given** I am a admin on the faculty page
+- **When** I have clicked the `Edit` icon button on a specific faculty in the faculty list
+- **Then** a edit modal pops up with the `first name`, `last name`, and `department` filled out with the selected faculty's info
+- **And** no API request is sent
+
+
+#### Scenario: Admin edits the faculty's `first name` text input
+
+- **Given** I am a admin on the faculty page
+- **And** I have clicked the `Edit` icon button on a specific faculty in the faculty list
+- **When** I edit the `first name` text input 
+- **Then** `first name` text input reflects the new inputted value
+- **And** no API request is sent
+
+#### Scenario: Admin edits the faculty's `last name` text input
+
+- **Given** I am a admin on the faculty page
+- **And** I have clicked the `Edit` icon button on a specific faculty in the faculty list
+- **When** I edit the `last name` text input 
+- **Then** `last name` text input reflects the new inputted value
+- **And** no API request is sent
+
+#### Scenario: Admin edits the faculty's `department` text input
+
+- **Given** I am a admin on the faculty page
+- **And** I have clicked the `Edit` icon button on a specific faculty in the faculty list
+- **When** I edit the `department` text input 
+- **Then** `department` text input reflects the new inputted value
+- **And** no API request is sent
+
+#### Scenario: Admin clicks the `Update Faculty` button with correct inputted values
+
+- **Given** I am a admin on the faculty page
+- **And** I have clicked the `Edit` icon button on a specific faculty in the faculty list
+- **When** I click the `Update Faculty` button with correct inputted values
+- **Then** the API returns `200` with a payload containing `universityId`, `fname`, `lname`, and `dept`
+- **And** the edit modal closes and the faculty list refreshes to show all faculty
+
+#### Scenario: Admin clicks the `Update Faculty` button with incorrect inputted values
+
+- **Given** I am a admin on the faculty page
+- **And** I have clicked the `Edit` icon button on a specific faculty in the faculty list
+- **When** I have clicked the `Update Faculty` button with incorrect inputted values
+- **Then** the API returns `400` with `{"message": "Invalid faculty information"}`
+- **And** I remain on the add modal 
+- **And** a error notification pops up for 5 seconds saying `Cannot add faculty`
+
+#### Scenario: Admin clicks the `Cancel` button
+
+- **Given** I am a admin on the faculty page
+- **When** I have clicked the `Cancel` button
+- **Then** input texts are cleared and the edit modal closes 
+- **And** no API request is sent
+
+### US-4.3 — Delete Faculty
+
+#### Scenario: Admin clicks the `Delete` icon button and deletes the user successfully
+
+- **Given** I am a admin on the faculty page
+- **When** I have clicked the `Delete` button
+- **Then** the API returns `200` with a payload of `{"message": "Successfully removed faculty"}`
+
+#### Scenario: Admin clicks the `Delete` icon button and deletes the user unsuccessfully
+
+- **Given** I am a admin on the faculty page
+- **When** I have clicked the `Delete` button
+- **Then** the API returns `500` with a payload of `{"message": "Could not remove {faculty first name} {faculty last name}"}`
+
+### US-4.4 — List Faculty 
+
+#### Scenario: Admin opens the faculty page successfully
+
+- **Given** I am a admin 
+- **When** I click the `Faculty` tab on the menu bar
+- **Then** the API fetches all faculty and returns `200` with a payload containing all faculty in a JSON format
+- **And** displays all faculty as a table with their `first name`, `last name`, `department`, and `Edit/Delete` icon buttons
+
+#### Scenario: Admin opens the faculty page unsuccessfully
+
+- **Given** I am a admin 
+- **When** I click the `Faculty` tab on the menu bar
+- **Then** the API fetches all faculty and returns `500` with a payload containing `{"message": "Could not retrieve faculty"}`
+
+#### Scenario: Admin `Adds/Edits` a faculty
+
+- **Given** I am a admin 
+- **When** I `Add` or `Edit` a faculty
+- **Then** the API fetches all faculty and returns `200` with a payload containing all faculty in a JSON format
+- **And** displays all faculty as a table with their `first name`, `last name`, `department`, and `Edit/Delete` icon buttons
 
 ---
 
 
-
-### US-N.2 — {Related Functional Requirement}
-
-
-
-#### Scenario: 
-
-- **Given** 
-- **And** 
-- **When** 
-- **And** 
-- **Then** 
-- **And** 
-- **And**
-- **And** 
-
----
-
-### etc...
