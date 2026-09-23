@@ -94,11 +94,10 @@
 
 | Rule | Requirement |
 |------|-------------|
-| **Read scope** | `GET /todo/lists` returns only lists where `userId = req.user.id`. |
-| **Write scope** | `PUT` and `DELETE` apply only when the list row matches both `id` and `req.user.id`. |
-| **Create scope** | New lists are always owned by the authenticated user. |
-| **Cross-user access** | If a list belongs to another user, respond with `404` — never `403` (do not confirm the list exists). |
-| **UI scope** | The lists view shows only lists returned by `GET /todo/lists` for the signed-in user. |
+| **Read scope** | `GET /faculty` returns only lists where `universityId = req.universityId`. |
+| **Write scope** | `PUT` and `DELETE` apply only when the faculty row matches both `universityId` and `req.universityId`. |
+| **Cross-user access** | Only a admin can view faculty, if user tries to view and `user.role != admin`, respond with `404` — never `403` (do not confirm the list exists). |
+| **UI scope** | The faculty view shows only faculty returned by `GET /faculty` for the signed-in user. |
 | **Implementation** | Use a shared helper (e.g. `getAccessibleListOrNull(req, listId)`) in `app/authorization/` — do not duplicate scope logic in controllers. |
 
 ---
