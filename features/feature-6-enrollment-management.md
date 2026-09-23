@@ -4,7 +4,7 @@
 **Branch pattern:** `feature/6-enrollment-management`
 **Status:** Draft
 **Created:** 2026-09-18
-**Input:** CRUD enrollment for users.
+**Input:** CRD enrollment for users.
 **Depends on:** [Feature 1 -- User Auth & Sessions](feature-1-user-auth-session-management.md), [Feature 2 -- Semesters](feature-2-semester-management.md), [Feature 3 -- Courses](feature-3-course-management), [Feature 5 -- Sections](feature-5-section-management.md)
 **Related:** `frontend/src/views/EnrollmentList.vue`, `frontend/src/views/Section.vue`, `backend/app/routes/courses.routes.js`, `backend/app/routes/users.routes.js`, `backend/app/routes/sections.routes.js`, `backend/app/routes/enrollments.routes.js`, `backend/app/routes/semester.routes.js`
 
@@ -29,7 +29,7 @@
 **So that** I can know about its details.
 
 **Priority:** P1
-**Independent test:** click on an existing `enrollment`, details modal opens containing `section` content, close modal
+**Independent test:** `enrollment` details located along each `enrollment`'s list row
 **Acceptance scenarios:** see ### US-6.2 under Acceptance Criteria
 
 ### US-6.3: Add Enrollment
@@ -39,7 +39,7 @@
 **So that** I can change what I'm doing this semester.
 
 **Priority:** P1
-**Independent test:** Click `Add Section`, modal opens with `courses` combobox, select a `course`, `sections` combobox appears beneath `courses`, selecting a `section` adds new `enrollment` to `enrollment` list
+**Independent test:** Click **+ New enrollment**, modal opens with `courses` combobox, select a `course`, `sections` combobox appears beneath `courses`, selecting a `section` adds new `enrollment` to `enrollment` list
 **Acceptance scenarios:** see ### US-6.3 under Acceptance Criteria
 
 ### US-6.4: Remove Enrollment
@@ -49,7 +49,7 @@
 **So that** I can drop out of a `section`
 
 **Priority:** P2
-**Independent test:** open `enrollment` details modal, elevated button somewhere inside called `DROP`, clicking button asks for confirmation, confirming removes selected `enrollment` from `enrollment`s list
+**Independent test:** open `enrollment` details modal, elevated button somewhere inside called **Delete**, clicking button asks for confirmation, confirming removes selected `enrollment` from `enrollment`s list
 **Acceptance scenarios:** see ### US-6.4 under Acceptance Criteria
 
 ### US-6.5: Seek semesters pagination
@@ -70,7 +70,7 @@
 
 **Priority:** P3
 **Independent test:** send any `PUT` request to any `enrollment` api route, receive `405` error
-**Acceptance scenarios:** see ### US-6.5 under Acceptance Criteria
+**Acceptance scenarios:** see ### US-6.6 under Acceptance Criteria
 
 ---
 
@@ -103,7 +103,7 @@
 ## Edge Cases
 
 - Fetch another user's `enrollment`s -> `404`
-- POST `enrollment` with the same `semesterId`, `sectionId`, AND `userId` -> `409`
+- POST `enrollment` with the same `semesterId`, `sectionId`, AND `universityId` -> `409`
 - PUT in general. Enrollments are not overwritten and should not use PUT -> `405`
 
 ## Success Criteria
@@ -111,29 +111,29 @@
 - **SC-001**: Every Gherkin scenario has at least one automated test before merge
 - **SC-002**: Student user can Create, Read, and Delete their own `enrollment`s
 - **SC-003**: Student user can **NOT** Create, Read, Update, or Delete from/to any other student user's `enrollment`s
-- **SC-004**: npm test passes for `frontend/tests/enrollment.test.js` and for `backend/tests/Enrollment.test.js`
+- **SC-004**: npm test passes for `frontend/tests/enrollments.test.js` and for `backend/tests/EnrollmentList.test.js`
 
 ---
 
 ## Data Ownership & Isolation
 
-Each user owns their enrollments. Enrollments belong to one user, and a user can have many enrollments. The shared ingredient catalog is not owned by this feature.
+Each user owns their enrollments. Enrollments belong to one user, and a user can have many enrollments.
 
-| Rule                  | Requirement                                                                                                                                                                                  |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Read scope**        | For student users only, the semester page loads a list of enrollments by route id (`GET /courses/enrollments/:userId/:semesterId`)                                                           |
-| **Write scope**       | Enrollments cannot be manually edited since they consist of only foreign keys. They should be created and removed instead                                                                    |
-| **Create scope**      | `POST /courses/enrollments/:userId/*` succeeds only when the row does not already exist and `:userId = req.user.id`.                                                                         |
-| **Cross-user access** | Another user’s enrollment on read/create/delete → `404` `{ "message": "Cannot find Enrollment with userId=${userId}." }` (not `403`). Missing/invalid Bearer token on routes → `401`.        |
-| **UI scope**          | `EnrollmentList.vue` shows the enrollments for `route.params.id`. Navigation to `EnrollmentList.vue` comes from signing into the application as a student.                                   |
-| **Implementation**    | Enrollment operations already check for auth (`req.user.id`). Prefer a shared helper in `app/authorization/` for enrollment ownership rather than duplicating the check in every controller. |
+| Rule                  | Requirement                                                                                                                                                                                            |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Read scope**        | For student users only, the semester page loads a list of enrollments by route id (`GET /courses/enrollments/:universityId/:semesterId`)                                                               |
+| **Write scope**       | Enrollments cannot be manually edited since they consist of only foreign keys. They should be created and removed instead                                                                              |
+| **Create scope**      | `POST /courses/enrollments/:universityId/*` succeeds only when the row does not already exist and `:universityId === req.user.universityId`.                                                           |
+| **Cross-user access** | Another user’s enrollment on read/create/delete → `404` `{ "message": "Cannot find Enrollment with universityId=${universityId}." }` (not `403`). Missing/invalid Bearer token on routes → `401`.      |
+| **UI scope**          | `EnrollmentList.vue` shows the enrollments for `:universityId`. Navigation to `EnrollmentList.vue` comes from signing into the application as a student.                                               |
+| **Implementation**    | Enrollment operations already check for auth (`req.user.universityId`). Prefer a shared helper in `app/authorization/` for enrollment ownership rather than duplicating the check in every controller. |
 
 ---
 
 ## Key Entities
 
 - **User**: registered account (name, id, role, email, password); owns enrollments.
-- **Enrollment**: Entity collecting `semester.semesterId`, `section.sectionId`, and `user.id`; shows users what sections they're signed up for and when
+- **Enrollment**: Entity collecting `semester.semesterId`, `section.sectionId`, and `user.universityId`; shows users what sections they're signed up for and when
 
 ---
 
@@ -141,19 +141,19 @@ Each user owns their enrollments. Enrollments belong to one user, and a user can
 
 Mount prefix: `/courses`. Flat JSON (no `{ success, data }` envelope). Errors: `{ "message": "Human-readable explanation." }`. Authenticated writes send `Authorization: Bearer <token>`.
 
-This feature uses the enrollments endpoints below (CUD sections and CUD semesters stay in other features).
+This feature uses the `enrollment`s endpoints below (CUD sections and CUD semesters stay in other features).
 
-| Method   | Endpoint                                              | Auth | Purpose                                                                                                                                         |
-| -------- | ----------------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET`    | `/courses/enrollments/:userId/`                       | Yes  | List the enrollments for the user where `:userId = req.user.id`                                                                                 |
-| `POST`   | `/courses/enrollments/:userId/`                       | Yes  | Add an `enrollment` to the user where `:userId = req.user.id`                                                                                   |
-| `GET`    | `/courses/enrollments/:userId/semesters/:semesterId`  | Yes  | List only the enrollments the user `:userId = req.user.id` and `:semesterId = req.semester.id`                                                  |
-| `GET`    | `/courses/sections/:sectionId`                        | Yes  | List the details of the `section` where `:sectionId = req.section.id`                                                                           |
-| `DELETE` | `/courses/enrollments/:userId/:semesterId/:sectionId` | Yes  | Remove the specified enrollment from the user where `:userId = req.user.id`, `:semesterId = req.semester.id`, and `:sectionId = req.section.id` |
+| Method   | Endpoint                                                    | Auth | Purpose                                                                           |
+| -------- | ----------------------------------------------------------- | ---- | --------------------------------------------------------------------------------- |
+| `GET`    | `/courses/enrollments/:universityId/`                       | Yes  | List the enrollments for the user where `:universityId === req.user.universityId` |
+| `POST`   | `/courses/enrollments/:universityId/`                       | Yes  | Add an `enrollment` to the user where `:universityId === req.user.universityId`   |
+| `GET`    | `/courses/enrollments/:universityId/semesters/:semesterId`  | Yes  | List only the enrollments the user `:universityId === req.user.universityId`      |
+| `GET`    | `/courses/sections/:sectionId`                              | Yes  | List the details of the `section` whose `sectionId === :sectionId`                |
+| `DELETE` | `/courses/enrollments/:universityId/:semesterId/:sectionId` | Yes  | Remove the enrollment specified by the route parameters                           |
 
 **Unauthenticated write:** `401` `{ "message": "Unauthorized! No Auth Header" }` (or expired-token message).
 
-### Load enrollment (`GET /courses/enrollments/:userId`)
+### Load enrollment (`GET /courses/enrollments/:universityId`)
 
 **Success** (`200`): array with all enrollments for that user (frontend uses index `0`)
 
@@ -162,49 +162,44 @@ This feature uses the enrollments endpoints below (CUD sections and CUD semester
   {
     "semesterId": 2,
     "sectionId": "CMSC-2011-91",
-    "userId": 42
+    "universityId": 42
   },
   {
     "semesterId": 3,
     "sectionId": "CMSC-3023-02",
-    "userId": 42
+    "universityId": 42
   }
 ]
 ```
 
 **Server error:** `500` `{ "message": "…" }`.
 
-### Add enrollment (`POST /courses/enrollments/:userId`)
+### Add enrollment (`POST /courses/enrollments/:universityId`)
 
 **Request body** (fields the add request sends):
 
 ```json
 {
   "semesterId": 2,
-  "sectionId": "CMSC-2011-91",
-  "userId": 42
+  "sectionId": "CMSC-2011-91"
 }
 ```
 
-Missing `semesterId`, `sectionId`, or `recipeId` → `400` bad request.
+Missing `semesterId`, `sectionId` → `400` bad request.
 Duplicate combination of all three → `409` conflict.
 
 **Success** (`200`): created `enrollment` row (includes `semesterId`, `sectionId`, and `recipeId`).
 
 **Server error:** `500` `{ "message": "…" }`.
 
-### Remove Enrollment (`DELETE /courses/enrollments/:userId/:semesterId/:sectionId`)
+### Remove Enrollment (`DELETE /courses/enrollments/:universityId/:semesterId/:sectionId`)
 
-**Success** (`200`):
+**Success** (`204`)
 
-```json
-{ "message": "Enrollment was removed successfully." }
-```
-
-**Not owned:** `404`
+**Not found/Not owned:** `404`
 
 ```json
-{ "message": "Cannot find enrollment for userId=1." }
+{ "message": "Cannot find enrollment for universityId=1." }
 ```
 
 **Server error:** `500` `{ "message": "…" }`.
@@ -218,7 +213,7 @@ Follow [ui-style-system.mdc](../.cursor/rules/ui-style-system.mdc). Primary labe
 **enrollments view (this feature)**
 
 - Heading: **My Enrollments**
-- Primary action: **+ New enrollment** opens a `<v-dialog>` with a name `<v-text-field>` and **Create** / **Cancel**. Use class `oc-cta` on **Create** and **+ New enrollment** (per [ui-style-system.mdc](../../.cursor/rules/ui-style-system.mdc)).
+- Primary action: **+ New enrollment** opens a `<v-dialog>` with a **Course** field `<v-combobox>`, a conditionally-visible **Section** field `<v-combobox>`, and **Create** / **Cancel** buttons. Use class `oc-cta` on **Create** and **+ New enrollment** (per [ui-style-system.mdc](../../.cursor/rules/ui-style-system.mdc)).
 - Display interactive search bar named `Find` above any lists
 - Display enrollments as rows (e.g. `<v-list>` or table). The following columns should be in the list:
   - **SectionId** -- `XXXX-####-##` unique identifier code (e.g. `CMSC-1113`)
@@ -229,15 +224,15 @@ Follow [ui-style-system.mdc](../.cursor/rules/ui-style-system.mdc). Primary labe
   - **Instructor** -- The name of the `faculty` in the `section` (e.g. `David North`).
   - Each row contains a **Delete** icon — opens confirmation `<v-dialog>`
 - Icon-only row action uses `size="small"` and accessible `aria-label` (**Drop Class**).
-- **Empty state:** **"No enrollments yet. Add an enrollment."** when no semesters exist in the database.
+- **Empty state:** **"No enrollments yet. Add an enrollment."** when no enrollments exist in the database.
 - **Loading state:** skeleton or progress indicator while enrollments are fetching.
 - **Error state:** `<v-alert type="error">` for API failures.
 
-**Implementation note:** one route/view for semesters; semester CRUD dialogs are child components or inline `<v-dialog>` blocks in `Dashboard.vue` unless the team splits presentational dialogs later.
+**Implementation note:** one route/view for `enrollment`s; `enrollment` CRD dialogs are child components or inline `<v-dialog>` blocks in `EnrollmentList.vue` unless the team splits presentational dialogs later.
 
 **App chrome**
 
-- Existing `MenuBar` (Recipes, Ingredients, user menu). This feature does not add or hide chrome.
+- Existing `MenuBar`. This feature does not add or hide chrome.
 
 ---
 
@@ -247,17 +242,16 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 
 ### `enrollments` table
 
-| Field        | Type       | Rules                                               |
-| ------------ | ---------- | --------------------------------------------------- |
-| `id`         | INTEGER PK | Auto-increment                                      |
-| `semesterId` | STRING     | Required; foreign key to `semester.id`; Primary Key |
-| `sectionId`  | STRING     | Required; foreign key to `sections.id`; Primary Key |
-| `userId`     | INTEGER    | Required; foreign key to `users.id`; Primary Key    |
+| Field          | Type    | Rules                                                      |
+| -------------- | ------- | ---------------------------------------------------------- |
+| `semesterId`   | INTEGER | Required; foreign key to `semester.id`; Primary Key        |
+| `sectionId`    | STRING  | Required; foreign key to `sections.id`; Primary Key        |
+| `universityId` | INTEGER | Required; foreign key to `users.universityId`; Primary Key |
 
 ### Associations
 
 - `User` hasMany `enrollments`
-- `enrollment` belongsToOne `User`
+- `enrollment` belongsTo `User`
 
 ---
 
@@ -295,6 +289,15 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 - **And** I see a row containing the `section` name of `sectionId` `4`
 - **And** I see a row containing the `section` name of `sectionId` `19`
 
+#### Scenario: Student cannot fetch another user's enrollments
+
+- **Given** I am a signed-in student user with `universityId` `42`
+- **And** enrollments exist for `universityId` `99`
+- **When** I request `GET /courses/enrollments/99`
+- **Or** I request `GET /courses/enrollments/99/semesters/:semesterId`
+- **Then** the API returns `404` with `{ "message": "Cannot find Enrollment with universityId=99." }`
+- **And** I do not receive another user's enrollment data
+
 ### US-6.2: Enrollment Details
 
 #### Scenario: view enrollment details
@@ -306,7 +309,7 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 
 ### US-6.3: Add Enrollment
 
-#### Scenario: Open add modal
+#### Scenario: Open add enrollment modal
 
 - **Given** I am viewing the `EnrollmentList` view
 - **When** I click **+ New enrollment**
@@ -337,7 +340,17 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 - **Given** I am viewing the `Add Enrollment` modal
 - **And** I have selected a `course` already in the `Course` combobox
 - **When** I select a `section` in the `Section` combobox
-- **Then** I see the `section` details beneath the combobox
+- **Then** I see the `section`'s details beneath the combobox
+
+#### Scenario: Create valid enrollment
+
+- **Given** I am viewing the `Add Enrollment` modal
+- **And** I have selected a valid `course` already in the `Course` combobox
+- **And** I have selected a valid `section` in the `Section` combobox
+- **When** I select the **Create** button
+- **Then** the API sends a `200`/`201` response along with the created object
+- **And** the `enrollment` list updates with the newly created `enrollment`
+- **And** the `Add Enrollment` modal closes.
 
 #### Scenario: Create an enrollment with an empty course
 
@@ -468,7 +481,7 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 #### Scenario: PUT to enrollments is rejected
 
 - **Given** I am signed in as a student
-- **When** I send PUT /courses/enrollments/:userId/...
+- **When** I send PUT /courses/enrollments/:universityId/...
 - **Then** the API returns 405 with `{ "message": "Enrollments are dropped, not edited" }`
 
 ---
@@ -477,32 +490,34 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 
 Each scenario above must map to at least one automated test. `it` names must match the Gherkin **Scenario** titles exactly.
 
-| Story  | Scenario                                   | Test file                                                                    | Test name                                    |
-| ------ | ------------------------------------------ | ---------------------------------------------------------------------------- | -------------------------------------------- |
-| US-6.1 | view enrollment list with no enrollments   | `frontend/tests/EnrollmentList.test.js`                                      | `view enrollment list with no enrollments`   |
-| US-6.1 | view enrollment list with enrollments      | `backend/tests/enrollments.test.js`, `frontend/tests/EnrollmentList.test.js` | `view enrollment list with enrollments`      |
-| US-6.1 | view only enrollments matching semesterId  | `backend/tests/enrollments.test.js`, `frontend/tests/EnrollmentList.test.js` | `view only enrollments matching semesterId`  |
-| US-6.2 | view enrollment details                    | `frontend/tests/EnrollmentList.test.js`                                      | `view enrollment details`                    |
-| US-6.3 | Open add modal                             | `frontend/tests/EnrollmentList.test.js`                                      | `Open add modal`                             |
-| US-6.3 | Use course combobox                        | `frontend/tests/EnrollmentList.test.js`                                      | `Use course combobox`                        |
-| US-6.3 | Confirm course combobox                    | `frontend/tests/EnrollmentList.test.js`                                      | `Confirm course combobox`                    |
-| US-6.3 | Use section combobox                       | `frontend/tests/EnrollmentList.test.js`                                      | `Use section combobox`                       |
-| US-6.3 | Confirm section combobox                   | `frontend/tests/EnrollmentList.test.js`                                      | `Confirm section combobox`                   |
-| US-6.3 | Create an enrollment with an empty course  | `frontend/tests/EnrollmentList.test.js`                                      | `Create an enrollment with an empty course`  |
-| US-6.3 | Create an enrollment with an empty section | `frontend/tests/EnrollmentList.test.js`                                      | `Create an enrollment with an empty section` |
-| US-6.3 | Create an enrollment with duplicate data   | `frontend/tests/EnrollmentList.test.js`                                      | `Create an enrollment with duplicate data`   |
-| US-6.3 | Create enrollment with improper course ID  | `frontend/tests/EnrollmentList.test.js`                                      | `Create enrollment with improper course ID`  |
-| US-6.3 | Create enrollment with improper section ID | `frontend/tests/EnrollmentList.test.js`                                      | `Create enrollment with improper section ID` |
-| US-6.4 | Select enrollment delete icon              | `frontend/tests/EnrollmentList.test.js`                                      | `Select enrollment delete icon`              |
-| US-6.4 | Confirm delete icon                        | `backend/tests/enrollments.test.js`, `frontend/tests/EnrollmentList.test.js` | `Confirm delete icon`                        |
-| US-6.4 | Cancel delete                              | `frontend/tests/EnrollmentList.test.js`                                      | `Cancel delete`                              |
-| US-6.5 | EnrollmentList First Landing               | `backend/tests/enrollments.test.js`, `frontend/tests/EnrollmentList.test.js` | `EnrollmentList First Landing`               |
-| US-6.5 | EnrollmentList Return Landing              | `frontend/tests/EnrollmentList.test.js`                                      | `EnrollmentList Return Landing`              |
-| US-6.5 | Navigate Semesters order forward           | `frontend/tests/EnrollmentList.test.js`                                      | `Navigate Semesters order forward`           |
-| US-6.5 | Navigate Semesters order backward          | `frontend/tests/EnrollmentList.test.js`                                      | `Navigate Semesters order backward`          |
-| US-6.5 | Navigate Semesters combobox typing         | `frontend/tests/EnrollmentList.test.js`                                      | `Navigate Semesters combobox typing`         |
-| US-6.5 | Navigate Semesters combobox select         | `frontend/tests/EnrollmentList.test.js`                                      | `Navigate Semesters combobox select`         |
-| US-6.6 | PUT to enrollments is rejected             | `backend/tests/enrollments.test.js`                                          | `PUT to enrollments is rejected`             |
+| Story  | Scenario                                        | Test file                                                                    | Test name                                         |
+| ------ | ----------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------- |
+| US-6.1 | view enrollment list with no enrollments        | `frontend/tests/EnrollmentList.test.js`                                      | `view enrollment list with no enrollments`        |
+| US-6.1 | view enrollment list with enrollments           | `backend/tests/enrollments.test.js`, `frontend/tests/EnrollmentList.test.js` | `view enrollment list with enrollments`           |
+| US-6.1 | view only enrollments matching semesterId       | `backend/tests/enrollments.test.js`, `frontend/tests/EnrollmentList.test.js` | `view only enrollments matching semesterId`       |
+| US-6.1 | student cannot fetch another user's enrollments | `backend/tests/enrollments.test.js`, `frontend/tests/EnrollmentList.test.js` | `student cannot fetch another user's enrollments` |
+| US-6.2 | view enrollment details                         | `frontend/tests/EnrollmentList.test.js`                                      | `view enrollment details`                         |
+| US-6.3 | Open add enrollment modal                       | `frontend/tests/EnrollmentList.test.js`                                      | `Open add enrollment modal`                       |
+| US-6.3 | Use course combobox                             | `frontend/tests/EnrollmentList.test.js`                                      | `Use course combobox`                             |
+| US-6.3 | Confirm course combobox                         | `frontend/tests/EnrollmentList.test.js`                                      | `Confirm course combobox`                         |
+| US-6.3 | Use section combobox                            | `frontend/tests/EnrollmentList.test.js`                                      | `Use section combobox`                            |
+| US-6.3 | Confirm section combobox                        | `frontend/tests/EnrollmentList.test.js`                                      | `Confirm section combobox`                        |
+| US-6.3 | Create valid enrollment                         | `backend/tests/enrollments.test.js`, `frontend/tests/EnrollmentList.test.js` | `Create valid enrollment`                         |
+| US-6.3 | Create an enrollment with an empty course       | `frontend/tests/EnrollmentList.test.js`                                      | `Create an enrollment with an empty course`       |
+| US-6.3 | Create an enrollment with an empty section      | `frontend/tests/EnrollmentList.test.js`                                      | `Create an enrollment with an empty section`      |
+| US-6.3 | Create an enrollment with duplicate data        | `frontend/tests/EnrollmentList.test.js`                                      | `Create an enrollment with duplicate data`        |
+| US-6.3 | Create enrollment with improper course ID       | `frontend/tests/EnrollmentList.test.js`                                      | `Create enrollment with improper course ID`       |
+| US-6.3 | Create enrollment with improper section ID      | `frontend/tests/EnrollmentList.test.js`                                      | `Create enrollment with improper section ID`      |
+| US-6.4 | Select enrollment delete icon                   | `frontend/tests/EnrollmentList.test.js`                                      | `Select enrollment delete icon`                   |
+| US-6.4 | Confirm delete icon                             | `backend/tests/enrollments.test.js`, `frontend/tests/EnrollmentList.test.js` | `Confirm delete icon`                             |
+| US-6.4 | Cancel delete                                   | `frontend/tests/EnrollmentList.test.js`                                      | `Cancel delete`                                   |
+| US-6.5 | EnrollmentList First Landing                    | `backend/tests/enrollments.test.js`, `frontend/tests/EnrollmentList.test.js` | `EnrollmentList First Landing`                    |
+| US-6.5 | EnrollmentList Return Landing                   | `frontend/tests/EnrollmentList.test.js`                                      | `EnrollmentList Return Landing`                   |
+| US-6.5 | Navigate Semesters order forward                | `frontend/tests/EnrollmentList.test.js`                                      | `Navigate Semesters order forward`                |
+| US-6.5 | Navigate Semesters order backward               | `frontend/tests/EnrollmentList.test.js`                                      | `Navigate Semesters order backward`               |
+| US-6.5 | Navigate Semesters combobox typing              | `frontend/tests/EnrollmentList.test.js`                                      | `Navigate Semesters combobox typing`              |
+| US-6.5 | Navigate Semesters combobox select              | `frontend/tests/EnrollmentList.test.js`                                      | `Navigate Semesters combobox select`              |
+| US-6.6 | PUT to enrollments is rejected                  | `backend/tests/enrollments.test.js`                                          | `PUT to enrollments is rejected`                  |
 
 ---
 
