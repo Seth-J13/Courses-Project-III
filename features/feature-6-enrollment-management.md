@@ -69,16 +69,18 @@
 ### Functional Requirements
 
 - **FR-001**: A student user can only view and interact with their `enrollment`s if they are authenticated and have a valid `session`
-- **FR-002**: A student user's `enrollment`s with the same `semesterId` **MUST** be grouped together into a single list view on `EnrollmentList.vue`
-- **FR-003**: A student user's `enrollment`s with different `semesterId`s **MUST** be in separate list views on `EnrollmentList.vue`
-- **FR-004**: A student user **MUST** be allowed to see the `enrollment`s it owns for a given semester on `EnrollmentList.vue`
-- **FR-005**: A student user **MUST NOT** be allowed to see the `enrollment`s other student users own
-- **FR-006**: A student user **MUST** be allowed to see the details of the `enrollment`s it owns
-- **FR-007**: A student user **MUST NOT** be allowed to see the details of `enrollment`s other student users owns
-- **FR-008**: A student user **MUST** be allowed to add `enrollment`s to its ownership
-- **FR-009**: A student user **MUST** be allowed to remove `enrollment`s from its ownership
-- **FR-010**: A student user **MUST NOT** be allowed to add `enrollment`s to other student users
-- **FR-011**: A student user **MUST NOT** be allowed to remove `enrollment`s from other student users' ownership
+- **FR-002**: A student user's `enrollment`s **MUST** be shown based on a provided `semesterId`.
+- **FR-003**: `enrollment`s **MUST NOT** be shown in a single, big list.
+- **FR-004**: A student user **MUST** be able to navigate to different `semester` groups of `enrollment`s without changing views from `EnrollmentList.vue`
+- **FR-005**: A student user's `enrollment`s with different `semesterId`s **MUST** be in separate list views on `EnrollmentList.vue`
+- **FR-006**: A student user **MUST** be allowed to see the `enrollment`s it owns for a given semester on `EnrollmentList.vue`
+- **FR-007**: A student user **MUST NOT** be allowed to see the `enrollment`s other student users own
+- **FR-008**: A student user **MUST** be allowed to see the details of the `enrollment`s it owns
+- **FR-009**: A student user **MUST NOT** be allowed to see the details of `enrollment`s other student users owns
+- **FR-010**: A student user **MUST** be allowed to add `enrollment`s to its ownership
+- **FR-011**: A student user **MUST** be allowed to remove `enrollment`s from its ownership
+- **FR-012**: A student user **MUST NOT** be allowed to add `enrollment`s to other student users
+- **FR-013**: A student user **MUST NOT** be allowed to remove `enrollment`s from other student users' ownership
 
 ---
 
@@ -129,13 +131,13 @@ Mount prefix: `/courses`. Flat JSON (no `{ success, data }` envelope). Errors: `
 
 This feature uses the enrollments endpoints below (CUD sections and CUD semesters stay in other features).
 
-| Method   | Endpoint                                                                 | Auth | Purpose                                                                                                                                         |
-| -------- | ------------------------------------------------------------------------ | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET`    | `/courses/enrollments/:userId/`                                          | Yes  | List the enrollments for the user where `:userId = req.user.id`                                                                                 |
-| `POST`   | `/courses/enrollments/:userId/`                                          | Yes  | Add an `enrollment` to the user where `:userId = req.user.id`                                                                                   |
-| `GET`    | `/courses/enrollments/:userId/semesters/:semesterId`                     | Yes  | List only the enrollments the user `:userId = req.user.id` and `:semesterId = req.semester.id`                                                  |
-| `GET`    | `/courses/sections/:sectionId`                                           | Yes  | List the details of the `section` where `:sectionId = req.section.id`                                                                           |
-| `DELETE` | `/courses/enrollments/:userId/semesters/:semesterId/sections/:sectionId` | Yes  | Remove the specified enrollment from the user where `:userId = req.user.id`, `:semesterId = req.semester.id`, and `:sectionId = req.section.id` |
+| Method   | Endpoint                                              | Auth | Purpose                                                                                                                                         |
+| -------- | ----------------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/courses/enrollments/:userId/`                       | Yes  | List the enrollments for the user where `:userId = req.user.id`                                                                                 |
+| `POST`   | `/courses/enrollments/:userId/`                       | Yes  | Add an `enrollment` to the user where `:userId = req.user.id`                                                                                   |
+| `GET`    | `/courses/enrollments/:userId/semesters/:semesterId`  | Yes  | List only the enrollments the user `:userId = req.user.id` and `:semesterId = req.semester.id`                                                  |
+| `GET`    | `/courses/sections/:sectionId`                        | Yes  | List the details of the `section` where `:sectionId = req.section.id`                                                                           |
+| `DELETE` | `/courses/enrollments/:userId/:semesterId/:sectionId` | Yes  | Remove the specified enrollment from the user where `:userId = req.user.id`, `:semesterId = req.semester.id`, and `:sectionId = req.section.id` |
 
 **Unauthenticated write:** `401` `{ "message": "Unauthorized! No Auth Header" }` (or expired-token message).
 
@@ -197,84 +199,24 @@ Duplicate combination of all three → `409` conflict.
 
 ---
 
-## Screen Requirements **CHECK THIS FIRST WHEN RETURNING**
+## Screen Requirements
 
 Follow [ui-style-system.mdc](../.cursor/rules/ui-style-system.mdc). Primary labeled actions use class `oc-cta`. Icon-only row actions need `aria-label`s.
 
-### [View: Edit Recipe] — route name `editRecipe`
+**enrollments view (this feature)**
 
-- Path: `/recipe/:id` (`props: true`). View: `frontend/src/views/EditRecipe.vue`.
-- Heading: **Edit Recipe**
-- Reached from a signed-in user’s recipe card (pencil on the list).
-- On load: `GET` recipe, recipe ingredients, catalog ingredients, and steps-with-ingredients. Local field edits do **not** call the API until a save/add/update/delete action.
+- Heading: **My Enrollments**
+- Primary action: **+ New enrollment** opens a `<v-dialog>` with a name `<v-text-field>` and **Create** / **Cancel**. Use class `oc-cta` on **Create** and **+ New enrollment** (per [ui-style-system.mdc](../../.cursor/rules/ui-style-system.mdc)).
+- Display interactive search bar named `Find` above any lists
+- Display enrollments as rows (e.g. `<v-semester>` or table): each row shows the **enrollment section** and icon actions:
+  - **Edit** icon — opens rename `<v-dialog>` pre-filled with current course and section; **Save** / **Cancel**
+  - **Delete** icon — opens confirmation `<v-dialog>`
+- Icon-only row actions use `size="small"` and accessible `aria-label`s (**Edit enrollment**, **Delete enrollment**).
+- **Empty state:** **"No enrollments yet. Add an enrollment."** when no semesters exist in the database.
+- **Loading state:** skeleton or progress indicator while enrollments are fetching.
+- **Error state:** `<v-alert type="error">` for API failures.
 
-**Recipe details card**
-
-- Text field **Name** (`recipe.name`) — FR-001 / US-6.1
-- Number field **Number of Servings** (`recipe.servings`, `type="number"`) — FR-002, FR-003 / US-6.2
-- Number field **Time to Make (in minutes)** (`recipe.time`, `type="number"`) — FR-004, FR-005 / US-6.3
-- Switch **Publish?** with label `Publish? Yes` or `Publish? No` from `recipe.isPublished` — FR-008 / US-6.4
-- Textarea **Description** (`recipe.description`, multiple rows) — FR-006 / US-6.5
-- Description resize: vertical grab on the bottom-right resizer changes height; horizontal drag does not widen the box — FR-007 / US-6.6
-- Client whole-number check for servings and time: non-integer input is cleared and the user sees **"Please enter a whole number."**; no API request — US-6.2 / US-6.3
-- Primary action: **Update Recipe** (`oc-cta`) — FR-009 / US-6.7
-- Success snackbar: `${recipe.name} updated successfully!`; remain on the edit page and reload the recipe
-- Failure: snackbar shows the API `{ message }`; stay on the edit page
-
-**Ingredients card** (below recipe details)
-
-- Heading: **Ingredients**
-- Primary action: **Add** (`oc-cta`)
-- Each row: quantity, unit (plural `s` when quantity > 1), ingredient name, price `($pricePerUnit/unit)`, pencil icon, trash icon
-- Icon actions: `aria-label` **Edit ingredient**, **Delete ingredient**
-- **Empty state:** empty list; **Add** remains available so the user can add an ingredient
-- Viewing the list does not send a new request after the initial page load
-
-**Add / Edit Ingredient dialog** (`v-dialog`, persistent)
-
-- Titles: **Add Ingredient** / **Edit Ingredient**
-- Fields: **Quantity** (`type="number"`), **Ingredients** select (catalog `item-title="name"`, return object)
-- Quantity: numeric values stay in the field; `NaN` is cleared on blur/enter; no API until confirm
-- Confirm: **Add Ingredient** or **Update Ingredient** (`oc-cta`)
-- Dismiss: **Close** (closes the dialog without saving; no API request)
-- Success snackbar: `Ingredient added successfully!` or `${ingredient.name} updated successfully!`
-- Error snackbar: API `{ message }`
-
-**Delete ingredient**
-
-- Trash icon immediately calls `DELETE` (no confirm dialog in the current UI)
-- Success snackbar: `${ingredient.name} deleted successfully!`
-- Error snackbar: API `{ message }`
-
-**Steps card**
-
-- Heading: **Steps**
-- Primary action: **Add** (`oc-cta`)
-- Table columns: step number, instruction, ingredient chips, edit icon, delete icon
-- Rows ordered by `Number` (`stepNumber`) ascending, including duplicates next to each other — US-6.14
-- Icon actions: `aria-label` **Edit step**, **Delete step**
-- **Empty state:** empty table; **Add** remains available
-
-**Add / Edit Step dialog** (`v-dialog`, persistent)
-
-- Titles: **Add Step** / **Edit Step**
-- Fields: **Number** (`type="number"`), **Instruction** (textarea), **Ingredients** multi-select from this recipe’s ingredients (optional)
-- Number: integers stay in the field; `NaN` is cleared on blur/enter; empty Instruction stays empty; no API until confirm
-- Confirm: **Add Step** or **Update Step** (`oc-cta`)
-- Dismiss: **Close**
-- Success snackbar: `Step added successfully!` / `Step updated successfully!`
-- Error snackbar: API `{ message }`
-- After a successful step create/update, selected recipe ingredients are `PUT` with `recipeStepId` set
-
-**Delete step**
-
-- Trash icon immediately calls `DELETE`
-- Success snackbar: `Step deleted successfully!`
-- Error snackbar: API `{ message }`
-
-**Loading / error**
-
-- Initial fetches run on mount. Request failures that return `{ message }` show in a `v-snackbar` (error color). There is no separate skeleton layout on this view.
+**Implementation note:** one route/view for semesters; semester CRUD dialogs are child components or inline `<v-dialog>` blocks in `Dashboard.vue` unless the team splits presentational dialogs later.
 
 **App chrome**
 
