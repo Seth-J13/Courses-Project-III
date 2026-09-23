@@ -354,4 +354,40 @@
 
 ---
 
+## Test Coverage Map
 
+Each scenario above must map to at least one automated test.
+
+| Story | Scenario | Test file | Test name |
+|-------|----------|-----------|-----------|
+| US-4.1 | Admin clicks the add faculty button | `frontend/tests/Faculty.test.js` | Admin clicks the add faculty button |
+| US-4.1 | Admin inputs faculty first name with correct values | `frontend/tests/Faculty.test.js` | Admin inputs faculty first name with correct values |
+| US-4.1 | Admin inputs faculty first name with incorrect values | `frontend/tests/Faculty.test.js` | Admin inputs faculty first name with incorrect values |
+| US-4.1 | Admin inputs faculty last name with correct values | `frontend/tests/Faculty.test.js` | Admin inputs faculty last name with correct values |
+| US-4.1 | Admin inputs faculty last name with incorrect values | `frontend/tests/Faculty.test.js` | Admin inputs faculty last name with incorrect values |
+| US-4.1 | Admin inputs faculty department with correct values | `frontend/tests/Faculty.test.js` | Admin inputs faculty department with correct values |
+| US-4.1 | Admin inputs faculty department with incorrect values | `frontend/tests/Faculty.test.js` | Admin inputs faculty department with incorrect values |
+| US-4.1 | Admin clicks the `Add Faculty` button with correct inputted values | `frontend/tests/Faculty.test.js` | Admin clicks the `Add Faculty` button with correct inputted values |
+| US-4.1 | Admin clicks the `Add Faculty` button with correct inputted values | `backend/tests/Faculty.test.js` | Admin clicks the `Add Faculty` button with correct inputted values |
+| US-4.1 | Admin clicks the `Add Faculty` button with incorrect inputted values | `frontend/tests/Faculty.test.js` | Admin clicks the `Add Faculty` button with incorrect inputted values |
+| US-4.1 | Admin clicks the `Add Faculty` button with incorrect inputted values | `backend/tests/Faculty.test.js` | Admin clicks the `Add Faculty` button with incorrect inputted values |
+| US-4.1 | Admin clicks the `Cancel` button | `frontend/tests/Faculty.test.js` | Admin clicks the `Cancel` button |
+| US-4.2 | Admin clicks the `Edit` icon button on a faculty record | `frontend/tests/Faculty.test.js` | Admin clicks the `Edit` icon button on a faculty record |
+| US-4.2 | Admin edits the faculty's `first name` text input | `frontend/tests/Faculty.test.js` | Admin edits the faculty's `first name` text input |
+| US-4.2 | Admin edits the faculty's `last name` text input | `frontend/tests/Faculty.test.js` | Admin edits the faculty's `last name` text input |
+| US-4.2 | Admin edits the faculty's `department` text input | `frontend/tests/Faculty.test.js` | Admin edits the faculty's `department` text input |
+| US-4.2 | Admin clicks the `Update Faculty` button with correct inputted values | `frontend/tests/Faculty.test.js` | Admin clicks the `Update Faculty` button with correct inputted values |
+| US-4.2 | Admin clicks the `Update Faculty` button with correct inputted values | `backend/tests/Faculty.test.js` | Admin clicks the `Update Faculty` button with correct inputted values |
+| US-4.2 | Admin clicks the `Update Faculty` button with incorrect inputted values | `frontend/tests/Faculty.test.js` | Admin clicks the `Update Faculty` button with incorrect inputted values |
+| US-4.2 | Admin clicks the `Update Faculty` button with incorrect inputted values | `backend/tests/Faculty.test.js` | Admin clicks the `Update Faculty` button with incorrect inputted values |
+| US-4.2 | Admin clicks the `Cancel` button | `frontend/tests/Faculty.test.js` | Admin clicks the `Cancel` button |
+| US-4.3 | Admin clicks the `Delete` icon button and deletes the user successfully | `frontend/tests/Faculty.test.js` | Admin clicks the `Delete` icon button and deletes the user successfully |
+| US-4.3 | Admin clicks the `Delete` icon button and deletes the user successfully | `backend/tests/Faculty.test.js` | Admin clicks the `Delete` icon button and deletes the user successfully |
+| US-4.3 | Admin clicks the `Delete` icon button and deletes the user unsuccessfully | `frontend/tests/Faculty.test.js` | Admin clicks the `Delete` icon button and deletes the user unsuccessfully |
+| US-4.3 | Admin clicks the `Delete` icon button and deletes the user unsuccessfully | `backend/tests/Faculty.test.js` | Admin clicks the `Delete` icon button and deletes the user unsuccessfully |
+| US-4.4 | Admin opens the faculty page successfully | `frontend/tests/Faculty.test.js` | Admin opens the faculty page successfully |
+| US-4.4 | Admin opens the faculty page successfully | `backend/tests/Faculty.test.js` | Admin opens the faculty page successfully |
+| US-4.4 | Admin opens the faculty page unsuccessfully | `frontend/tests/Faculty.test.js` | Admin opens the faculty page unsuccessfully |
+| US-4.4 | Admin opens the faculty page unsuccessfully | `backend/tests/Faculty.test.js` | Admin opens the faculty page unsuccessfully |
+| US-4.4 | Admin `Adds/Edits` a faculty | `frontend/tests/Faculty.test.js` | Admin `Adds/Edits` a faculty |
+| US-4.4 | Admin `Adds/Edits` a faculty | `backend/tests/Faculty.test.js` | Admin `Adds/Edits` a faculty |
