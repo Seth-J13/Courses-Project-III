@@ -78,6 +78,7 @@
 - **FR-006**: typing in the on-screen course search bar updates the course list with only courses containing the search bar's content as a substring.
 - **FR-007**: signed-out users MUST NOT have access to any `/courses` routes
 - **FR-008**: signed-in students MUST NOT have access to any non-`GET` `/courses` routes
+- **FR-009**: courses MUST have a corresponding semester (FA, WI, SP, SU for fall, winter, spring, and summer semesters respectively)
 
 ---
 
@@ -88,32 +89,32 @@
 
 ## Edge Cases
 
-- Empty or whitespace-only semester name → client block and/or `400`.
-- semester name longer than 6 characters → `400`.
-- Invalid `semesterId` → `400`; unowned semester → `404`.
+- Empty or whitespace-only course name → client block and/or `400`.
+- course Id longer than 9 characters → `400`.
+- Invalid `courseId` → `400`; unowned course → `404`.
 - Unauthenticated dashboard or `GET /courses/semesters` → redirect or `401`.
 
 ## Success Criteria
 
 - **SC-001**: Every Gherkin scenario has at least one automated test before merge.
-- **SC-002**: Signed-in admin can create, view, rename, and delete semesters on one screen.
+- **SC-002**: Signed-in admin can create, view, rename, and delete courses on one screen.
 - **SC-003**: Signed-in student cannot access this view
-- **SC-004**: `npm test` passes for semester API and dashboard semesters-view behavior.
+- **SC-004**: `npm test` passes for semester API and dashboard courses-view behavior.
 
 ---
 
 ## Data Ownership & Isolation
 
-Semesters are not owned by anybody; however, only administrator-role users are authorized to write/create on `semesters`
+Courses are not owned by anybody; however, only administrator-role users are authorized to write/create on `courses`
 
 | Rule                  | Requirement                                                                                                                                      |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Read scope**        | `GET /courses/semesters` returns only semesters.                                                                                                 |
-| **Write scope**       | `PUT` and `DELETE` apply only when the semester row matches both `id` and `req.user.id`.                                                         |
-| **Create scope**      | New semesters owned by nobody.                                                                                                                   |
-| **Cross-user access** | If an unauthorized user tries to `PUT`, `DELETE`, or `POST` semesters, respond with `403`.                                                       |
-| **UI scope**          | The semesters view shows only semesters returned by `GET /courses/semesters` for the signed-in admin.                                            |
-| **Implementation**    | Use a shared helper (e.g. `getAccessiblesemesterOrNull(req, semesterId)`) in `app/authorization/` — do not duplicate scope logic in controllers. |
+| **Read scope**        | `GET /courses` returns only courses.                                                                                                 |
+| **Write scope**       | `PUT` and `DELETE` apply only when the course row matches both `id` and `req.user.id`.                                                         |
+| **Create scope**      | New courses owned by nobody.                                                                                                                   |
+| **Cross-user access** | If an unauthorized user tries to `PUT`, `DELETE`, or `POST` courses, respond with `403`.                                                       |
+| **UI scope**          | The courses view shows only courses returned by `GET /courses` for the signed-in admin.                                            |
+| **Implementation**    | Use a shared helper (e.g. `getAccessiblesemesterOrNull(req, courseId)`) in `app/authorization/` — do not duplicate scope logic in controllers. |
 
 ---
 
@@ -121,64 +122,39 @@ Semesters are not owned by anybody; however, only administrator-role users are a
 
 | Method   | Endpoint                         | Auth       | Purpose               |
 | -------- | -------------------------------- | ---------- | --------------------- |
-| `GET`    | `/courses/semesters`             | Yes        | Fetch all semesters   |
-| `GET`    | `/courses/semesters/:semesterId` | Yes        | Show semester details |
-| `POST`   | `/courses/semesters`             | Yes, admin | Create a new semester |
-| `PUT`    | `/courses/semesters/:semesterId` | Yes, admin | Update a semester     |
-| `DELETE` | `/courses/semesters/:semesterId` | Yes, admin | Delete a semester     |
+| `GET`    | `/courses`             | Yes        | Fetch all courses   |
+| `GET`    | `/courses/:courseId` | Yes        | Show course details |
+| `POST`   | `/courses`             | Yes, admin | Create a new course |
+| `PUT`    | `/courses/:courseId` | Yes, admin | Update a course     |
+| `DELETE` | `/courses/:courseId` | Yes, admin | Delete a course     |
 
 All endpoints except `GET` require **an administrator-role user** to access/operate. Non-admin user access returns `403`.
 
-**Create semester request body:**
+**Create course request body:**
 
 ```json
 {
-  "semesterId": 105,
-  "semesterName": "FA2026",
-  "startDate": "2026-08-16",
-  "endDate": "2026-12-06"
+  "courseId": "CMSC-4321",
+  "semester_offered": "FA",
+  "name": "Software Engineering 4",
+  "description": "Make students suffer through speckits"
+  "sections": [
+    {"sectionId": "CMSC-4321-01"}
+  ]
 }
 ```
 
-**semester success response** (`200` / `201`):
+**courses success response** (`200` / `201`):
 
 ```json
 {
-  "semesterId": 105,
-  "semesterName": "FA2026",
-  "startDate": "2026-08-16",
-  "endDate": "2026-12-06",
-  "createdAt": "2026-07-02T12:00:00.000Z",
-  "updatedAt": "2026-07-02T12:00:00.000Z"
-}
-```
-
-**Error response:** `{ "message": "Human-readable explanation." }` with appropriate HTTP status.  
-**Not found:** `404`.
-**Invalid Request:** `400`.
-**Server/Connection Error:** `500`.
-
-\*Put semester request body:\*\*
-
-```json
-{
-  "semesterId": 105,
-  "semesterName": "SP2026",
-  "startDate": "2026-08-16",
-  "endDate": "2027-04-28"
-}
-```
-
-**semester success response** (`200` / `201`):
-
-```json
-{
-  "semesterId": 105,
-  "semesterName": "SP2026",
-  "startDate": "2026-08-16",
-  "endDate": "2027-04-28",
-  "createdAt": "2026-07-02T12:00:00.000Z",
-  "updatedAt": "2027-01-08T12:28:16.148Z"
+  "courseId": "CMSC-4321",
+  "semester_offered": "FA",
+  "name": "Software Engineering 4",
+  "description": "Make students suffer through speckits"
+  "sections": [
+    {"sectionId": "CMSC-4321-01"}
+  ]
 }
 ```
 
@@ -187,28 +163,28 @@ All endpoints except `GET` require **an administrator-role user** to access/oper
 **Invalid Request:** `400`.
 **Server/Connection Error:** `500`.
 
----
+\*Put course request body:\*\*
 
 ## Screen Requirements
 
-### [View: Semesters] — route name `semesters`
+### [View: Semesters] — route name `courses`
 
-**Single Vue view** (`Semesters.vue`) — no sidebar / main-panel split.
+**Single Vue view** (`Courses.vue`) — no sidebar / main-panel split.
 
-**semesters view (this feature)**
+**courses view (this feature)**
 
-- Heading: **Semesters**
-- Primary action: **+ New semester** opens a `<v-dialog>` with a name `<v-text-field>` and **Create** / **Cancel**. Use class `oc-cta` on **Create** and **+ New semester** (per [ui-style-system.mdc](../../.cursor/rules/ui-style-system.mdc)).
+- Heading: **Courses**
+- Primary action: **+ New course** opens a `<v-dialog>` with a name `<v-text-field>` and **Create** / **Cancel**. Use class `oc-cta` on **Create** and **+ New course** (per [ui-style-system.mdc](../../.cursor/rules/ui-style-system.mdc)).
 - Display interactive search bar named `Find` above any lists
-- Display semesters as rows (e.g. `<v-semester>` or table): each row shows the **semester name** and icon actions:
+- Display courses as rows (e.g. `<v-course>` or table): each row shows the **course name** and icon actions:
   - **Edit** icon — opens rename `<v-dialog>` pre-filled with current name; **Save** / **Cancel**
   - **Delete** icon — opens confirmation `<v-dialog>`
-- Icon-only row actions use `size="small"` and accessible `aria-label`s (**Edit semester**, **Delete semester**).
-- **Empty state:** **"No semesters yet. Create a semester."** when no semesters exist in the database.
-- **Loading state:** skeleton or progress indicator while semesters are fetching.
+- Icon-only row actions use `size="small"` and accessible `aria-label`s (**Edit course**, **Delete course**).
+- **Empty state:** **"No courses yet. Create a course."** when no courses exist in the database.
+- **Loading state:** skeleton or progress indicator while courses are fetching.
 - **Error state:** `<v-alert type="error">` for API failures.
 
-**Implementation note:** one route/view for semesters; semester CRUD dialogs are child components or inline `<v-dialog>` blocks in `Semesters.vue` unless the team splits presentational dialogs later.
+**Implementation note:** one route/view for courses; course CRUD dialogs are child components or inline `<v-dialog>` blocks in `Courses.vue` unless the team splits presentational dialogs later.
 
 **App chrome**
 
