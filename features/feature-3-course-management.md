@@ -194,195 +194,188 @@ All endpoints except `GET` require **an administrator-role user** to access/oper
 
 ## Key Entities
 
-- **semester**: named item.
-- **admin**: authenticated administrator user permitted to access all semester routes.
-- **student**: authenticated student user permitted to only access `GET` semester routes.
+- **course**: named item.
+- **admin**: authenticated administrator user permitted to access all course routes.
+- **student**: authenticated student user permitted to only access `GET` course routes.
 
 ---
 
 ## Data Model Requirements
 
-### `semesters` table
+### `courses` table
 
 | Field          | Type       | Rules                             |
 | -------------- | ---------- | --------------------------------- |
-| `semesterId`   | INTEGER PK | Auto-increment                    |
-| `semesterName` | STRING     | Required; Unique; exactly 6 chars |
-| `startDate`    | DATE       | Required                          |
-| `endDate`      | DATE       | Required;                         |
-| `createdAt`    | DATE       | Sequelize timestamps              |
-| `updatedAt`    | DATE       | Sequelize timestamps              |
-
+| `courseId`        | STRING PK |     Required; Unique; exactly 9 chars|
+| `courseName`      | STRING     | Required  |
+| `semesterOffered` |	ENUM	| Required; `FA`, `WI`, `SP`, `SU` |
+| `offeringFrequency` |	ENUM	| Required; `none`, `everyYear`, `oddYears`, `evenYears` |
+| `description`       | 	TEXT	| Optional |
+| `createdAt`         | 	DATE	| Sequelize timestamps |
+| `updatedAt`         |	DATE | 	Sequelize timestamps |
 ---
 
 ## Acceptance Criteria (Gherkin)
 
-### US-2.1 — Create semesters
+### US-3.1 — Create courses
 
-#### Scenario: Admin creates a new semester
+#### Scenario: Admin creates a new course
 
-- **Given** I am signed in as an admin on the semester view
-- **When** I click **+ New semester**
-- **And** I enter semester name `SP2026`
-- **And** I enter start date `2026-08-18`
-- **And** I enter end date `2026-12-06`
+- **Given** I am signed in as an admin on the course view
+- **When** I click **+ New course**
+- **And** I enter course Id `CMSC-4324`
+- **And** I enter description `XXXXXX`
+- **And** I enter course name `SE4`
+- **And** I add a semester `FA`
 - **And** I confirm the dialog
-- **Then** the API returns `201` with a semester object containing `semesterId`, `semesterName`, `startDate` and `endDate`
-- **And** `SP2026` appears in the semesters view
-- **And** the add-semester dialog closes
+- **Then** the API returns `201` with a course object containing `courseId`, `courseName`, `description` and `semesters`
+- **And** `CMSC-4324` appears in the courses view
+- **And** the add-course dialog closes
 
-#### Scenario: Admin creates a semester with an empty name
+#### Scenario: Admin creates a course with an empty name
 
-- **Given** I am signed in as an admin on the semester view
-- **When** I open the new semester dialog
+- **Given** I am signed in as an admin on the course view
+- **When** I open the new course dialog
 - **And** I leave the name field empty or whitespace only
 - **And** I attempt to confirm
 - **Then** inline validation blocks the request
-- **And** I see the message **"semester name is required."**
+- **And** I see the message **"course name is required."**
 - **And** no API request is sent
 
-#### Scenario: Admin creates a semester with an empty start date
+#### Scenario: Admin creates a course with an empty description
 
-- **Given** I am signed in as an admin on the semester view
-- **When** I open the new semester dialog
-- **And** I leave the start date field empty or whitespace only
+- **Given** I am signed in as an admin on the course view
+- **When** I open the new course dialog
+- **And** I leave the description field empty or whitespace only
 - **And** I attempt to confirm
 - **Then** inline validation blocks the request
-- **And** I see the message **"start date is required."**
+- **And** I see the message **"description is required."**
 - **And** no API request is sent
 
-#### Scenario: Admin creates a semester with an empty end date
+#### Scenario: Admin creates a course without semester
 
-- **Given** I am signed in as an admin on the semester view
-- **When** I open the new semester dialog
-- **And** I leave the end date field empty or whitespace only
+- **Given** I am signed in as an admin on the course view
+- **When** I open the new course dialog
+- **And** I leave the semester empty or whitespace only
 - **And** I attempt to confirm
 - **Then** inline validation blocks the request
-- **And** I see the message **"end date is required."**
+- **And** I see the message **"semester is required."**
 - **And** no API request is sent
 
-#### Scenario: Admin creates a semester with a name that is too long
+#### Scenario: Admin creates a course with a name that is too long
 
-- **Given** I am signed in as an admin on the semester view
-- **When** I submit a semester name longer than 6 characters
-- **Then** the API returns `400` with `{ "message": "semester name must be 100 characters or fewer." }`
+- **Given** I am signed in as an admin on the course view
+- **When** I submit a course id longer than 9 characters
+- **Then** the API returns `400` with `{ "message": "course name must be 9 characters." }`
 - **And** the error is displayed in a `<v-alert type="error">`
 
-#### Scenario: Admin creates a semester with a name that is improperly formatted
+#### Scenario: Admin creates a course with an id that is improperly formatted
 
-- **Given** I am signed in as an admin on the semester view
-- **When** I submit a semester name that does not follow the AAYYYY convention (AA being `FA`, `WI`, `SP`, or `SU`) and YYYY being 4 integers
-- **Then** the API returns `400` with `{ "message": "semester name must be of the form AAYYYY (e.g. SP2026)." }`
-- **And** the error is displayed in a `<v-alert type="error">`
-
-#### Scenario: Admin creates a semester with a start date or end date that is improperly formatted
-
-- **Given** I am signed in as an admin on the semester view
-- **When** I submit a start date or end date that does not follow the YYYY-MM-DD convention
-- **Then** the API returns `400` with `{ "message": "dates must be of the form YYYY-MM-DD." }`
+- **Given** I am signed in as an admin on the course view
+- **When** I submit a course name that does not follow the XXXX-#### convention (XXXX being a 4-letter department title) and #### being 4 integers
+- **Then** the API returns `400` with `{ "message": "course name must be of the form XXXX-#### (e.g. CMSC-4321)." }`
 - **And** the error is displayed in a `<v-alert type="error">`
 
 ---
 
-### US-2.2 — View all semesters
+### US-3.2 — View all courses
 
-#### Scenario: Semester view loads with existing semesters
-
-- **Given** I am signed in as an admin
-- **And** the semesters `SP2026` and `FA2027` exist
-- **When** I navigate to the semesters view
-- **Then** both semesters appear in the semesters view
-- **And** each row shows the semester name with edit and delete icon actions
-
-#### Scenario: No semesters exist
+#### Scenario: Course view loads with existing semesters
 
 - **Given** I am signed in as an admin
-- **And** no semesters exist
-- **When** I navigate to the semester view
-- **Then** I see **"No semesters yet. Create a semester."**
+- **And** the courses `CMSC-4321` and `ARTS-3214` exist
+- **When** I navigate to the courses view
+- **Then** both courses appear in the courses view
+- **And** each row shows the course name with edit and delete icon actions
+
+#### Scenario: No courses exist
+
+- **Given** I am signed in as an admin
+- **And** no courses exist
+- **When** I navigate to the course view
+- **Then** I see **"No courses yet. Create a course."**
 
 ---
 
-### US-2.3 — Manage semester rows
+### US-3.3 — Manage course rows
 
-#### Scenario: semester rows show edit and delete actions
+#### Scenario: course rows show edit and delete actions
 
 - **Given** I am signed in as an admin
-- **And** the semester `SP2026` exists
-- **When** I view the semesters view
-- **Then** the `SP2026` row shows an **Edit semester** icon action
-- **And** the `SP2026` row shows a **Delete semester** icon action
+- **And** the course `CMSC-4321` exists
+- **When** I view the courses view
+- **Then** the `CMSC-4321` row shows an **Edit course** icon action
+- **And** the `CMSC-4321` row shows a **Delete course** icon action
 
 ---
 
-### US-2.4 — Edit and delete semesters
+### US-3.4 — Edit and delete courses
 
-#### Scenario: Admin edits a semester
+#### Scenario: Admin edits a course
 
 - **Given** I am signed in as an admin
-- **And** the semester `SP2026` exists
-- **When** I click the edit icon on the `SP2026` row
-- **And** I change the name to `FA2027` in the rename dialog
-- **And** I change the end date to `2027-04-28`
+- **And** the course `CMSC-4321` exists
+- **When** I click the edit icon on the `CMSC-4321` row
+- **And** I change the name to `ARTS-4321` in the rename dialog
 - **And** I confirm
 - **Then** the API returns `200` with the updated semester object
-- **And** the semesters view shows `FA2027` instead of `SP2026`
+- **And** the courses view shows `ARTS-4321` instead of `CMSC-4321`
 
-#### Scenario: Admin deletes a semester
+#### Scenario: Admin deletes a course
 
 - **Given** I am signed in as an admin
-- **And** the semester `SP2026` exists
-- **When** I click the delete icon on the `SP2026` row
+- **And** the course `CMSC-4321` exists
+- **When** I click the delete icon on the `CMSC-4321` row
 - **And** I confirm the delete dialog
 - **Then** the API returns `204`
-- **And** the semester is removed from the semesters view
+- **And** the course is removed from the courses view
 
 ---
 
-### US-2.5 — Search Semesters
+### US-3.5 — Search courses
 
-#### Scenario: Search bar appears with semesters
+#### Scenario: Search bar appears with courses
 
 - **Given** I am signed in as an admin
-- **And** the semester `SP2026` exists
-- **When** I view the semesters view
-- **Then** I see a search bar named `Find` above the semesters list
+- **And** the course `CMSC-4321` exists
+- **When** I view the courses view
+- **Then** I see a search bar named `Find` above the courses list
   returns
 
-#### Scenario: No search bar appears with no semesters
+#### Scenario: No search bar appears with no courses
 
 - **Given** I am signed in as an admin
-- **And** the semester `SP2026` exists
-- **When** I view the semesters view
-- **Then** I see **"No semesters yet. Create a semester."**
+- **And** the course `CMSC-4321` exists
+- **When** I view the courses view
+- **Then** I see **"No courses yet. Create a course."**
 - **And** I see no search bars in the view
 
-#### Scenario: Admin types in semester search bar
+#### Scenario: Admin types in course search bar
 
 - **Given** I am signed in as an admin
-- **And** I am viewing the semesters view
-- **And** the semesters `SP2026`, `FA2026`, `SP2027`, and `FA2027` exist
-- **When** I type `SP20` in the `Find` search bar
-- **Then** the semester list updates to contain only the semesters `SP2026` and `SP2027`
+- **And** I am viewing the courses view
+- **And** the courses `CMSC-4321`, `ARTS-3214`, `BIBL-3421`, and `CMSC-1324` exist
+- **When** I type `CMSC` in the `Find` search bar
+- **Then** the course list updates to contain only the courses `CMSC-4321` and `CMSC-1324`
 
-#### Scenario: Admin types in semester search bar 2
+#### Scenario: Admin types in course search bar 2
 
 - **Given** I am signed in as an admin
-- **And** I am viewing the semesters view
-- **And** the semesters `SP2026`, `FA2026`, `SP2027`, and `FA2027` exist
-- **When** I type `2027` in the `Find` search bar
-- **Then** the semester list updates to contain only the semesters `SP2027` and `FA2027`
+- **And** I am viewing the courses view
+- **And** the courses `CMSC-4321`, `ARTS-3214`, `BIBL-4321`, and `CMSC-1324` exist
+- **When** I type `4321` in the `Find` search bar
+- **Then** the course list updates to contain only the courses `CMSC-4321` and `BIBL-4321`
 
-#### Scenario: Unauthenticated user accesses the semesters view
+#### Scenario: Unauthenticated user accesses the courses view
 
 - **Given** I have no session in `localStorage`
-- **When** I navigate to the semesters view
+- **When** I navigate to the courses view
 - **Then** I am redirected to the login page
 
-#### Scenario: Unauthenticated API request to semesters
+#### Scenario: Unauthenticated API request to courses
 
 - **Given** I have no valid session token
-- **When** I request `GET /courses/semesters`
+- **When** I request `GET /courses`
 - **Then** the API returns `401` with an unauthorized message
 
 ---
@@ -391,24 +384,23 @@ All endpoints except `GET` require **an administrator-role user** to access/oper
 
 | Story  | Scenario                                                                            | Test file                                                            | Test name                                                                             |
 | ------ | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| US-2.1 | Admin creates a new semester                                                        | `backend/tests/semesters.test.js`, `frontend/tests/Semesters.test.js` | `Admin creates a new semester`                                                        |
-| US-2.1 | Admin creates a semester with an empty name                                         | `frontend/tests/Semesters.test.js`                                    | `Admin creates a semester with an empty name`                                         |
-| US-2.1 | Admin creates a semester with an empty start date                                   | `frontend/tests/Semesters.test.js`                                    | `Admin creates a semester with an empty start date`                                   |
-| US-2.1 | Admin creates a semester with an empty end date                                     | `frontend/tests/Semesters.test.js`                                    | `Admin creates a semester with an empty end date`                                     |
-| US-2.1 | Admin creates a semester with a name that is too long                               | `backend/tests/semesters.test.js`, `frontend/tests/Semesters.test.js` | `Admin creates a semester with a name that is too long`                               |
-| US-2.1 | Admin creates a semester with a name that is improperly formatted                   | `backend/tests/semesters.test.js`, `frontend/tests/Semesters.test.js` | `Admin creates a semester with a name that is improperly formatted`                   |
-| US-2.1 | Admin creates a semester with a start date or end date that is improperly formatted | `backend/tests/semesters.test.js`, `frontend/tests/Semesters.test.js` | `Admin creates a semester with a start date or end date that is improperly formatted` |
-| US-2.2 | Semesters view loads with existing semesters                                             | `backend/tests/semesters.test.js`, `frontend/tests/Semesters.test.js` | `Semesters view loads with existing semesters`                                             |
-| US-2.2 | No semesters exist                                                                  | `frontend/tests/Semesters.test.js`                                    | `No semesters exist`                                                                  |
-| US-2.3 | semester rows show edit and delete actions                                          | `frontend/tests/Semesters.test.js`                                    | `semester rows show edit and delete actions`                                          |
-| US-2.4 | Admin edits a semester                                                              | `backend/tests/semesters.test.js`, `frontend/tests/Semesters.test.js` | `Admin edits a semester`                                                              |
-| US-2.4 | Admin deletes a semester                                                            | `backend/tests/semesters.test.js`, `frontend/tests/Semesters.test.js` | `Admin deletes a semester`                                                            |
-| US-2.5 | Search bar appears with semesters                                                   | `frontend/tests/Semesters.test.js`                                    | `Search bar appears with semesters`                                                   |
-| US-2.5 | No search bar appears with no semesters                                             | `frontend/tests/Semesters.test.js`                                    | `No search bar appears with no semesters`                                             |
-| US-2.5 | Admin types in semester search bar                                                  | `frontend/tests/Semesters.test.js`                                    | `Admin types in semester search bar`                                                  |
-| US-2.5 | Admin types in semester search bar 2                                                | `frontend/tests/Semesters.test.js`                                    | `Admin types in semester search bar 2`                                                |
-| US-2.5 | Unauthenticated user accesses the semesters view                                         | `frontend/tests/Semesters.test.js`                                    | `Unauthenticated user accesses the semesters view`                                         |
-| US-2.5 | Unauthenticated API request to semesters                                            | `backend/tests/semesters.test.js`                                    | `Unauthenticated API request to semesters`                                            |
+| US-3.1 | Admin creates a new course                                                        | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Admin creates a new course`                                                        |
+| US-3.1 | Admin creates a course with an empty name                                         | `frontend/tests/Courses.test.js`                                    | `Admin creates a course with an empty name`                                         |
+| US-3.1 | Admin creates a course with an empty id                                   | `frontend/tests/Courses.test.js`                                    | `Admin creates a course with an empty id`                                   |
+| US-3.1 | Admin creates a course with an empty description                                     | `frontend/tests/Courses.test.js`                                    | `Admin creates a course with an empty description`                                     |
+| US-3.1 | Admin creates a course with an id that is too long                               | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Admin creates a course with an id that is too long`                               |
+| US-3.1 | Admin creates a course with an id that is improperly formatted                   | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Admin creates a semester with a name that is improperly formatted`                   |
+| US-3.2 | Courses view loads with existing courses                                             | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Courses view loads with existing courses`                                             |
+| US-3.2 | No courses exist                                                                  | `frontend/tests/Courses.test.js`                                    | `No courses exist`                                                                  |
+| US-3.3 | course rows show edit and delete actions                                          | `frontend/tests/Courses.test.js`                                    | `course rows show edit and delete actions`                                          |
+| US-3.4 | Admin edits a course                                                              | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Admin edits a course`                                                              |
+| US-3.4 | Admin deletes a course                                                            | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Admin deletes a course`                                                            |
+| US-3.5 | Search bar appears with courses                                                   | `frontend/tests/Courses.test.js`                                    | `Search bar appears with courses`                                                   |
+| US-3.5 | No search bar appears with no courses                                             | `frontend/tests/Courses.test.js`                                    | `No search bar appears with no courses`                                             |
+| US-3.5 | Admin types in course search bar                                                  | `frontend/tests/Courses.test.js`                                    | `Admin types in course search bar`                                                  |
+| US-3.5 | Admin types in course search bar 2                                                | `frontend/tests/Courses.test.js`                                    | `Admin types in course search bar 2`                                                |
+| US-3.5 | Unauthenticated user accesses the courses view                                         | `frontend/tests/Courses.test.js`                                    | `Unauthenticated user accesses the courses view`                                         |
+| US-3.5 | Unauthenticated API request to semesters                                            | `backend/tests/courses.test.js`                                    | `Unauthenticated API request to courses`                                            |
 
 ---
 
@@ -417,7 +409,7 @@ All endpoints except `GET` require **an administrator-role user** to access/oper
 Copy when asking Cursor to implement this feature (`@` this file):
 
 ```text
-Implement Feature 2 from @features/feature-2-semester-management.md on branch `feature/2-semester-management`.
+Implement Feature 3 from @features/feature-3-course-management.md on branch `feature/3-course-management`.
 
 Follow layer order in @features/framework.md (models → routes → backend tests → frontend → frontend tests).
 Map every Gherkin scenario in the Test Coverage Map; run `npm test` before finishing.
@@ -444,17 +436,23 @@ Do not implement behavior not in this spec.
 
 ## Out of Scope
 
-- Todo items (see `features/feature-3-todo-semester-item-management.md`)
+- Faculty items (see `features/feature-4-faculty-management.md`)
 - `MenuBar` beyond basic sign-out (full nav deferred if not needed)
 - Drag-and-drop semester reordering
-- Sharing semesters with other users
-- `POST`/`GET`/`PUT`/`DELETE` anywhere that's not `/courses/semesters` or `/courses/semesters/:semesterId`
+- Sharing courses with other users
+- `POST`/`GET`/`PUT`/`DELETE` anywhere that's not `/courses/courses` or `/courses/:courseId`
 
 ---
 
-## Delivered to Feature 3
+## Delivered to Feature 5
 
 The following are intentionally deferred to the next feature spec:
 
 - `courses` table and associations
 - `sections` table and associations
+
+## Delivered to Feature 7
+
+The following are intentionally deferred to the next feature spec:
+
+- `courses` table and associations
