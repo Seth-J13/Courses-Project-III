@@ -1,8 +1,7 @@
 # Feature: Semester Management
-
 **Feature ID:** 2
 **Branch pattern:** `feature/2-semester-management`
-**Status:** Draft
+**Status:** Ready
 **Created:** 2026-09-21
 **Input:** signed in admin users CRUD semesters.
 **Depends on:** [Feature 1 -- User Auth & Sessions](feature-1-user-auth-session-management.md)
@@ -238,8 +237,6 @@ Non-admin user access to `POST`/`PUT`/`DELETE` returns `403`. Authenticated stud
 | `semesterName` | STRING     | Required; Unique; exactly 6 chars |
 | `startDate`    | DATE       | Required                          |
 | `endDate`      | DATE       | Required;                         |
-| `createdAt`    | DATE       | Sequelize timestamps              |
-| `updatedAt`    | DATE       | Sequelize timestamps              |
 
 ---
 

@@ -1,12 +1,8 @@
 # Feature: User Auth & Session Management
-
 **Feature ID:** 1
-
 **Branch pattern:** `Feature-1-User-Auth`
-
 **Status:** Ready
 **Created:** 2026-09-23
-
 **Input:** Can log in, stay signed in, and log out.
 
 ---
@@ -56,11 +52,7 @@
 
 ---
 
-
-
 ## Requirements
-
-
 
 ### Functional Requirements
 
@@ -74,16 +66,12 @@
 
 ---
 
-
-
 ## Assumptions
 
-- The courses app shell (Vue 3 frontend, Express API mounted at `/coursesapi`, MySQL) already exists in this repo.
+- The courses app shell (Vue 3 frontend, Express API mounted at `/courses`, MySQL) already exists in this repo.
 - Login identifier is **email**, matching the running courses UI and `users.email`.
 
 ---
-
-
 
 ## Edge Cases
 
@@ -94,8 +82,6 @@
 
 ---
 
-
-
 ## Success Criteria
 
 - **SC-001**: Every Gherkin scenario has at least one automated test before merge.
@@ -104,8 +90,6 @@
 - **SC-004**: A valid session survives courses navigation and page refresh until logout or expiry.
 
 ---
-
-
 
 ## Data Ownership & Isolation
 
@@ -121,10 +105,16 @@ Feature 1 starts and ends the caller’s own session. It does not return another
 | **UI scope**          | MenuBar shows the signed-in user’s initials, name, and email from `localStorage` `user`.            |
 | **Later features**    | Course APIs must never expose another user’s private courses. Cross-user → `404` (not `403`).       |
 
+## API Requirements
+| Method   | Endpoint                         | Auth                | Purpose               |
+| -------- | -------------------------------- | ------------------- | --------------------- |
+| `GET`    | `/courses/users`                 | Yes (admin)         | Fetch all users       |
+| `GET`    | `/courses/sessions`              | Yes (admin)         | Fetch all sessions    |
+| `POST`   | `/courses/users`                 | Yes, admin          | Create a new user     |
+| `POST`    | `/courses/sessions`             | Yes, admin          | Create a new session  |
+| `DELETE` | `/courses/sessions/:sessionId`   | Yes, admin          | Delete a session      |
 
 ---
-
-
 
 ## Key Entities
 
@@ -162,11 +152,7 @@ Quoted messages that tests must match:
 
 ---
 
-
-
 ## Screen Requirements
-
-
 
 ### [View: Login] — route name `login` (`/`)
 
@@ -177,8 +163,6 @@ Quoted messages that tests must match:
 - **Error:** shows the API `message` (including **"User not found!"** and **"Invalid password!"**)
 - **Success:** store payload in `localStorage` `user`, snackbar **"Login successful!"**, navigate to route `courses`
 
-
-
 ### App chrome — `MenuBar`
 
 - **Courses** button (stays signed in; navigates to `courses`)
@@ -187,25 +171,19 @@ Quoted messages that tests must match:
 
 ---
 
-
-
 ## Data Model Requirements
 
 This feature **uses** `users` (Feature 1) and **owns** `sessions`.
 
 ### `users` table (read for login; not created here)
-
-
-| Field       | Type       | Rules                                              |
-| ----------- | ---------- | -------------------------------------------------- |
-| `id`        | INTEGER PK | Auto-increment                                     |
-| `firstName` | STRING     | Required                                           |
-| `lastName`  | STRING     | Required                                           |
-| `email`     | STRING     | Required, unique; login identifier                 |
-| `password`  | BLOB       | Required; salted hash only — never store plaintext |
-| `salt`      | BLOB       | Required; used to hash the password                |
-
-
+| Field         | Type       | Rules                                              |
+| ------------- | ---------- | -------------------------------------------------- |
+| `universityId`| INTEGER PK | NOT NULL, UNIQUE                                   |
+| `firstName`   | STRING     | Required                                           |
+| `lastName`    | STRING     | Required                                           |
+| `email`       | STRING     | Required, unique; login identifier                 |
+| `password`    | BLOB       | Required; salted hash only — never store plaintext |
+| `salt`        | BLOB       | Required; used to hash the password                |
 
 
 ### `sessions` table
@@ -213,10 +191,10 @@ This feature **uses** `users` (Feature 1) and **owns** `sessions`.
 
 | Field            | Type       | Rules                           |
 | ---------------- | ---------- | ------------------------------- |
-| `id`             | INTEGER PK | Auto-increment                  |
+| `sessionId`             | INTEGER PK | Auto-increment                  |
 | `email`          | STRING     | Required                        |
 | `expirationDate` | DATE       | Required; 24 hours from login   |
-| `userId`         | INTEGER FK | Required; references `users.id` |
+| `universityId`   | INTEGER FK | Required; references `users.universityId` |
 
 
 The client `token` is the encrypted session `id`. It is not stored as a separate column.
@@ -228,33 +206,24 @@ The client `token` is the encrypted session `id`. It is not stored as a separate
 
 ---
 
-
-
 ## Acceptance Criteria (Gherkin)
-
-
-
 ### US-1.1 — Sign in
-
-
 
 #### Scenario: Admin signs in
 
-- Given I am on the Login page
-- And an account exists with role `admin`
-- When I enter that email and password and press Login
-- Then I am signed in
-- And I land on the Semesters page (`/semesters`)
+- **Given** I am on the Login page
+- **And** an account exists with role `admin`
+- **When** I enter that email and password and press Login
+- **Then** I am signed in
+- **And** I land on the Semesters page (`/semesters`)
 
-Scenario: Student signs in
+#### Scenario: Student signs in
 
-- Given I am on the Login page
-- And an account exists with role `student`
-- When I enter that email and password and press Login
-- Then I am signed in
-- And I land on the Enrollments page (`/enrollments`)
-
-
+- **Given** I am on the Login page
+- **And** an account exists with role `student`
+- **When** I enter that email and password and press Login
+- **Then** I am signed in
+- **And** I land on the Enrollments page (`/enrollments`)
 
 #### Scenario: Bad email
 
@@ -265,8 +234,6 @@ Scenario: Student signs in
 - **And** I remain on Login
 - **And** I am not signed in
 
-
-
 #### Scenario: Bad password
 
 - **Given** I am on the Login page
@@ -276,11 +243,7 @@ Scenario: Student signs in
 - **And** I remain on Login
 - **And** I am not signed in
 
-
-
 ### US-1.2 — Stay signed in across page loads
-
-
 
 #### Scenario: Changing pages
 
@@ -289,8 +252,6 @@ Scenario: Student signs in
 - **Then** I remain logged in
 - **And** I am on the Semesters page
 
-
-
 #### Scenario: Refresh pages
 
 - **Given** I have a valid session
@@ -298,12 +259,7 @@ Scenario: Student signs in
 - **Then** I remain logged in
 - **And** I do not have to sign in again
 
-
-
 ### US-1.3 — Sign out
-
-
-
 #### Scenario: Logging out
 
 - **Given** I have a valid session
@@ -312,11 +268,7 @@ Scenario: Student signs in
 - **Then** I am logged out of the user session
 - **And** I am redirected to the Login page
 
-
-
 ### US-1.4 — Create account
-
-
 
 #### Scenario: Creating new account
 
@@ -329,8 +281,6 @@ Scenario: Student signs in
 
 ---
 
-
-
 ## Test Coverage Map
 
 Each scenario above must map to at least one automated test.
@@ -339,10 +289,12 @@ Each scenario above must map to at least one automated test.
 | Story  | Scenario             | Test file                      | Test name                    |
 | ------ | -------------------- | ------------------------------ | ---------------------------- |
 | US-1.1 | Admin signs in       | `frontend/tests/Login.test.js` | `it("Admin signs in")`       |
-| US-1.1 | Srudent signs in     | `frontend/tests/Login.test.js` | `it("Student signs in")`     |
+| US-1.1 | Student signs in     | `frontend/tests/Login.test.js` | `it("Student signs in")`     |
 | US-1.1 | Bad email            | `backend/tests/auth.test.js`   | `it("Bad email")`            |
 | US-1.1 | Bad password         | `backend/tests/auth.test.js`   | `it("Bad password")`         |
+| US-1.2 | Changing pages       | `frontend/tests/Login.test.js` | `it("Changing Pages)`        |
 | US-1.2 | Refresh pages        | `frontend/tests/Login.test.js` | `it("Refresh pages")`        |
+| US-1.3 | Logging out          | `backend/tests/auth.test.js`   | `it("Logging out)`           |
 | US-1.4 | Creating new account | `frontend/tests/Login.test.js` | `it("Creating new account")` |
 
 
@@ -360,8 +312,6 @@ Each scenario above must map to at least one automated test.
 - [ ] `features/reference/behavior.md` updated (if product rules changed)
 
 ---
-
-
 
 ## Out of Scope
 

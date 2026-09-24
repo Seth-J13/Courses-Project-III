@@ -1,8 +1,8 @@
-# Feature: User Authentication & Session Management
+# Feature: Faculty Management
 
-**Feature ID:** {Number}
-**Branch pattern:** `feature/#-short-name`
-**Status:** {Draft | Ready | Shipped}
+**Feature ID:** 4
+**Branch pattern:** `feature/4-faculty-management`
+**Status:** Ready
 **Created:** 2026-09-22
 **Input:** Manage faculty
 
@@ -80,9 +80,9 @@
 ## Success Criteria
 
 - **SC-001**: Every Gherkin scenario has at least one automated test before merge
-- **SC-002**: Admin can add new faculty with the correct data to the `faculty-table`
-- **SC-003**: Admin can edit any faculty data and update the `faculty-table`
-- **SC-004**: Admin can delete any faculty from the `faculty-table`
+- **SC-002**: Admin can add new faculty with the correct data to the `faculty` table 
+- **SC-003**: Admin can edit any faculty data and update the `faculty` table
+- **SC-004**: Admin can delete any faculty from the `faculty` table
 - **SC-005**: Students can not view faculty vue web page
 - **SC-006**: Students can not add, edit, or delete faculty
 - **SC-007**: npm test passes for `faculty.test.js`
@@ -94,11 +94,11 @@
 
 | Rule | Requirement |
 |------|-------------|
-| **Read scope** | `GET /faculty` returns only lists where `universityId = req.universityId`. |
-| **Write scope** | `PUT` and `DELETE` apply only when the faculty row matches both `universityId` and `req.universityId`. |
+| **Read scope** | `GET /faculty` returns only lists where `universityId = req.user.universityId`. |
+| **Write scope** | `PUT` and `DELETE` apply only when the faculty row matches both `universityId` and `req.user.universityId`. |
 | **Cross-user access** | Only a admin can view faculty, if user tries to view and `user.role != admin`, respond with `404` — never `403` (do not confirm the list exists). |
 | **UI scope** | The faculty view shows only faculty returned by `GET /faculty` for the signed-in user. |
-| **Implementation** | Use a shared helper (e.g. `getAccessibleListOrNull(req, listId)`) in `app/authorization/` — do not duplicate scope logic in controllers. |
+| **Implementation** | Use a shared helper (e.g. `getAccessibleFacultyOrNull(req, facultyId)`) in `app/authorization/` — do not duplicate scope logic in controllers. |
 
 ---
 
@@ -106,10 +106,10 @@
 
 | Method | Endpoint | Auth | Purpose |
 |--------|----------|------|---------|
-| `GET` | `/faculty` | Yes | Retrieve all faculty |
-| `POST` | `/faculty` | Yes | Create a new faculty |
-| `PUT` | `/faculty/:facultyId` | Yes | Update a faculty with specified facultyId |
-| `DELETE` | `/faculty/:facultyId` | Yes | Delete a faculty with specified facultyId |
+| `GET` | `/courses/faculty` | Yes | Retrieve all faculty |
+| `POST` | `/courses/faculty` | Yes | Create a new faculty |
+| `PUT` | `/courses/faculty/:facultyId` | Yes | Update a faculty with specified facultyId |
+| `DELETE` | `/courses/faculty/:facultyId` | Yes | Delete a faculty with specified facultyId |
 
 
 **Create/Update faculty request body:**
@@ -122,7 +122,7 @@
 {
   "universityId": 1112233,
   "fname": "John",
-  "lname": "Doe,
+  "lname": "Doe",
   "dept":"Computer Science",
   "createdAt": "2026-07-02T12:00:00.000Z",
   "updatedAt": "2026-07-02T12:00:00.000Z"
@@ -136,29 +136,29 @@
 
 ## Screen Requirements
 
-### [View: Application Dashboard] — route name `Faculty`
-(`Dashboard.vue`) — no sidebar / main-panel split.
+### [View: Faculty] — route name `Faculty`
+(`Faculty.vue`) — no sidebar / main-panel split.
 
 **Lists view (this feature)**
 *   Heading: **Faculty**
-*   Primary action: **+ New Faculty** opens a `<v-dialog>` with a name `<v-text-field>` and **Create** / **Cancel**. Use class `oc-cta` on **Create** and **+ New List** (per [ui-style-system.mdc](../../.cursor/rules/ui-style-system.mdc)).
+*   Primary action: **+ New Faculty** opens a `<v-dialog>` with a fisrt name, last name, department, all `<v-text-field>`s and **Create** / **Cancel**. Use class `oc-cta` on **Create** and **+ New List** (per [ui-style-system.mdc](../../.cursor/rules/ui-style-system.mdc)).
 *   Display owned lists as rows (e.g. `<v-list>` or table): each row shows the **Faculty fname, lname, dept** and icon actions:
     *   **Edit** icon — opens rename `<v-dialog>` pre-filled with current fname, lname, and dept; **Save** / **Cancel**
     *   **Delete** icon — opens confirmation `<v-dialog>`
-    *   *(Feature 5 handles which faculty own which course sections)*
 *   Icon-only row actions use `size="small"` and accessible `aria-label`s (**Edit Faculty**, **Delete Faculty**).
-*   **Empty state:** **"No faculty yet. Add your faculty member."** when the admin has zero faculty.
+*   **Empty state:** **"No faculty yet. Add your faculty member."** when there are zero faculty.
 *   **Loading state:** skeleton or progress indicator while faculty are fetching.
 *   **Error state:** `<v-alert type="error">` for API failures.
 
-**Implementation note:** one route/view for faculty; faculty CRUD dialogs are child components or inline `<v-dialog>` blocks in `Dashboard.vue` unless the team splits presentational dialogs later.
+**Implementation note:** one route/view for faculty; faculty CRUD dialogs are child components or inline `<v-dialog>` blocks in `Faculty.vue` unless the team splits presentational dialogs later.
 
 ---
 
 ## Key Entities
 
-- **User**: registered account (name, email, username, role); role must be admin to view page
+- **Admin**: registered user with admin (name, email, username, role); valid session
 - **Session**: server-side record tying a JWT token to a user; expires after 24 hours.
+- **Faculty**: data entries in the `faculty` table
 
 ---
 
@@ -168,10 +168,10 @@
 
 | Field          | Type        | Rules                              |
 | -------------- | ----------- | ---------------------------------- |
-| `universityId` | INTEGER PK  | NOT NULL, POSITIVE INT, MINIMUM 7 DIGITS, UNIQUE, Required |
+| `facultyId`    | INTEGER PK  | NOT NULL, POSITIVE INT, MINIMUM 7 DIGITS, UNIQUE, Required |
 | `fName`        | STRING      | Required                           |
 | `lName`        | STRING      | Required                           |
-| `dept`         | STRING(255) | Required         |
+| `dept`         | STRING(255) | Required                           |
 
 ---
 
@@ -238,7 +238,7 @@
 
 - **Given** I am a admin on the faculty page
 - **When** I have clicked the `Add Faculty` button
-- **Then** the API returns `200` with a payload containing `universityId`, `fname`, `lname`, and `dept`
+- **Then** the API returns `200` with a payload containing `facultyId`, `fname`, `lname`, and `dept`
 - **And** the add modal closes and the faculty list refreshes to show all faculty
 
 #### Scenario: Admin clicks the `Add Faculty` button with incorrect inputted values

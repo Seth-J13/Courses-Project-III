@@ -2,7 +2,7 @@
 
 **Feature ID:** 5
 **Branch pattern:** `feature/5-Section-Management`
-**Status:** Draft
+**Status:** Ready
 **Created:** 2026-09-23
 **Input:** Admins can create, edit, list, filter, and remove course sections. Students cannot use section management.
 **Depends on:** Feature 1 user authentication and roles (session and `role` must already exist)
@@ -63,7 +63,7 @@
 ### Functional Requirements
 
 - **FR-001**: Admins can create a section with `courseId`, `dayOfWeek`, `roomNum`, `timeStart`, `timeEnd`, and `facultyId`.
-- **FR-002**: `sectionId` MUST follow the format `CourseId-##` for example `CS101-01`.
+- **FR-002**: `sectionId` MUST follow the format `AAAA-####-##` for example `CMSC-1111-01`.
 - **FR-003**: Admins can edit any section fields except `sectionId`.
 - **FR-004**: Admins can delete any section.
 - **FR-005**: Listing sections must show course, faculty, time, and room.
@@ -74,33 +74,28 @@
 
 ---
 
-
-
 ## Assumptions
 
 - Courses and faculty already exist and are managed outside this feature.
 - Feature 1 already authenticates users, stores a session token, and returns `role` (`admin` or `student`).
 - This feature checks that session. It does not implement login, logout, or registration.
 - Section management is only for admins. Students enroll through a later enrollment feature.
-- The app framework exists (`/api` mount, Bearer token, Vue router).
+- The app framework exists (`/courses` mount, Bearer token, Vue router).
 
 ---
-
-
 
 ## Edge Cases
 
 - Creating or updating a section with a `courseId` that does not exist returns **400** the message would be "Course does not exist".
 - Creating or updating a section with a `facultyId` that does not exist returns **400** the message would be "Faculty does not exist".
 - `timeStart` that is not earlier than `timeEnd` returns **400** the message would be "Time start must be less than time end".
-- A missing `courseId`, `dayOfWeek`, `roomNum`, `timeStart`, `timeEnd`, or `facultyId` returns **400** with one message for that field "{field} is required. for example the message could be "courseId is required".
+- A missing `courseId` or `dayOfWeek` returns **400** with one message for that field "{field} is required. for example the message could be "courseId is required".
 - A faculty member already scheduled at an overlapping time on the same day returns **400** the message would be "Faculty is already taken for this time".
 - A room already scheduled at an overlapping time on the same day returns **400** the message would be "Room is already taken for this time".
 - A signed-in non-admin like student calling any section endpoint returns **403** the message would be "Access denied".
 - Deleting or updating a `sectionId` that does not exist returns **400** the message would be "Section does not exist".
 
 ---
-
 
 
 ## Success Criteria
@@ -127,7 +122,7 @@ Feature 5 owns `sections`. It reads `courses` and `faculty` to validate foreign 
 | **Who may call**   | `role = admin` after a valid Bearer session                                                                        |
 | **Read scope**     | Admins may list and filter every section. Students may not.                                                        |
 | **Write scope**    | Admins may create, update, and delete any section. Students may not.                                               |
-| **Create scope**   | New rows are not owned by the caller. `sectionId` is generated as `CourseId-##`.                                   |
+| **Create scope**   | New rows are not owned by the caller. `sectionId` is generated as `AAAA-####-##`.                                   |
 | **Student access** | Signed-in student → **403** `{ "message": "Access denied." }`                                                      |
 | **No session**     | Missing or invalid token → **401** `{ "message": "Unauthorized!" }`                                                |
 | **UI scope**       | Section Management route is admin-only. Students and signed-out users never see the management form.               |
@@ -135,8 +130,6 @@ Feature 5 owns `sections`. It reads `courses` and `faculty` to validate foreign 
 
 
 ---
-
-
 
 ## Key Entities
 
@@ -147,19 +140,17 @@ Feature 5 owns `sections`. It reads `courses` and `faculty` to validate foreign 
 
 ---
 
-
-
 ## API Requirements
 
-All routes mount under `/api`. Auth is `Authorization: Bearer <token>` from Feature 1. Every route below requires an admin session.
+All routes mount under `/courses`. Auth is `Authorization: Bearer <token>` from Feature 1. Every route below requires an admin session.
 
 
 | Method   | Endpoint                   | Auth  | Purpose                         |
 | -------- | -------------------------- | ----- | ------------------------------- |
-| `GET`    | `/api/sections`            | Admin | List sections; optional filters |
-| `POST`   | `/api/sections`            | Admin | Create a section                |
-| `PUT`    | `/api/sections/:sectionId` | Admin | Update a section                |
-| `DELETE` | `/api/sections/:sectionId` | Admin | Delete a section                |
+| `GET`    | `/courses/sections`            | Admin | List sections; optional filters |
+| `POST`   | `/courses/sections`            | Admin | Create a section                |
+| `PUT`    | `/courses/sections/:sectionId` | Admin | Update a section                |
+| `DELETE` | `/courses/sections/:sectionId` | Admin | Delete a section                |
 
 
 **List query (all optional):** `courseId`, `facultyId`, `dayOfWeek`, `roomNum`, `timeStart`, `timeEnd`.  
@@ -169,12 +160,12 @@ Only sections that match every provided filter are returned. No filters returns 
 
 ```json
 {
-  "courseId": "CS101",
+  "courseId": "CMSC-1111",
   "dayOfWeek": "Monday",
   "roomNum": "A12",
   "timeStart": "09:00:00",
   "timeEnd": "10:15:00",
-  "facultyId": 3
+  "facultyId": 1112233
 }
 ```
 
@@ -184,13 +175,13 @@ Update uses the same body. `sectionId` is not accepted in the body.
 
 ```json
 {
-  "sectionId": "CS101-01",
-  "courseId": "CS101",
+  "sectionId": "CMSC-1111-01",
+  "courseId": "CMSC-1111",
   "dayOfWeek": "Monday",
   "roomNum": "A12",
   "timeStart": "09:00:00",
   "timeEnd": "10:15:00",
-  "facultyId": 3
+  "facultyId": 1112233
 }
 ```
 
@@ -215,16 +206,11 @@ The next `##` is the next unused two-digit number for that `courseId` (`01`, `02
 | `401`  | No token or invalid session               | `Unauthorized!`                                                                                        |
 | `403`  | Signed-in user is not `admin`             | `Access denied.`                                                                                       |
 
-
 Overlap means the time ranges share any minute on the same `dayOfWeek`. A section does not overlap itself on update.
 
 ---
 
-
-
 ## Screen Requirements
-
-
 
 ### View: Section Management — route name `sectionManagement`
 
@@ -256,8 +242,6 @@ Overlap means the time ranges share any minute on the same `dayOfWeek`. A sectio
 
 ---
 
-
-
 ## Data Model Requirements
 
 This feature **owns** `sections`. It **reads** `courses`, `faculty`, and the Feature 1 `users` / `sessions` tables. It does not store passwords, tokens, or login identifiers on a section.
@@ -267,16 +251,13 @@ This feature **owns** `sections`. It **reads** `courses`, `faculty`, and the Fea
 
 | Field       | Type       | Rules                                              |
 | ----------- | ---------- | -------------------------------------------------- |
-| `sectionId` | STRING PK  | Required; not auto-increment; format `CourseId-##` |
+| `sectionId` | STRING PK  | Required; not auto-increment; format `AAAA-####-##` |
 | `courseId`  | STRING FK  | Required; references `courses.courseId`            |
 | `dayOfWeek` | STRING     | Required                                           |
-| `roomNum`   | STRING     | Required                                           |
+| `roomNum`   | STRING     | Required; Max char is 7                            |
 | `timeStart` | TIME       | Required; must be earlier than `timeEnd`           |
 | `timeEnd`   | TIME       | Required                                           |
 | `facultyId` | INTEGER FK | Required; references `faculty.facultyId`           |
-
-
-
 
 ### Associations
 
@@ -287,26 +268,20 @@ This feature **owns** `sections`. It **reads** `courses`, `faculty`, and the Fea
 
 ---
 
-
-
 ## Acceptance Criteria (Gherkin)
 
-
-
 ### US-5.1 — Add Section
-
-
 
 #### Scenario: Admin creates a valid section
 
 - **Given** I am signed in as an admin
-- **And** course `CS101` exists
-- **And** faculty `3` exists
+- **And** course `CMSC-1111` exists
+- **And** faculty `1112233` exists
 - **And** I am on the Section Management page
-- **When** I enter course `CS101`, faculty `3`, day `Monday`, room `A12`, time start `09:00:00`, and time end `10:15:00`
+- **When** I enter course `CMSC-1111`, faculty `1112233`, day `Monday`, room `HSH 212`, time start `09:00:00`, and time end `10:15:00`
 - **And** I press **Save**
 - **Then** the API returns `201`
-- **And** the new section id is `CS101-01`
+- **And** the new section id is `CMSC-1111-01`
 - **And** the section appears in the list
 
 
@@ -318,25 +293,19 @@ This feature **owns** `sections`. It **reads** `courses`, `faculty`, and the Fea
 - **Then** the API returns `400` with the message "courseId is required"
 - **And** no section is created
 
-
-
 #### Scenario: Course does not exist
 
 - **Given** I am signed in as an admin
-- **And** course `ZZ999` does not exist
-- **When** I create a section with course `ZZ999` and valid fields
+- **And** course `CMSC-9999` does not exist
+- **When** I create a section with course `CMSC-9999` and valid fields
 - **Then** the API returns `400` with the message "Course does not exist"
-
-
 
 #### Scenario: Faculty does not exist
 
 - **Given** I am signed in as an admin
-- **And** faculty `999` does not exist
-- **When** I create a section with faculty `999` and valid fields
+- **And** faculty `1112233` does not exist
+- **When** I create a section with faculty `1112233` and valid fields
 - **Then** the API returns `400` with the message "Faculty does not exist."
-
-
 
 #### Scenario: Time start is not before time end
 
@@ -344,105 +313,79 @@ This feature **owns** `sections`. It **reads** `courses`, `faculty`, and the Fea
 - **When** I create a section with time start `11:00:00` and time end `10:00:00`
 - **Then** the API returns `400` with the message "Time start must be less than time end."
 
-
-
 #### Scenario: Faculty is already taken
 
 - **Given** I am signed in as an admin
-- **And** faculty `3` already has a Monday section from `09:00:00` to `10:15:00`
-- **When** I create another Monday section for faculty `3` from `10:00:00` to `11:00:00`
+- **And** faculty `1112233` already has a Monday section from `09:00:00` to `10:15:00`
+- **When** I create another Monday section for faculty `1112233` from `10:00:00` to `11:00:00`
 - **Then** the API returns `400` with the message "Faculty is already taken for this time."
-
-
 
 #### Scenario: Room is already taken
 
 - **Given** I am signed in as an admin
-- **And** room `A12` already has a Monday section from `09:00:00` to `10:15:00`
-- **When** I create another Monday section in room `A12` from `10:00:00` to `11:00:00`
+- **And** room `HSH 212` already has a Monday section from `09:00:00` to `10:15:00`
+- **When** I create another Monday section in room `NSW 102` from `10:00:00` to `11:00:00`
 - **Then** the API returns `400` with the message "Room is already taken for this time."
 
-
-
 ### US-5.2 — Edit Section
-
-
 
 #### Scenario: Admin updates a section
 
 - **Given** I am signed in as an admin
-- **And** section `CS101-01` exists in room `A12`
-- **When** I change the room to `B20` and press **Save**
+- **And** section `CMSC-1111-01` exists in room `NSW 201`
+- **When** I change the room to `NSW 202` and press **Save**
 - **Then** the API returns `200`
-- **And** the list shows room `B20` for `CS101-01`
-
-
+- **And** the list shows room `NSW 202` for `CMSC-1111-01`
 
 #### Scenario: Update a missing section
 
 - **Given** I am signed in as an admin
-- **And** section `CS101-99` does not exist
-- **When** I send `PUT /api/sections/CS101-99` with a valid body
+- **And** section `CMSC-1111-99` does not exist
+- **When** I send `PUT /courses/sections/CMSC-1111-99` with a valid body
 - **Then** the API returns `400` with the message "Section does not exist."
 
-
-
 ### US-5.3 — Remove Section
-
-
 
 #### Scenario: Admin deletes a section
 
 - **Given** I am signed in as an admin
-- **And** section `CS101-01` is in the list
-- **When** I press **Delete** for `CS101-01`
+- **And** section `CMSC-1111-01` is in the list
+- **When** I press **Delete** for `CMSC-1111-01`
 - **Then** the API returns `200`
-- **And** `CS101-01` no longer appears in the list
-
-
+- **And** `CMSC-1111-01` no longer appears in the list
 
 #### Scenario: Delete a missing section
 
 - **Given** I am signed in as an admin
-- **And** section `CS101-99` does not exist
-- **When** I send `DELETE /api/sections/CS101-99`
+- **And** section `CMSC-1111-99` does not exist
+- **When** I send `DELETE /courses/sections/CMSC-1111-99`
 - **Then** the API returns `400` with the message "Section does not exist."
 
-
-
 ### US-5.4 — List & Filter Sections
-
-
 
 #### Scenario: Admin sees course, faculty, time, and room
 
 - **Given** I am signed in as an admin
-- **And** section `CS101-01` exists for faculty `3` in room `A12` from `09:00:00` to `10:15:00`
+- **And** section `CMSC-1111-01` exists for faculty `1112233` in room `HSH 212` from `09:00:00` to `10:15:00`
 - **When** I open Section Management
-- **Then** the list shows course `CS101`, faculty `3`, room `A12`, time start `09:00:00`, and time end `10:15:00`
-
-
+- **Then** the list shows course `CMSC-1111`, faculty `1112233`, room `HSH 212`, time start `09:00:00`, and time end `10:15:00`
 
 #### Scenario: Filter sections
 
 - **Given** I am signed in as an admin
-- **And** one Monday section exists in room `A12`
-- **And** one Wednesday section exists in room `B20`
+- **And** one Monday section exists in room `HSH 212`
+- **And** one Wednesday section exists in room `HSH 212`
 - **When** I filter by day `Monday` and press **Apply Filters**
 - **Then** only the Monday section is shown
-
-
 
 #### Scenario: Student cannot access section management
 
 - **Given** I am signed in as a student
-- **When** I request `GET /api/sections`
+- **When** I request `GET /courses/sections`
 - **Then** the API returns `403` with the message "Access denied."
 - **And** the Section Management page shows **Access denied.**
 
 ---
-
-
 
 ## Test Coverage Map
 
@@ -470,7 +413,6 @@ Each scenario above must map to at least one automated test.
 | US-5.4 | Filter sections                            | `frontend/tests/SectionManagement.test.js` | `Filter sections`                            |
 | US-5.4 | Student cannot access section management   | `backend/tests/sections.test.js`           | `Student cannot access section management`   |
 | US-5.4 | Student cannot access section management   | `frontend/tests/SectionManagement.test.js` | `Student cannot access section management`   |
-| US-5.4 | Unsigned request is rejected               | `backend/tests/sections.test.js`           | `Unsigned request is rejected`               |
 
 
 ---
@@ -547,12 +489,12 @@ Follow layer order in @features/framework.md (models → routes → backend test
 Follow Test Traceability in this spec (file headers, nested describe blocks, exact Scenario it names).
 Map every Gherkin scenario in the Test Coverage Map; run `npm test` before finishing.
 Section routes require an existing Feature 1 admin session (`authenticate` + `requireAdmin`). Do not implement login, logout, registration, or password storage in this feature.
-If API routes, payloads, schema, or product rules changed per this spec, update @features/reference/api.md, @features/reference/data-model.md, and/or @features/reference/behavior.md in the same PR to match shipped code.
+If API routes, payloads, schema, or product rules changed per this spec, update @features/reference/courses.md, @features/reference/data-model.md, and/or @features/reference/behavior.md in the same PR to match shipped code.
 Complete Definition of Done and the merge checklist in @features/framework.md.
 Do not implement behavior not in this spec.
 ```
 
-**Reference updates for this feature:** `features/reference/data-model.md`, `features/reference/api.md`, `features/reference/behavior.md`
+**Reference updates for this feature:** `features/reference/data-model.md`, `features/reference/courses.md`, `features/reference/behavior.md`
 
 ---
 
@@ -566,7 +508,7 @@ Do not implement behavior not in this spec.
 - [ ] Test Coverage Map complete
 - [ ] Test traceability (file headers, nested `describe` / `it`, audit commands in this spec)
 - [ ] `features/reference/data-model.md` updated (if schema changed)
-- [ ] `features/reference/api.md` updated (if API changed)
+- [ ] `features/reference/courses.md` updated (if API changed)
 - [ ] `features/reference/behavior.md` updated (if product rules changed)
 
 ---
