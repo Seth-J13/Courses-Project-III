@@ -1,5 +1,5 @@
 {
-  "name": "speckit-app",
+  "name": "courses-app",
   "private": true,
   "description": "Spec-driven app — monorepo root (deploy scripts orchestrate frontend/ and backend/)",
   "scripts": {
