@@ -1,35 +1,38 @@
-# Feature: Todo List Management
+# Feature: Student Section Listing
 
 **Feature ID:** 8
 **Branch pattern:** `feature/8-Student-Section-Listing`
 **Status:** Draft
 **Created:** 2026-09-23
 **Input:** Signed-in users view the sections they are signed up for
-**Depends on:** [Feature 5 — Section Management](NEED TO ADD .md FILE)
+**Depends on:** [Feature 5 — Section Management](Feature-5-Section-Management.md)
 
 ---
 
 ## User Stories
 
 ### US-8.1: View my sections
+
 **As a** signed-in user  
 **I want to** see all of my sections lists on one screen  
 **So that** I can see what course sections I have signed up for
 
 **Priority:** P1  
-**Independent test:** Dashboard loads a single list of owned course sections (no sidebar split)  
+**Independent test:** SectionList loads a single list of owned course sections (no sidebar split)  
 **Acceptance scenarios:** see ### US-8.1 under Acceptance Criteria
 
 ### US-8.2: Manage section rows
+
 **As a** signed-in user  
 **I want** each list row to show and have a **delete** action  
-**So that** I can manage sections without leaving the section view 
+**So that** I can manage sections without leaving the section view
 
 **Priority:** P1  
 **Independent test:** Each section row exposes delete icon action  
 **Acceptance scenarios:** see ### US-8.2 under Acceptance Criteria
 
 ### US-8.3: Private section list only
+
 **As a** signed-in user  
 **I want** my sections are visible only to me and a admin
 **So that** other users cannot read the sections I have signed up for
@@ -47,7 +50,7 @@
 - **FR-001**: All section endpoints MUST require a valid session (`authenticate` middleware).
 - **FR-002**: Every database read, update, and delete MUST include `universityId: req.universityId` in the `where` clause.
 - **FR-003**: Sections MUST be ordered alphabetically by name in API responses.
-- **FR-004**: This feature MUST deliver section read and delete and a **single-view** section lists UI in `Dashboard.vue`. No sidebar/main split. 
+- **FR-004**: This feature MUST deliver section read and delete and a **single-view** section lists UI in `SectionList.vue`. No sidebar/main split.
 - **FR-005**: This feature MUST update section availability and remove user from that section
 
 ---
@@ -61,13 +64,13 @@
 ## Edge Cases
 
 - Invalid `universityId` → `401`; unowned section → `404`.
-- Unauthenticated dashboard or `GET /section/:sectionId` → redirect or `401`.
+- Unauthenticated SectionList or `GET /section/:sectionId` → redirect or `401`.
 
 ## Success Criteria
 
 - **SC-001**: Every Gherkin scenario has at least one automated test before merge.
 - **SC-002**: Signed-in user can view and delete sections on one screen without seeing another user's data.
-- **SC-003**: `npm test` passes for list API and dashboard lists-view behavior.
+- **SC-003**: `npm test` passes for list API and SectionList lists-view behavior.
 
 ---
 
@@ -75,40 +78,49 @@
 
 Each user owns their lists exclusively. Another authenticated user must not be able to view, rename, or delete them.
 
-| Rule | Requirement |
-|------|-------------|
-| **Read scope** | `GET /sections/` returns only sections where `universityId = req.universityId`. |
-| **Write scope** | `DELETE` applies only when the section row matches both `universityId` and `req.universityId`. |
-| **Cross-user access** | If a user does not belong to a returned section, respond with `404` — never `403` (do not confirm the list exists). |
-| **UI scope** | The section view shows only sections returned by `GET /sections/` for the signed-in user. |
-| **Implementation** | Use a shared helper (e.g. `getAccessibleListOrNull(req, sectionId)`) in `app/authorization/` — do not duplicate scope logic in controllers. |
+| Rule                  | Requirement                                                                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Read scope**        | `GET /sections/` returns only sections where `universityId = req.universityId`.                                                             |
+| **Write scope**       | `DELETE` applies only when the section row matches both `universityId` and `req.universityId`.                                              |
+| **Cross-user access** | If a user does not belong to a returned section, respond with `404` — never `403` (do not confirm the list exists).                         |
+| **UI scope**          | The section view shows only sections returned by `GET /sections/` for the signed-in user.                                                   |
+| **Implementation**    | Use a shared helper (e.g. `getAccessibleListOrNull(req, sectionId)`) in `app/authorization/` — do not duplicate scope logic in controllers. |
 
 ---
 
 ## API Requirements
 
-| Method | Endpoint | Auth | Purpose |
-|--------|----------|------|---------|
-| `GET` | `/sections/` | Yes | Fetch all lists for the authenticated user |
-| `DELETE` | `/sections/:sectionId` | Yes | Delete a section user is signed up for and update sections to remove user from that section |
+| Method   | Endpoint               | Auth | Purpose                                                                                     |
+| -------- | ---------------------- | ---- | ------------------------------------------------------------------------------------------- |
+| `GET`    | `/sections/`           | Yes  | Fetch all lists for the authenticated user                                                  |
+| `DELETE` | `/sections/:sectionId` | Yes  | Delete a section user is signed up for and update sections to remove user from that section |
 
 All endpoints return **only data owned by the authenticated user**. Cross-user access attempts return `404`.
 
 **Create section request body:**
-```json
-{ "courseId": "CMCS-3033", "sectionId": "CMCS-3033-01", "dayOfWeek":"MWF", "roomNum":"HSH 204", "time": {"start":"8:00AM", "end":"8:50AM"}, "facultyId":"1112233" }
-```
 
-**List success response** (`200` / `201`):
 ```json
 {
   "courseId": "CMCS-3033",
   "sectionId": "CMCS-3033-01",
-  "dayOfWeek":"MWF",
-  "roomNum":"HSH 204",
-  "time": {"start":"8:00AM", "end":"8:50AM"},
-  "facultyId":"1112233"
-} 
+  "dayOfWeek": "MWF",
+  "roomNum": "HSH 204",
+  "time": { "start": "8:00AM", "end": "8:50AM" },
+  "facultyId": "1112233"
+}
+```
+
+**List success response** (`200` / `201`):
+
+```json
+{
+  "courseId": "CMCS-3033",
+  "sectionId": "CMCS-3033-01",
+  "dayOfWeek": "MWF",
+  "roomNum": "HSH 204",
+  "time": { "start": "8:00AM", "end": "8:50AM" },
+  "facultyId": "1112233"
+}
 ```
 
 **Error response:** `{ "message": "Human-readable explanation." }` with appropriate HTTP status.  
@@ -118,23 +130,26 @@ All endpoints return **only data owned by the authenticated user**. Cross-user a
 
 ## Screen Requirements
 
-### [View: Application Dashboard] — route name `View Sections`
-Replaces the Feature 1 placeholder home page. **Single Vue view** (`Dashboard.vue`) — no sidebar / main-panel split.
+### [View: Application SectionList] — route name `View Sections`
+
+Replaces the Feature 1 placeholder home page. **Single Vue view** (`SectionList.vue`) — no sidebar / main-panel split.
 
 **Lists view (this feature)**
-*   Heading: **My Sections**
-*   Display owned sections as rows (e.g. `<v-list>` or table): each row shows the **course name**, **section id**, **Days Of Week**, **Start/End Time**, **Faculty Teaching the Section** and icon action:
-    *   **Delete** icon — opens confirmation `<v-dialog>`
-*   Icon-only row actions use `size="small"` and accessible `aria-label`s (**Edit list**, **Delete list**).
-*   **Empty state:** **"No sections yet. Sign up to view your sections."** when the user has zero lists.
-*   **Loading state:** skeleton or progress indicator while lists are fetching.
-*   **Error state:** `<v-alert type="error">` for API failures.
+
+- Heading: **My Sections**
+- Display owned sections as rows (e.g. `<v-list>` or table): each row shows the **course name**, **section id**, **Days Of Week**, **Start/End Time**, **Faculty Teaching the Section** and icon action:
+  - **Delete** icon — opens confirmation `<v-dialog>`
+- Icon-only row actions use `size="small"` and accessible `aria-label`s (**Edit list**, **Delete list**).
+- **Empty state:** **"No sections yet. Sign up to view your sections."** when the user has zero lists.
+- **Loading state:** skeleton or progress indicator while lists are fetching.
+- **Error state:** `<v-alert type="error">` for API failures.
 
 **App chrome**
-*   Introduce `MenuBar` in this feature (not present in Feature 1): signed-in user's name and **Sign out**.
-*   `MenuBar` is hidden on login and register routes.
 
-**Implementation note:** one route/view for lists; list CRUD dialogs are child components or inline `<v-dialog>` blocks in `Dashboard.vue` unless the team splits presentational dialogs later.
+- Introduce `MenuBar` in this feature (not present in Feature 1): signed-in user's name and **Sign out**.
+- `MenuBar` is hidden on login and register routes.
+
+**Implementation note:** one route/view for lists; list CRUD dialogs are child components or inline `<v-dialog>` blocks in `SectionList.vue` unless the team splits presentational dialogs later.
 
 ---
 
@@ -148,73 +163,83 @@ Replaces the Feature 1 placeholder home page. **Single Vue view** (`Dashboard.vu
 ## Data Model Requirements
 
 ### `sections` table
-| Field | Type | Rules |
-|-------|------|-------|
-| `courseId` | STRING PK | UNIQUE |
-| `sectionId` | STRING | Required; max 12 chars |
-| `dayOfWeek` | STRING | Required; max 7 chars |
-| `roomNum` | STRING | Required; max 8 chars |
-| `timeStart` | STRING | Sequelize; max 6 chars |
-| `timeEnd` | STRING | Sequelize; max 8 chars |
-| `universityId` | INT | Sequelize; NOT NULL |
+
+| Field          | Type      | Rules                  |
+| -------------- | --------- | ---------------------- |
+| `courseId`     | STRING PK | UNIQUE                 |
+| `sectionId`    | STRING    | Required; max 12 chars |
+| `dayOfWeek`    | STRING    | Required; max 7 chars  |
+| `roomNum`      | STRING    | Required; max 8 chars  |
+| `timeStart`    | STRING    | Sequelize; max 6 chars |
+| `timeEnd`      | STRING    | Sequelize; max 8 chars |
+| `universityId` | INT       | Sequelize; NOT NULL    |
 
 ### Associations (in `models/index.js`)
-*   `section belongsTo course`
+
+- `section belongsTo course`
+
 ---
 
 ## Acceptance Criteria (Gherkin)
 
 ### US-8.1 — View my sections
 
-#### Scenario: Dashboard loads with listed sections
-*   **Given** I am signed in
-*   **And** I signed up for sections `CMCS-3033-01` and `CMCS-2123-02`
-*   **When** I navigate to the dashboard
-*   **Then** both sections appear in the section list view
-*   **And** each row shows the section name, section id, day of week, room number, start time, end time, faculty name teaching the section, and a delete icon actions
+#### Scenario: SectionList loads with listed sections
+
+- **Given** I am signed in
+- **And** I signed up for sections `CMCS-3033-01` and `CMCS-2123-02`
+- **When** I navigate to the SectionList
+- **Then** both sections appear in the section list view
+- **And** each row shows the section name, section id, day of week, room number, start time, end time, faculty name teaching the section, and a delete icon actions
 
 #### Scenario: User has no sections
-*   **Given** I am signed in
-*   **And** I have not signed up for any sections
-*   **When** I navigate to the dashboard
-*   **Then** I see **"No sections yet. Sign up to view your sections."**
+
+- **Given** I am signed in
+- **And** I have not signed up for any sections
+- **When** I navigate to the SectionList
+- **Then** I see **"No sections yet. Sign up to view your sections."**
 
 #### Scenario: User cannot see other users signed up for sections
-*   **Given** user B owns signed up for `CMCS-3033-01`
-*   **And** I am signed in as user A
-*   **When** I request `GET /sections/:universityId`
-*   **Then** the response contains only sections user A is related to
+
+- **Given** user B owns signed up for `CMCS-3033-01`
+- **And** I am signed in as user A
+- **When** I request `GET /sections/:universityId`
+- **Then** the response contains only sections user A is related to
 
 ---
 
 ### US-8.2 — Manage section rows
 
 #### Scenario: Section rows show edit and delete actions
-*   **Given** I am signed in
-*   **And** I signed up for `CMCS-3033-01`
-*   **When** I view the dashboard section view
-*   **Then** the `CMCS-3033-01` row shows a **Delete list** icon action
+
+- **Given** I am signed in
+- **And** I signed up for `CMCS-3033-01`
+- **When** I view the SectionList section view
+- **Then** the `CMCS-3033-01` row shows a **Delete list** icon action
 
 ---
 
 ### US-8.3 — Private section list only
 
 #### Scenario: User attempts to delete another user's list
-*   **Given** I am signed in as user A
-*   **And** a list exists that belongs to user B
-*   **When** I send `DELETE /section/:universityId` with user B's ID
-*   **Then** the API returns `404` with `{ "message": "List with id=<id> not found." }`
-*   **And** user B's list still exists
 
-#### Scenario: Unauthenticated user accesses the dashboard
-*   **Given** I have no session in `localStorage`
-*   **When** I navigate to the dashboard
-*   **Then** I am redirected to the login page
+- **Given** I am signed in as user A
+- **And** a list exists that belongs to user B
+- **When** I send `DELETE /section/:universityId` with user B's ID
+- **Then** the API returns `404` with `{ "message": "List with id=<id> not found." }`
+- **And** user B's list still exists
+
+#### Scenario: Unauthenticated user accesses the SectionList
+
+- **Given** I have no session in `localStorage`
+- **When** I navigate to the SectionList
+- **Then** I am redirected to the login page
 
 #### Scenario: Unauthenticated API request to lists
-*   **Given** I have no valid session token
-*   **When** I request `GET /sections/`
-*   **Then** the API returns `401` with an unauthorized message
+
+- **Given** I have no valid session token
+- **When** I request `GET /sections/`
+- **Then** the API returns `401` with an unauthorized message
 
 ---
 
@@ -222,12 +247,12 @@ Replaces the Feature 1 placeholder home page. **Single Vue view** (`Dashboard.vu
 
 Each scenario above must map to at least one automated test.
 
-| Story | Scenario | Test file | Test name |
-|-------|----------|-----------|-----------|
-| US-8.1 | Dashboard loads with listed sections | `frontend/tests/student-section-listing.test.js` | Dashboard loads with listed sections |
-| US-8.1 | User has no sections | `frontend/tests/student-section-listing.test.js` | User has no sections |
-| US-8.1 | User cannot see other users signed up for sections | `backend/tests/student-section-listing.test.js` | User cannot see other users signed up for sections |
-| US-8.2 | Section rows show edit and delete actions | `frontend/tests/student-section-listing.test.js` | Section rows show edit and delete actions |
-| US-8.3 | User attempts to delete another user's list | `backend/tests/student-section-listing.test.js` | User attempts to delete another user's list |
-| US-8.3 | Unauthenticated user accesses the dashboard | `frontend/tests/student-section-listing.test.js` | Unauthenticated user accesses the dashboard |
-| US-8.3 | Unauthenticated API request to lists | `backend/tests/student-section-listing.test.js` | Unauthenticated API request to lists |
+| Story  | Scenario                                           | Test file                                        | Test name                                          |
+| ------ | -------------------------------------------------- | ------------------------------------------------ | -------------------------------------------------- |
+| US-8.1 | SectionList loads with listed sections             | `frontend/tests/student-section-listing.test.js` | SectionList loads with listed sections             |
+| US-8.1 | User has no sections                               | `frontend/tests/student-section-listing.test.js` | User has no sections                               |
+| US-8.1 | User cannot see other users signed up for sections | `backend/tests/student-section-listing.test.js`  | User cannot see other users signed up for sections |
+| US-8.2 | Section rows show edit and delete actions          | `frontend/tests/student-section-listing.test.js` | Section rows show edit and delete actions          |
+| US-8.3 | User attempts to delete another user's list        | `backend/tests/student-section-listing.test.js`  | User attempts to delete another user's list        |
+| US-8.3 | Unauthenticated user accesses the SectionList      | `frontend/tests/student-section-listing.test.js` | Unauthenticated user accesses the SectionList      |
+| US-8.3 | Unauthenticated API request to lists               | `backend/tests/student-section-listing.test.js`  | Unauthenticated API request to lists               |

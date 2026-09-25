@@ -2,7 +2,7 @@
 
 **Feature ID:** 6
 **Branch pattern:** `feature/6-enrollment-management`
-**Status:** Draft
+**Status:** Ready
 **Created:** 2026-09-18
 **Input:** CRD enrollment for users.
 **Depends on:** [Feature 1 -- User Auth & Sessions](feature-1-user-auth-session-management.md), [Feature 2 -- Semesters](feature-2-semester-management.md), [Feature 3 -- Courses](feature-3-course-management), [Feature 5 -- Sections](feature-5-section-management.md)
@@ -132,7 +132,7 @@ Each user owns their enrollments. Enrollments belong to one user, and a user can
 
 ## Key Entities
 
-- **User**: registered account (name, id, role, email, password); owns enrollments.
+- **User**: registered account (name, universityId, role, email, password); owns enrollments.
 - **Enrollment**: Entity collecting `semester.semesterId`, `section.sectionId`, and `user.universityId`; shows users what sections they're signed up for and when
 
 ---
@@ -153,7 +153,7 @@ This feature uses the `enrollment`s endpoints below (CUD sections and CUD semest
 
 **Unauthenticated write:** `401` `{ "message": "Unauthorized! No Auth Header" }` (or expired-token message).
 
-### Load enrollment (`GET /courses/enrollments/:universityId`)
+### Load enrollments (`GET /courses/enrollments/:universityId`)
 
 **Success** (`200`): array with all enrollments for that user (frontend uses index `0`)
 
@@ -250,7 +250,7 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 
 ### Associations
 
-- `User` hasMany `enrollments`
+- `User` hasMany `enrollment`s
 - `enrollment` belongsTo `User`
 
 ---
@@ -271,8 +271,8 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 
 - **Given** I am a signed in student user
 - **When** I view the `EnrollmentList` view
-- **And** I have an `enrollment` for the `sectionId` `4` for the `semesterId` `105`
-- **Then** I see a row containing the details of `sectionId` `4`
+- **And** I have an `enrollment` for the `sectionId` `CMSC-1113-01` for the `semesterId` `105`
+- **Then** I see a row containing the details of `sectionId` `CMSC-1113-01`
 - **And** each row has a **Delete** icon
 - **And** I see a `Previous` button
 - **And** I see a `Next` button
@@ -281,21 +281,21 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 
 - **Given** I am a signed in student user
 - **When** I view the `EnrollmentList` view
-- **And** I have an `enrollment` for the `sectionId` `4` for the `semesterId` `105`
-- **And** I have an `enrollment` for the `sectionId` `19` for the `semesterId` `105`
-- **And** I have an `enrollment` for the `sectionId` `28` for the `semesterId` `106`
+- **And** I have an `enrollment` for the `sectionId` `CMSC-1113-01` for the `semesterId` `105`
+- **And** I have an `enrollment` for the `sectionId` `CMSC-2213-01` for the `semesterId` `105`
+- **And** I have an `enrollment` for the `sectionId` `ENGL-5243-02` for the `semesterId` `106`
 - **And** I am viewing my `enrollment` list for `semesterId` `105`
 - **Then** I see a header above the `enrollment` list with the name of `semesterId` `105`
-- **And** I see a row containing the `section` name of `sectionId` `4`
-- **And** I see a row containing the `section` name of `sectionId` `19`
+- **And** I see a row containing the `section` name of `sectionId` `CMSC-1113-01`
+- **And** I see a row containing the `section` name of `sectionId` `CMSC-2213-01`
 
 #### Scenario: Student cannot fetch another user's enrollments
 
-- **Given** I am a signed-in student user with `universityId` `42`
-- **And** enrollments exist for `universityId` `99`
-- **When** I request `GET /courses/enrollments/99`
-- **Or** I request `GET /courses/enrollments/99/semesters/:semesterId`
-- **Then** the API returns `404` with `{ "message": "Cannot find Enrollment with universityId=99." }`
+- **Given** I am a signed-in student user with `universityId` `1114442`
+- **And** enrollments exist for `universityId` `1027599`
+- **When** I request `GET /courses/enrollments/1027599`
+- **Or** I request `GET /courses/enrollments/1027599/semesters/:semesterId`
+- **Then** the API returns `404` with `{ "message": "Cannot find Enrollment with universityId=1027599." }`
 - **And** I do not receive another user's enrollment data
 
 ### US-6.2: Enrollment Details
@@ -320,7 +320,7 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 
 - **Given** I am viewing the `Add Enrollment` modal
 - **When** I type in the `Course` combobox
-- **Then** I see the course codes for _this semester_ that contain my typing as a substring
+- **Then** I see the course codes for this semester that contain my typing as a substring
 
 #### Scenario: Confirm course combobox
 
@@ -340,7 +340,7 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 - **Given** I am viewing the `Add Enrollment` modal
 - **And** I have selected a `course` already in the `Course` combobox
 - **When** I select a `section` in the `Section` combobox
-- **Then** I see the `section`'s details beneath the combobox
+- **Then** I see the correct `section`'s details beneath the combobox
 
 #### Scenario: Create valid enrollment
 
@@ -348,7 +348,7 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 - **And** I have selected a valid `course` already in the `Course` combobox
 - **And** I have selected a valid `section` in the `Section` combobox
 - **When** I select the **Create** button
-- **Then** the API sends a `200`/`201` response along with the created object
+- **Then** the API sends a `200` response along with the created object
 - **And** the `enrollment` list updates with the newly created `enrollment`
 - **And** the `Add Enrollment` modal closes.
 
@@ -481,7 +481,7 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 #### Scenario: PUT to enrollments is rejected
 
 - **Given** I am signed in as a student
-- **When** I send PUT /courses/enrollments/:universityId/...
+- **When** I send any `PUT` request
 - **Then** the API returns 405 with `{ "message": "Enrollments are dropped, not edited" }`
 
 ---

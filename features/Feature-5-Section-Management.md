@@ -54,11 +54,7 @@
 
 ---
 
-
-
 ## Requirements
-
-
 
 ### Functional Requirements
 
@@ -69,8 +65,8 @@
 - **FR-005**: Listing sections must show course, faculty, time, and room.
 - **FR-006**: Only a signed-in user whose `role` is `admin` can call the section management API or open the Section Management screen. A signed-in student MUST receive **403** message "Access denied". A missing or invalid session MUST receive **401** message "Unauthorized!".
 - **FR-007**: `timeStart` MUST be earlier than `timeEnd`. Otherwise **400** message "Time start must be less than time end".
-- **FR-008**: The system MUST reject the creation of a section that has the same `facultyId`  as another on the same `dayOfWeek` and the same `timeStart` `timeEnd`. Response **400** message: "Faculty is already taken for this time".
-- **FR-009**: The system MUST reject the creation of a section that has the same `roomNum` - **FR-008**: The system MUST reject the creation of a section that has the same `facultyId`  as another on the same `dayOfWeek` and the same `timeStart` `timeEnd`. Response **400** message "Room is already taken for this time".
+- **FR-008**: The system MUST reject the creation of a section that has the same `facultyId` as another on the same `dayOfWeek` and the same `timeStart` `timeEnd`. Response **400** message: "Faculty is already taken for this time".
+- **FR-009**: The system MUST reject the creation of a section that has the same `roomNum` - **FR-008**: The system MUST reject the creation of a section that has the same `facultyId` as another on the same `dayOfWeek` and the same `timeStart` `timeEnd`. Response **400** message "Room is already taken for this time".
 
 ---
 
@@ -97,7 +93,6 @@
 
 ---
 
-
 ## Success Criteria
 
 - **SC-001**: Every Gherkin scenario has at least one automated test before merge.
@@ -110,24 +105,20 @@
 
 ---
 
-
-
 ## Data Ownership & Isolation
 
 Feature 5 owns `sections`. It reads `courses` and `faculty` to validate foreign keys. It reads the Feature 1 session and user `role`. It does not create or own `users` or `sessions`.
-
 
 | Rule               | Requirement                                                                                                        |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------ |
 | **Who may call**   | `role = admin` after a valid Bearer session                                                                        |
 | **Read scope**     | Admins may list and filter every section. Students may not.                                                        |
 | **Write scope**    | Admins may create, update, and delete any section. Students may not.                                               |
-| **Create scope**   | New rows are not owned by the caller. `sectionId` is generated as `AAAA-####-##`.                                   |
+| **Create scope**   | New rows are not owned by the caller. `sectionId` is generated as `AAAA-####-##`.                                  |
 | **Student access** | Signed-in student → **403** `{ "message": "Access denied." }`                                                      |
 | **No session**     | Missing or invalid token → **401** `{ "message": "Unauthorized!" }`                                                |
 | **UI scope**       | Section Management route is admin-only. Students and signed-out users never see the management form.               |
 | **Implementation** | `authenticate` then `requireAdmin` from `app/authorization/`. Do not duplicate the role check in every controller. |
-
 
 ---
 
@@ -144,14 +135,12 @@ Feature 5 owns `sections`. It reads `courses` and `faculty` to validate foreign 
 
 All routes mount under `/courses`. Auth is `Authorization: Bearer <token>` from Feature 1. Every route below requires an admin session.
 
-
-| Method   | Endpoint                   | Auth  | Purpose                         |
-| -------- | -------------------------- | ----- | ------------------------------- |
+| Method   | Endpoint                       | Auth  | Purpose                         |
+| -------- | ------------------------------ | ----- | ------------------------------- |
 | `GET`    | `/courses/sections`            | Admin | List sections; optional filters |
 | `POST`   | `/courses/sections`            | Admin | Create a section                |
 | `PUT`    | `/courses/sections/:sectionId` | Admin | Update a section                |
 | `DELETE` | `/courses/sections/:sectionId` | Admin | Delete a section                |
-
 
 **List query (all optional):** `courseId`, `facultyId`, `dayOfWeek`, `roomNum`, `timeStart`, `timeEnd`.  
 Only sections that match every provided filter are returned. No filters returns every section.
@@ -192,7 +181,6 @@ The next `##` is the next unused two-digit number for that `courseId` (`01`, `02
 **Success — delete (**`200`**):** `{ "message": "Section deleted." }`
 
 **Error response:** `{ "message": "..." }`
-
 
 | Status | When                                      | Message                                                                                                |
 | ------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -248,16 +236,15 @@ This feature **owns** `sections`. It **reads** `courses`, `faculty`, and the Fea
 
 ### `sections` table
 
-
-| Field       | Type       | Rules                                              |
-| ----------- | ---------- | -------------------------------------------------- |
+| Field       | Type       | Rules                                               |
+| ----------- | ---------- | --------------------------------------------------- |
 | `sectionId` | STRING PK  | Required; not auto-increment; format `AAAA-####-##` |
-| `courseId`  | STRING FK  | Required; references `courses.courseId`            |
-| `dayOfWeek` | STRING     | Required                                           |
-| `roomNum`   | STRING     | Required; Max char is 7                            |
-| `timeStart` | TIME       | Required; must be earlier than `timeEnd`           |
-| `timeEnd`   | TIME       | Required                                           |
-| `facultyId` | INTEGER FK | Required; references `faculty.facultyId`           |
+| `courseId`  | STRING FK  | Required; references `courses.courseId`             |
+| `dayOfWeek` | STRING     | Required                                            |
+| `roomNum`   | STRING     | Required; Max char is 7                             |
+| `timeStart` | TIME       | Required; must be earlier than `timeEnd`            |
+| `timeEnd`   | TIME       | Required                                            |
+| `facultyId` | INTEGER FK | Required; references `faculty.facultyId`            |
 
 ### Associations
 
@@ -283,8 +270,6 @@ This feature **owns** `sections`. It **reads** `courses`, `faculty`, and the Fea
 - **Then** the API returns `201`
 - **And** the new section id is `CMSC-1111-01`
 - **And** the section appears in the list
-
-
 
 #### Scenario: Missing required field
 
@@ -391,7 +376,6 @@ This feature **owns** `sections`. It **reads** `courses`, `faculty`, and the Fea
 
 Each scenario above must map to at least one automated test.
 
-
 | Story  | Scenario                                   | Test file                                  | Test name                                    |
 | ------ | ------------------------------------------ | ------------------------------------------ | -------------------------------------------- |
 | US-5.1 | Admin creates a valid section              | `backend/tests/sections.test.js`           | `Admin creates a valid section`              |
@@ -414,10 +398,7 @@ Each scenario above must map to at least one automated test.
 | US-5.4 | Student cannot access section management   | `backend/tests/sections.test.js`           | `Student cannot access section management`   |
 | US-5.4 | Student cannot access section management   | `frontend/tests/SectionManagement.test.js` | `Student cannot access section management`   |
 
-
 ---
-
-
 
 ## Test traceability
 
@@ -441,8 +422,6 @@ feature-5-Section-Management.md
               └── backend/tests/sections.test.js → it("Unsigned request is rejected")
 ```
 
-
-
 ### File header
 
 Every Feature 5 test file starts with:
@@ -459,15 +438,23 @@ Harness-only files (`app.test.js`, `App.test.js`) are exempt — they verify the
 ### Nested `describe` blocks
 
 ```javascript
-describe("Feature 5 — Section Management", () => {
-  describe("US-5.1 — Add Section", () => {
-    it("Admin creates a valid section", async () => { /* … */ });
-    it("Missing required field", async () => { /* … */ });
+describe('Feature 5 — Section Management', () => {
+  describe('US-5.1 — Add Section', () => {
+    it('Admin creates a valid section', async () => {
+      /* … */
+    });
+    it('Missing required field', async () => {
+      /* … */
+    });
   });
 
-  describe("US-5.4 — List & Filter Sections", () => {
-    it("Student cannot access section management", async () => { /* … */ });
-    it("Unsigned request is rejected", async () => { /* … */ });
+  describe('US-5.4 — List & Filter Sections', () => {
+    it('Student cannot access section management', async () => {
+      /* … */
+    });
+    it('Unsigned request is rejected', async () => {
+      /* … */
+    });
   });
 });
 ```
@@ -475,8 +462,6 @@ describe("Feature 5 — Section Management", () => {
 - **Outer** `describe` — feature name (matches spec title).
 - **Inner** `describe` — `US-5.n` + story title (matches AC `###` heading).
 - `it` **name** — exact Gherkin **Scenario** title from this spec.
-
-
 
 ## Agent implementation request
 
@@ -498,8 +483,6 @@ Do not implement behavior not in this spec.
 
 ---
 
-
-
 ## Definition of Done
 
 - [ ] Backend and frontend implemented per this spec (**FR-001** through **FR-009** satisfied)
@@ -513,8 +496,6 @@ Do not implement behavior not in this spec.
 
 ---
 
-
-
 ## Out of Scope
 
 - Login, logout, stay signed in, and create account (Feature 1)
@@ -522,4 +503,3 @@ Do not implement behavior not in this spec.
 - Course create / edit / delete
 - Faculty create / edit / delete
 - Student enrollment in a section
-
