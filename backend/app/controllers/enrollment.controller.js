@@ -11,19 +11,19 @@ const exports = {};
 
 const gameInclude = [
   {
-    model: db.season,
-    as: "season",
-    attributes: ["id", "name", "leagueId"],
+    model: db.semester,
+    as: "semester",
+    attributes: ["id", "name"],
   },
   {
-    model: db.team,
-    as: "homeTeam",
-    attributes: ["id", "name", "leagueId"],
+    model: db.course,
+    as: "course",
+    attributes: ["id", "name"],
   },
   {
-    model: db.team,
-    as: "visitingTeam",
-    attributes: ["id", "name", "leagueId"],
+    model: db.section,
+    as: "section",
+    attributes: ["id", "name"],
   },
 ];
 
@@ -46,7 +46,7 @@ const parseLeagueId = (leagueId) => {
 };
 
 const findSeason = (seasonId) =>
-  db.season.findByPk(seasonId, { include: seasonInclude });
+  db.enrollment.findByPk(seasonId, { include: seasonInclude });
 
 const parseScheduleFields = ({ gameDays, gameTime, minDaysBetweenGames }) => {
   const hasGameDays = Array.isArray(gameDays) && gameDays.length > 0;
@@ -98,77 +98,37 @@ const parseScheduleFields = ({ gameDays, gameTime, minDaysBetweenGames }) => {
 
 exports.findAll = async (req, res) => {
   try {
-    const seasons = await db.season.findAll({
+    const seasons = await db.enrollment.findAll({
       include: seasonInclude,
       order: [["startDate", "ASC"]],
     });
 
     return res.send(seasons);
   } catch (err) {
-    logger.error(`season findAll failed: ${err.message}`);
+    logger.error(`enrollment findAll failed: ${err.message}`);
     return res.status(500).send({ message: "Failed to fetch seasons." });
   }
 };
 
 exports.create = async (req, res) => {
   try {
-    const { name, startDate, endDate, leagueId } = req.body;
-    const parsedLeagueId = parseLeagueId(leagueId);
-    const schedule = parseScheduleFields(req.body);
-
-    if (!name?.trim() || !startDate || !endDate || parsedLeagueId === null) {
-      return res.status(400).send({ message: "Required" });
+    const { semesterId, courseId, sectionId } = req.body;
+    if (!semesterId || !courseId || !sectionId) {
+      return res.status(400).send({ message: "Requires semester, course, and section to be valid entries" });
     }
 
-    if (schedule.error) {
-      return res.status(400).send({ message: schedule.error.message });
-    }
-
-    if (name.trim().length > 30) {
-      return res.status(400).send({
-        message: "Season name must be 30 characters or fewer.",
-      });
-    }
-
-    if (!isEndAfterStart(startDate, endDate)) {
-      return res.status(400).send({
-        message: "End date must be after start date.",
-      });
-    }
-
-    if (Number.isNaN(parsedLeagueId)) {
-      return res.status(400).send({ message: "League not found." });
-    }
-
-    const league = await db.league.findByPk(parsedLeagueId);
-    if (!league) {
-      return res.status(400).send({ message: "League not found." });
-    }
-
-    const existing = await db.season.findOne({
-      where: { leagueId: parsedLeagueId, name: name.trim() },
-    });
-    if (existing) {
-      return res.status(400).send({
-        message: "Season name is already taken in this league.",
-      });
-    }
-
-    const created = await db.season.create({
-      name: name.trim(),
-      startDate,
-      endDate,
-      leagueId: parsedLeagueId,
-      ...schedule.values,
+    const created = await db.enrollment.create({
+      semesterId,
+      courseId,
+      sectionId,
     });
 
-    return res.status(201).send(await findSeason(created.id));
+    return res.status(201).send(created);
   } catch (err) {
-    logger.error(`season create failed: ${err.message}`);
-    return res.status(500).send({ message: "Failed to create season." });
+    logger.error(`enrollment create failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to create enrollment." });
   }
 };
-
 exports.update = async (req, res) => {
   try {
     const seasonId = parseInt(req.params.seasonId, 10) || req.body.seasonId;
@@ -177,13 +137,13 @@ exports.update = async (req, res) => {
     const schedule = parseScheduleFields(req.body);
 
     if (seasonId == null || Number.isNaN(Number(seasonId))) {
-      return res.status(400).send({ message: "Invalid season id." });
+      return res.status(400).send({ message: "Invalid enrollment id." });
     }
 
-    const season = await db.season.findByPk(seasonId);
-    if (!season) {
+    const enrollment = await db.enrollment.findByPk(seasonId);
+    if (!enrollment) {
       return res.status(404).send({
-        message: `Season with id=${seasonId} not found.`,
+        message: `enrollment with id=${seasonId} not found.`,
       });
     }
 
@@ -197,7 +157,7 @@ exports.update = async (req, res) => {
 
     if (name.trim().length > 30) {
       return res.status(400).send({
-        message: "Season name must be 30 characters or fewer.",
+        message: "enrollment name must be 30 characters or fewer.",
       });
     }
 
@@ -216,16 +176,16 @@ exports.update = async (req, res) => {
       return res.status(400).send({ message: "League not found." });
     }
 
-    const existing = await db.season.findOne({
+    const existing = await db.enrollment.findOne({
       where: { leagueId: parsedLeagueId, name: name.trim() },
     });
     if (existing && existing.id !== Number(seasonId)) {
       return res.status(400).send({
-        message: "Season name is already taken in this league.",
+        message: "enrollment name is already taken in this league.",
       });
     }
 
-    await db.season.update(
+    await db.enrollment.update(
       {
         name: name.trim(),
         startDate,
@@ -238,10 +198,10 @@ exports.update = async (req, res) => {
       }
     );
 
-    return res.status(200).send({ message: "season updated successfully." });
+    return res.status(200).send({ message: "enrollment updated successfully." });
   } catch (err) {
-    logger.error(`season update failed: ${err.message}`);
-    return res.status(500).send({ message: "Failed to update season." });
+    logger.error(`enrollment update failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to update enrollment." });
   }
 };
 
@@ -249,29 +209,29 @@ exports.remove = async (req, res) => {
   try {
     const seasonId = parseInt(req.params.seasonId, 10);
     if (Number.isNaN(seasonId)) {
-      return res.status(400).send({ message: "Invalid season id." });
+      return res.status(400).send({ message: "Invalid enrollment id." });
     }
 
-    const existing = await db.season.findByPk(seasonId);
+    const existing = await db.enrollment.findByPk(seasonId);
     if (!existing) {
       return res.status(404).send({
-        message: `Season with id=${seasonId} not found.`,
+        message: `enrollment with id=${seasonId} not found.`,
       });
     }
 
     const gameCount = await db.game.count({ where: { seasonId } });
     if (gameCount > 0) {
       return res.status(400).send({
-        message: "Cannot delete season: games still exist.",
+        message: "Cannot delete enrollment: games still exist.",
       });
     }
 
-    await db.season.destroy({ where: { id: seasonId } });
+    await db.enrollment.destroy({ where: { id: seasonId } });
 
-    return res.status(200).send({ message: "season deleted successfully." });
+    return res.status(200).send({ message: "enrollment deleted successfully." });
   } catch (err) {
-    logger.error(`season delete failed: ${err.message}`);
-    return res.status(500).send({ message: "Failed to delete season." });
+    logger.error(`enrollment delete failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to delete enrollment." });
   }
 };
 
@@ -296,13 +256,13 @@ exports.createGames = async (req, res) => {
   try {
     const seasonId = parseInt(req.params.seasonId, 10);
     if (Number.isNaN(seasonId)) {
-      return res.status(400).send({ message: "Invalid season id." });
+      return res.status(400).send({ message: "Invalid enrollment id." });
     }
 
-    const season = await db.season.findByPk(seasonId);
-    if (!season) {
+    const enrollment = await db.enrollment.findByPk(seasonId);
+    if (!enrollment) {
       return res.status(404).send({
-        message: `Season with id=${seasonId} not found.`,
+        message: `enrollment with id=${seasonId} not found.`,
       });
     }
 
@@ -314,7 +274,7 @@ exports.createGames = async (req, res) => {
     }
 
     const teams = await db.team.findAll({
-      where: { leagueId: season.leagueId },
+      where: { leagueId: enrollment.leagueId },
       order: [["id", "ASC"]],
     });
     if (teams.length < 3) {
@@ -323,14 +283,14 @@ exports.createGames = async (req, res) => {
       });
     }
 
-    const gameDays = parseStoredGameDays(season.gameDays);
-    const dates = enumerateGameDates(season.startDate, season.endDate, gameDays);
+    const gameDays = parseStoredGameDays(enrollment.gameDays);
+    const dates = enumerateGameDates(enrollment.startDate, enrollment.endDate, gameDays);
     const pairings = buildPairings(teams);
-    const scheduled = scheduleGames(pairings, dates, season.minDaysBetweenGames);
+    const scheduled = scheduleGames(pairings, dates, enrollment.minDaysBetweenGames);
 
     if (!scheduled) {
       return res.status(400).send({
-        message: "Season is not long enough to schedule all games.",
+        message: "enrollment is not long enough to schedule all games.",
       });
     }
 
@@ -341,7 +301,7 @@ exports.createGames = async (req, res) => {
           {
             seasonId,
             gameDate: row.gameDate,
-            startTime: season.gameTime,
+            startTime: enrollment.gameTime,
             location: teams.find((team) => team.id === row.homeTeamId)?.homeField
               ?.trim() || null,
             homeTeamId: row.homeTeamId,
@@ -369,7 +329,7 @@ exports.createGames = async (req, res) => {
 
     return res.status(201).send(games);
   } catch (err) {
-    logger.error(`season createGames failed: ${err.message}`);
+    logger.error(`enrollment createGames failed: ${err.message}`);
     return res.status(500).send({ message: "Failed to create games." });
   }
 };
