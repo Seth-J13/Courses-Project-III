@@ -1,4 +1,5 @@
 # Feature: Semester Management
+
 **Feature ID:** 2
 **Branch pattern:** `feature/2-semester-management`
 **Status:** Ready
@@ -145,8 +146,7 @@ Non-admin user access to `POST`/`PUT`/`DELETE` returns `403`. Authenticated stud
 
 ```json
 {
-  "semesterId": 105,
-  "semesterName": "FA2026",
+  "semesterId": "FA2026",
   "startDate": "2026-08-16",
   "endDate": "2026-12-06",
   "createdAt": "2026-07-02T12:00:00.000Z",
@@ -163,8 +163,7 @@ Non-admin user access to `POST`/`PUT`/`DELETE` returns `403`. Authenticated stud
 
 ```json
 {
-  "semesterId": 105,
-  "semesterName": "SP2026",
+  "semesterId": "SP2026",
   "startDate": "2026-08-16",
   "endDate": "2027-04-28"
 }
@@ -174,8 +173,7 @@ Non-admin user access to `POST`/`PUT`/`DELETE` returns `403`. Authenticated stud
 
 ```json
 {
-  "semesterId": 105,
-  "semesterName": "SP2026",
+  "semesterId": "SP2026",
   "startDate": "2026-08-16",
   "endDate": "2027-04-28",
   "createdAt": "2026-07-02T12:00:00.000Z",
@@ -231,12 +229,11 @@ Non-admin user access to `POST`/`PUT`/`DELETE` returns `403`. Authenticated stud
 
 ### `semesters` table
 
-| Field          | Type       | Rules                             |
-| -------------- | ---------- | --------------------------------- |
-| `semesterId`   | INTEGER PK | Auto-increment                    |
-| `semesterName` | STRING     | Required; Unique; exactly 6 chars |
-| `startDate`    | DATE       | Required                          |
-| `endDate`      | DATE       | Required;                         |
+| Field        | Type      | Rules                     |
+| ------------ | --------- | ------------------------- |
+| `semesterId` | STRING PK | Required; exactly 6 chars |
+| `startDate`  | DATE      | Required                  |
+| `endDate`    | DATE      | Required;                 |
 
 ---
 
@@ -349,8 +346,8 @@ Non-admin user access to `POST`/`PUT`/`DELETE` returns `403`. Authenticated stud
 #### Scenario: Student can GET a semester by id
 
 - **Given** I am a signed-in student user
-- **And** the semester `SP2026` exists with `semesterId` `105`
-- **When** I request `GET /courses/semesters/105`
+- **And** the semester `SP2026` exists
+- **When** I request `GET /courses/semesters/SP2026`
 - **Then** the API returns `200` with the semester object for `SP2026`
 
 #### Scenario: Student user accesses the semester view

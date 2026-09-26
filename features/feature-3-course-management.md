@@ -1,4 +1,4 @@
-# Feature: Semester Management
+# Feature: Course Management
 
 **Feature ID:** 3
 **Branch pattern:** `feature/3-course-management`
@@ -73,7 +73,7 @@
 - **FR-001**: All course endpoints MUST require a valid session (`authenticate` middleware).
 - **FR-002**: course names MUST be trimmed before save; empty strings MUST be rejected.
 - **FR-003**: course Id's MUST follow the format `XXXX-####` where `XXXX` is a four-letter course code (`CMSC` for computer science, `ARTS` for an arts class, `BIBL` for a Bible class, `HIST` for history, etc.)
-- **FR-004**: course Id's MUST follow the format `XXXX-####` where `####` is a four-digit code for the course (The first digit stands for the difficulty. For example '1' is freshmen level, '2' is sophomore level, '3' is junior level, '4' is senior level, and '5' is graduate level. The second through fourth digits are mainly identifiers for which course is offered.) 
+- **FR-004**: course Id's MUST follow the format `XXXX-####` where `####` is a four-digit code for the course (The first digit stands for the difficulty. For example '1' is freshmen level, '2' is sophomore level, '3' is junior level, '4' is senior level, and '5' is graduate level. The second through fourth digits are mainly identifiers for which course is offered.)
 - **FR-005**: This feature MUST deliver course CRUD and a **single-view** courses UI in `Courses.vue` (dialog-based add/edit/delete). No sidebar/main split.
 - **FR-006**: typing in the on-screen course search bar updates the course list with only courses containing the search bar's content as a substring.
 - **FR-007**: signed-out users MUST NOT have access to any `/courses` routes
@@ -92,14 +92,14 @@
 - Empty or whitespace-only course name → client block and/or `400`.
 - course Id longer than 9 characters → `400`.
 - Invalid `courseId` → `400`; unowned course → `404`.
-- Unauthenticated dashboard or `GET /courses/semesters` → redirect or `401`.
+- Unauthenticated `Courses.vue` or `GET /courses/semesters` → redirect or `401`.
 
 ## Success Criteria
 
 - **SC-001**: Every Gherkin scenario has at least one automated test before merge.
 - **SC-002**: Signed-in admin can create, view, rename, and delete courses on one screen.
 - **SC-003**: Signed-in student cannot access this view
-- **SC-004**: `npm test` passes for semester API and dashboard courses-view behavior.
+- **SC-004**: `npm test` passes for course API and courses-view behavior.
 
 ---
 
@@ -107,24 +107,24 @@
 
 Courses are not owned by anybody; however, only administrator-role users are authorized to write/create on `courses`
 
-| Rule                  | Requirement                                                                                                                                      |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Read scope**        | `GET /courses` returns only courses.                                                                                                 |
-| **Write scope**       | `PUT` and `DELETE` apply only when the course row matches both `id` and `req.user.id`.                                                         |
-| **Create scope**      | New courses owned by nobody.                                                                                                                   |
-| **Cross-user access** | If an unauthorized user tries to `PUT`, `DELETE`, or `POST` courses, respond with `403`.                                                       |
-| **UI scope**          | The courses view shows only courses returned by `GET /courses` for the signed-in admin.                                            |
+| Rule                  | Requirement                                                                                                                                   |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Read scope**        | `GET /courses` returns only courses.                                                                                                          |
+| **Write scope**       | `PUT` and `DELETE` apply only when the course row matches both `id` and `req.user.id`.                                                        |
+| **Create scope**      | New courses owned by nobody.                                                                                                                  |
+| **Cross-user access** | If an unauthorized user tries to `PUT`, `DELETE`, or `POST` courses, respond with `403`.                                                      |
+| **UI scope**          | The courses view shows only courses returned by `GET /courses` for the signed-in admin.                                                       |
 | **Implementation**    | Use a shared helper (e.g. `getAccessibleCoursesOrNull(req, courseId)`) in `app/authorization/` — do not duplicate scope logic in controllers. |
 
 ---
 
 ## API Requirements
 
-| Method   | Endpoint                         | Auth       | Purpose               |
-| -------- | -------------------------------- | ---------- | --------------------- |
-| `GET`    | `/courses`             | Yes        | Fetch all courses   |
+| Method   | Endpoint             | Auth       | Purpose             |
+| -------- | -------------------- | ---------- | ------------------- |
+| `GET`    | `/courses`           | Yes        | Fetch all courses   |
 | `GET`    | `/courses/:courseId` | Yes        | Show course details |
-| `POST`   | `/courses`             | Yes, admin | Create a new course |
+| `POST`   | `/courses`           | Yes, admin | Create a new course |
 | `PUT`    | `/courses/:courseId` | Yes, admin | Update a course     |
 | `DELETE` | `/courses/:courseId` | Yes, admin | Delete a course     |
 
@@ -162,8 +162,9 @@ All endpoints except `GET` require **an administrator-role user** to access/oper
 **Not found:** `404`.
 **Invalid Request:** `400`.
 **Server/Connection Error:** `500`.
-**Put course request body:** 
-```json 
+**Put course request body:**
+
+```json
   {
       "courseId": "CMSC-4321",
       "semester_offered": "FA",
@@ -214,13 +215,13 @@ All endpoints except `GET` require **an administrator-role user** to access/oper
 
 ### `courses` table
 
-| Field          | Type       | Rules                             |
-| -------------- | ---------- | --------------------------------- |
-| `courseId`          | STRING PK |     Required; Unique; exactly 9 chars|
-| `courseName`        | STRING     | Required  |
-| `semesterOffered`   |	ENUM	| Required; `FA`, `WI`, `SP`, `SU` |
-| `offeringFrequency` |	ENUM	| Required; `none`, `everyYear`, `oddYears`, `evenYears` |
-| `description`       | STRING	| NULLABLE |
+| Field               | Type      | Rules                                                  |
+| ------------------- | --------- | ------------------------------------------------------ |
+| `courseId`          | STRING PK | Required; Unique; exactly 9 chars                      |
+| `courseName`        | STRING    | Required                                               |
+| `semesterOffered`   | ENUM      | Required; `FA`, `WI`, `SP`, `SU`                       |
+| `offeringFrequency` | ENUM      | Required; `none`, `everyYear`, `oddYears`, `evenYears` |
+| `description`       | STRING    | NULLABLE                                               |
 
 ---
 
@@ -235,7 +236,7 @@ All endpoints except `GET` require **an administrator-role user** to access/oper
 - **And** I enter course Id `CMSC-4324`
 - **And** I enter description `XXXXXX`
 - **And** I enter course name `SE4`
-- **And** I add a semester `FA`
+- **And** I add a semesterOffered `FA`
 - **And** I confirm the dialog
 - **Then** the API returns `201` with a course object containing `courseId`, `courseName`, `description` and `semesters`
 - **And** `CMSC-4324` appears in the courses view
@@ -327,7 +328,7 @@ All endpoints except `GET` require **an administrator-role user** to access/oper
 - **When** I click the edit icon on the `CMSC-4321` row
 - **And** I change the name to `ARTS-4321` in the rename dialog
 - **And** I confirm
-- **Then** the API returns `200` with the updated semester object
+- **Then** the API returns `200` with the updated course object
 - **And** the courses view shows `ARTS-4321` instead of `CMSC-4321`
 
 #### Scenario: Admin deletes a course
@@ -391,25 +392,25 @@ All endpoints except `GET` require **an administrator-role user** to access/oper
 
 ## Test Coverage Map
 
-| Story  | Scenario                                                                            | Test file                                                            | Test name                                                                             |
-| ------ | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| US-3.1 | Admin creates a new course                                                        | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Admin creates a new course`                                                        |
-| US-3.1 | Admin creates a course with an empty name                                         | `frontend/tests/Courses.test.js`                                    | `Admin creates a course with an empty name`                                         |
-| US-3.1 | Admin creates a course with an empty description                                     | `frontend/tests/Courses.test.js`                                    | `Admin creates a course with an empty description`                                     |
-| US-3.1 | Admin creates a course without semester                                           | `frontend/tests/Courses.test.js`                                    | `Admin creates a course without semester`                                           |
-| US-3.1 | Admin creates a course with a name that is too long                               | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Admin creates a course with a name that is too long`                               |
-| US-3.1 | Admin creates a course with an id that is improperly formatted                   | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Admin creates a course with an id that is improperly formatted`                   |
-| US-3.2 | Course view loads with existing semesters                                             | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Course view loads with existing semesters`                                             |
-| US-3.2 | No courses exist                                                                  | `frontend/tests/Courses.test.js`                                    | `No courses exist`                                                                  |
-| US-3.3 | course rows show edit and delete actions                                          | `frontend/tests/Courses.test.js`                                    | `course rows show edit and delete actions`                                          |
-| US-3.4 | Admin edits a course                                                              | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Admin edits a course`                                                              |
-| US-3.4 | Admin deletes a course                                                            | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Admin deletes a course`                                                            |
-| US-3.5 | Search bar appears with courses                                                   | `frontend/tests/Courses.test.js`                                    | `Search bar appears with courses`                                                   |
-| US-3.5 | No search bar appears with no courses                                             | `frontend/tests/Courses.test.js`                                    | `No search bar appears with no courses`                                             |
-| US-3.5 | Admin types in course search bar                                                  | `frontend/tests/Courses.test.js`                                    | `Admin types in course search bar`                                                  |
-| US-3.5 | Admin types in course search bar 2                                                | `frontend/tests/Courses.test.js`                                    | `Admin types in course search bar 2`                                                |
-| US-3.5 | Unauthenticated user accesses the courses view                                         | `frontend/tests/Courses.test.js`                                    | `Unauthenticated user accesses the courses view`                                         |
-| US-3.5 | Unauthenticated API request to courses                                            | `backend/tests/courses.test.js`                                    | `Unauthenticated API request to courses`                                            |
+| Story  | Scenario                                                       | Test file                                                         | Test name                                                        |
+| ------ | -------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------- |
+| US-3.1 | Admin creates a new course                                     | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Admin creates a new course`                                     |
+| US-3.1 | Admin creates a course with an empty name                      | `frontend/tests/Courses.test.js`                                  | `Admin creates a course with an empty name`                      |
+| US-3.1 | Admin creates a course with an empty description               | `frontend/tests/Courses.test.js`                                  | `Admin creates a course with an empty description`               |
+| US-3.1 | Admin creates a course without semester                        | `frontend/tests/Courses.test.js`                                  | `Admin creates a course without semester`                        |
+| US-3.1 | Admin creates a course with a name that is too long            | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Admin creates a course with a name that is too long`            |
+| US-3.1 | Admin creates a course with an id that is improperly formatted | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Admin creates a course with an id that is improperly formatted` |
+| US-3.2 | Course view loads with existing semesters                      | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Course view loads with existing semesters`                      |
+| US-3.2 | No courses exist                                               | `frontend/tests/Courses.test.js`                                  | `No courses exist`                                               |
+| US-3.3 | course rows show edit and delete actions                       | `frontend/tests/Courses.test.js`                                  | `course rows show edit and delete actions`                       |
+| US-3.4 | Admin edits a course                                           | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Admin edits a course`                                           |
+| US-3.4 | Admin deletes a course                                         | `backend/tests/courses.test.js`, `frontend/tests/Courses.test.js` | `Admin deletes a course`                                         |
+| US-3.5 | Search bar appears with courses                                | `frontend/tests/Courses.test.js`                                  | `Search bar appears with courses`                                |
+| US-3.5 | No search bar appears with no courses                          | `frontend/tests/Courses.test.js`                                  | `No search bar appears with no courses`                          |
+| US-3.5 | Admin types in course search bar                               | `frontend/tests/Courses.test.js`                                  | `Admin types in course search bar`                               |
+| US-3.5 | Admin types in course search bar 2                             | `frontend/tests/Courses.test.js`                                  | `Admin types in course search bar 2`                             |
+| US-3.5 | Unauthenticated user accesses the courses view                 | `frontend/tests/Courses.test.js`                                  | `Unauthenticated user accesses the courses view`                 |
+| US-3.5 | Unauthenticated API request to courses                         | `backend/tests/courses.test.js`                                   | `Unauthenticated API request to courses`                         |
 
 ---
 
@@ -447,7 +448,7 @@ Do not implement behavior not in this spec.
 
 - Faculty items (see `features/feature-4-faculty-management.md`)
 - `MenuBar` beyond basic sign-out (full nav deferred if not needed)
-- Drag-and-drop semester reordering
+- Drag-and-drop course reordering
 - Sharing courses with other users
 - `POST`/`GET`/`PUT`/`DELETE` anywhere that's not `/courses/courses` or `/courses/:courseId`
 
@@ -457,11 +458,4 @@ Do not implement behavior not in this spec.
 
 The following are intentionally deferred to the next feature spec:
 
-- `courses` table and associations
 - `sections` table and associations
-
-## Delivered to Feature 7
-
-The following are intentionally deferred to the next feature spec:
-
-- `courses` table and associations
