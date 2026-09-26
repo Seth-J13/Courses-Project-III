@@ -9,21 +9,21 @@ import {
 
 const exports = {};
 
-const gameInclude = [
+const enrollmentInclude = [
   {
     model: db.semester,
     as: "semester",
-    attributes: ["id", "name"],
+    attributes: ["semesterId", "semesterName", "startDate", "endDate"],
   },
   {
     model: db.course,
     as: "course",
-    attributes: ["id", "name"],
+    attributes: ["courseId", "name", "description", "semesterOffered" ],
   },
   {
     model: db.section,
     as: "section",
-    attributes: ["id", "name"],
+    attributes: ["courseId", "sectionId", "dayOfWeek", "roomNumber", "startTime", "endTime", "facultyId"],
   },
 ];
 
