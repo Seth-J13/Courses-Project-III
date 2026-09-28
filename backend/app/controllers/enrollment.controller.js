@@ -13,113 +13,62 @@ const enrollmentInclude = [
   {
     model: db.semester,
     as: "semester",
-    attributes: ["semesterId", "semesterName", "startDate", "endDate"],
+    attributes: ["semesterId", "semesterName", "startDate", "endDate"]
   },
   {
-    model: db.course,
-    as: "course",
-    attributes: ["courseId", "name", "description", "semesterOffered" ],
+    model: db.user,
+    as: "user",
+    attributes: ["universityId", "name", "role"]
   },
   {
     model: db.section,
     as: "section",
-    attributes: ["courseId", "sectionId", "dayOfWeek", "roomNumber", "startTime", "endTime", "facultyId"],
+    attributes: ["courseId", "sectionId", "dayOfWeek", "roomNumber", "startTime", "endTime", "facultyId"]
   },
 ];
 
-const seasonInclude = {
-  model: db.league,
-  as: "league",
-  attributes: ["id", "name", "sport"],
-};
+exports.findOne = async (universityId, semesterId, sectionId) => {
+  try {
+    const enrollments = await db.enrollment.findOne({
+      where: {universityId, semesterId, sectionId},
+      include: enrollmentInclude,
+      order: [["semesterId", "ASC"]],
+    });
 
-const isEndAfterStart = (startDate, endDate) =>
-  Boolean(startDate && endDate && endDate > startDate);
-
-const parseLeagueId = (leagueId) => {
-  if (leagueId === undefined || leagueId === null || leagueId === "") {
-    return null;
+    if (parseInt(universityId, 10) === enrollments.user?.universityId)
+      return res.send(enrollments);
+    else
+      return res.status(401).send({ message: "Unauthorized! No auth header" });
+  } catch (err) {
+    logger.error(`enrollment findOne failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to fetch enrollments." });
   }
-
-  const parsed = parseInt(leagueId, 10);
-  return Number.isNaN(parsed) ? NaN : parsed;
-};
-
-const findSeason = (seasonId) =>
-  db.enrollment.findByPk(seasonId, { include: seasonInclude });
-
-const parseScheduleFields = ({ gameDays, gameTime, minDaysBetweenGames }) => {
-  const hasGameDays = Array.isArray(gameDays) && gameDays.length > 0;
-  if (
-    !hasGameDays ||
-    !gameTime ||
-    minDaysBetweenGames === undefined ||
-    minDaysBetweenGames === null ||
-    minDaysBetweenGames === ""
-  ) {
-    if (hasGameDays && gameDays.some((day) => !WEEKDAYS.includes(day))) {
-      return {
-        error: {
-          message:
-            "Game days must be one or more of sunday, monday, tuesday, wednesday, thursday, friday, saturday.",
-        },
-      };
-    }
-    return { error: { message: "Required" } };
-  }
-
-  const uniqueDays = [...new Set(gameDays)];
-  if (uniqueDays.some((day) => !WEEKDAYS.includes(day))) {
-    return {
-      error: {
-        message:
-          "Game days must be one or more of sunday, monday, tuesday, wednesday, thursday, friday, saturday.",
-      },
-    };
-  }
-
-  const gap = Number(minDaysBetweenGames);
-  if (!Number.isInteger(gap) || gap < 0 || gap > 99) {
-    return {
-      error: {
-        message: "Minimum days between games must be between 0 and 99.",
-      },
-    };
-  }
-
-  return {
-    values: {
-      gameDays: uniqueDays,
-      gameTime,
-      minDaysBetweenGames: gap,
-    },
-  };
-};
+}
 
 exports.findAll = async (req, res) => {
   try {
-    const seasons = await db.enrollment.findAll({
-      include: seasonInclude,
-      order: [["startDate", "ASC"]],
+    const enrollments = await db.enrollment.findAll({
+      include: enrollmentInclude,
+      order: [["semesterId", "ASC"]],
     });
 
-    return res.send(seasons);
+    return res.send(enrollments);
   } catch (err) {
     logger.error(`enrollment findAll failed: ${err.message}`);
-    return res.status(500).send({ message: "Failed to fetch seasons." });
+    return res.status(500).send({ message: "Failed to fetch enrollments." });
   }
 };
 
 exports.create = async (req, res) => {
   try {
-    const { semesterId, courseId, sectionId } = req.body;
-    if (!semesterId || !courseId || !sectionId) {
-      return res.status(400).send({ message: "Requires semester, course, and section to be valid entries" });
+    const { semesterId, universityId, sectionId } = req.body;
+    if (!semesterId || !universityId || !sectionId) {
+      return res.status(400).send({ message: "Requires semester, account ID, and section to be valid entries" });
     }
 
     const created = await db.enrollment.create({
       semesterId,
-      courseId,
+      universityId,
       sectionId,
     });
 

@@ -6,8 +6,8 @@ export default (sequelize, Sequelize) => {
         type: Sequelize.CHAR(6),
         allowNull: false,
       },
-      courseId: {
-        type: Sequelize.CHAR(9),
+      universityId: {
+        type: Sequelize.INTEGER(7),
         allowNull: false,
       },
       sectionId: {
@@ -16,7 +16,7 @@ export default (sequelize, Sequelize) => {
       },
     },
     {
-      indexes: [{ unique: true, fields: ["semesterId", "courseId", "sectionId"] }],
+      indexes: [{ unique: true, fields: ["semesterId", "universityId", "sectionId"] }],
     }
   );
 
