@@ -147,7 +147,8 @@ This feature uses the `enrollment`s endpoints below (CUD sections and CUD semest
 | -------- | ----------------------------------------------------------- | ---- | --------------------------------------------------------------------------------- |
 | `GET`    | `/courses/enrollments/:universityId/`                       | Yes  | List the enrollments for the user where `:universityId === req.user.universityId` |
 | `POST`   | `/courses/enrollments/:universityId/`                       | Yes  | Add an `enrollment` to the user where `:universityId === req.user.universityId`   |
-| `GET`    | `/courses/enrollments/:universityId/semesters/:semesterId`  | Yes  | List only the enrollments the user `:universityId === req.user.universityId`      |
+| `GET`    | `/courses/enrollments/:universityId/:semesterId`            | Yes  | List only the enrollments the user `:universityId === req.user.universityId`      |
+| `GET`    | `/courses/enrollments/:universityId/:semesterId/:sectionId` | Yes  | List details of the enrollment specified by the route parameters                  |
 | `DELETE` | `/courses/enrollments/:universityId/:semesterId/:sectionId` | Yes  | Remove the enrollment specified by the route parameters                           |
 
 **Unauthenticated write:** `401` `{ "message": "Unauthorized! No Auth Header" }` (or expired-token message).
