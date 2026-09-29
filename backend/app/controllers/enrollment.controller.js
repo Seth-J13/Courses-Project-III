@@ -112,7 +112,7 @@ exports.create = async (req, res) => {
   }
 };
 
-exports.remove = async (req, res) => {
+exports.delete = async (req, res) => {
   try {
     const { semesterId, universityId, sectionId } = req.body;
 

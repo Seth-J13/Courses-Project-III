@@ -1,6 +1,6 @@
 import Router from "express";
 import enrollmentController from "../controllers/enrollment.controller.js";
-import authenticate from "../authorization/authorization.js";
+import { authenticate } from "../authorization/authorization.js";
 
 const router = Router();
 
