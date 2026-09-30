@@ -6,3 +6,7 @@
 export function authenticate() {
   throw new Error("authenticate() not implemented — add per feature auth spec");
 }
+
+export function authenticateAdmin() {
+  throw new Error("authenticateAdmin() not implemented — add per feature auth spec");
+}
