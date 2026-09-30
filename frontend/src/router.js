@@ -2,13 +2,12 @@ import { createRouter, createWebHistory } from "vue-router";
 import Home from "./views/Home.vue";
 import Login from "./views/Login.vue";
 import Register from "./views/Register.vue";
-// import Games from "./views/Games.vue";
-// import TeamList from "./views/TeamList.vue";
-// import Leagues from "./views/Leagues.vue";
-// import Team from "./views/Team.vue";
-// import PeopleList from "./views/PeopleList.vue";
-// import Season from "./views/Season.vue";
-// import SeasonList from "./views/SeasonList.vue";
+import Games from "./views/Games.vue";
+import TeamList from "./views/TeamList.vue";
+import Team from "./views/Team.vue";
+import PeopleList from "./views/PeopleList.vue";
+import Season from "./views/Season.vue";
+import SeasonList from "./views/SeasonList.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -29,19 +28,14 @@ const router = createRouter({
       component: Home,
     },
     {
-      path: "/team-list",
-      name: "TeamList",
-      component: TeamList,
-    },
-    {
       path: "/games",
       name: "Games",
       component: Games,
     },
     {
-      path: "/leagues",
-      name: "Leagues",
-      component: Leagues,
+      path: "/team-list",
+      name: "TeamList",
+      component: TeamList,
     },
     {
       path: "/team",
@@ -69,3 +63,5 @@ const router = createRouter({
     }
   ],
 });
+
+export default router;
