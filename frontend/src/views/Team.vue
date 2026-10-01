@@ -6,6 +6,7 @@ import leagueServices from "../services/leagueServices.js";
 import peopleServices from "../services/peopleServices.js";
 import TeamForm from "../components/TeamForm.vue";
 import PlayerForm from "../components/PlayerForm.vue";
+import MenuBar from "../components/MenuBar.vue";
 import Utils from "../config/utils.js";
 
 const route = useRoute();

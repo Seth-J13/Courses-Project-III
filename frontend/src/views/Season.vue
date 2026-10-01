@@ -5,7 +5,7 @@ import seasonServices from "../services/seasonServices.js";
 import gameServices from "../services/gameServices.js";
 import teamServices from "../services/teamServices.js";
 import GameForm from "../components/GameForm.vue";
-import { formatDate, toDateInputValue } from "../config/validation.js";
+import { formatDueDate, toDateInputValue } from "../config/validation.js";
 
 const route = useRoute();
 
@@ -199,7 +199,7 @@ watch(() => route.params.seasonId, retrieveSeason);
         <v-card-subtitle v-if="season">
           {{ season.league?.name }}
           <template v-if="season.startDate || season.endDate">
-            · {{ formatDate(season.startDate) }} – {{ formatDate(season.endDate) }}
+            · {{ formatDueDate(season.startDate) }} – {{ formatDueDate(season.endDate) }}
           </template>
         </v-card-subtitle>
         <template #append>
@@ -252,7 +252,7 @@ watch(() => route.params.seasonId, retrieveSeason);
             </thead>
             <tbody>
               <tr v-for="game in seasonGames" :key="game.id">
-                <td>{{ formatDate(game.gameDate) }}</td>
+                <td>{{ formatDueDate(game.gameDate) }}</td>
                 <td>{{ toTimeInputValue(game.startTime) }}</td>
                 <td>{{ game.location }}</td>
                 <td>{{ game.homeTeam?.name }}</td>

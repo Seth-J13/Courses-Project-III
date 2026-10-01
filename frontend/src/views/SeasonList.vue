@@ -4,7 +4,7 @@ import { useRouter } from "vue-router";
 import seasonServices from "../services/seasonServices.js";
 import leagueServices from "../services/leagueServices.js";
 import SeasonForm from "../components/SeasonForm.vue";
-import { toDateInputValue, formatDate } from "../config/validation.js";
+import { toDateInputValue, formatDueDate } from "../config/validation.js";
 
 const router = useRouter();
 
@@ -216,8 +216,8 @@ onMounted(retrieveSeasons);
             <tr v-for="season in seasons" :key="season.id">
               <td>{{ season.name }}</td>
               <td>{{ season.league?.name }}</td>
-              <td>{{ formatDate(season.startDate) }}</td>
-              <td>{{ formatDate(season.endDate) }}</td>
+              <td>{{ formatDueDate(season.startDate) }}</td>
+              <td>{{ formatDueDate(season.endDate) }}</td>
               <td>
                 <v-icon
                   size="small"

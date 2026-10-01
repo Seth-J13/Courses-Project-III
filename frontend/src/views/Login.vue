@@ -98,7 +98,7 @@ const handleSubmit = async () => {
           </v-card-text>
 
           <v-card-actions>
-            <v-btn variant="text" :to="{ name: 'register' }">
+            <v-btn variant="text" :to="{ name: 'Register' }">
               Create an account
             </v-btn>
           </v-card-actions>
