@@ -1,20 +1,35 @@
 export default (sequelize, Sequelize) => {
-  const League = sequelize.define("league", {
-    id: {
+  const League = sequelize.define("section", {
+    sectionId: {
       type: Sequelize.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-    name: {
+    CourseId: {
       type: Sequelize.STRING(50),
       allowNull: false,
-      unique: true,
     },
-    sport: {
-      type: Sequelize.ENUM("soccer", "baseball", "volleyball", "football"),
+    dayOfWeek: {
+      type: Sequelize.STRING(50),
+      allowNull: false,
+    },
+    RoomNum:{
+      type: Sequelize.INTEGER,
+      allowNull: false,
+    },
+    TimeStart: {
+      type: Sequelize.TIME,
+      allowNull: false,
+    },
+    TimeEnd: {
+      type: Sequelize.TIME,
+      allowNull: false,
+    },
+    FacultyId: {
+      type: Sequelize.INTEGER,
       allowNull: false,
     },
   });
 
-  return League;
+  return section;
 };
