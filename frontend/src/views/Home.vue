@@ -1,4 +1,10 @@
 <script setup>
+import { useRouter } from "vue-router";
+const router = useRouter();
+
+const help = () => {
+  console.log("Trying to go to login");
+}
 </script>
 
 <template>

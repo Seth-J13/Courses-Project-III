@@ -4,8 +4,8 @@ import { authenticate } from "../authorization/authorization.js";
 
 const router = Router();
 
-router.post("/register", authController.register);
-router.post("/login", authController.login);
-router.post("/logout", [authenticate], authController.logout);
+router.post("/Register", authController.register);
+router.post("/Login", authController.login);
+router.post("/Logout", [authenticate], authController.logout);
 
 export default router;

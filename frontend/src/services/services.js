@@ -3,7 +3,7 @@ import Utils from "../config/utils.js";
 import router from "../router.js";
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.DEV ? "http://localhost:3200/api/" : "/api/",
+  baseURL: import.meta.env.DEV ? "http://localhost:3200/courses/" : "/courses/",
   withCredentials: true,
 });
 
@@ -28,8 +28,8 @@ apiClient.interceptors.response.use(
 
     if (error.response?.status === 401 || /Unauthorized/i.test(message)) {
       Utils.removeItem("user");
-      if (router.hasRoute("login")) {
-        router.push({ name: "login" });
+      if (router.hasRoute("Login")) {
+        router.push({ name: "Login" });
       }
     }
 

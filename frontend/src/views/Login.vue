@@ -32,7 +32,7 @@ const handleSubmit = async () => {
 
     Utils.setStore("user", response.data);
     window.dispatchEvent(new CustomEvent("user-logged-in"));
-    await router.push({ name: "home" });
+    await router.push({ name: "SeasonList" });
   } catch (error) {
     errorMessage.value = error.response?.data?.message || "Login failed.";
   } finally {
@@ -91,7 +91,7 @@ const handleSubmit = async () => {
           </v-card-text>
 
           <v-card-actions>
-            <v-btn variant="text" :to="{ name: 'register' }">
+            <v-btn variant="text" :to="{ name: 'Register' }">
               Create an account
             </v-btn>
           </v-card-actions>
