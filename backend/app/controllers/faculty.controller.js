@@ -78,7 +78,7 @@ exports.update = async (req, res) => {
   }
 };
 
-exports.delete = async (req, res) =>{
+exports.delete = async (req, res) => {
   try
   {
     const faculty_id = parseInt(req.params.facultyId, 10);
@@ -102,7 +102,7 @@ exports.delete = async (req, res) =>{
   }
 };
 
-exports.create() = async (req, res) => {
+exports.create = async (req, res) => {
   try{
     const facultyId = parseInt(req.params.facultyId);
     
