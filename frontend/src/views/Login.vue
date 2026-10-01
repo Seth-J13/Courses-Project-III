@@ -6,12 +6,13 @@ import Utils from "../config/utils.js";
 
 const router = useRouter();
 const form = ref(null);
-const username = ref("");
+const email = ref("");
 const password = ref("");
 const loading = ref(false);
 const errorMessage = ref("");
+const snackbar = ref(false);
 
-const usernameRules = [(value) => !!value?.trim() || "Username is required."];
+const emailRules = [(value) => !!value?.trim() || "Email is required."];
 const passwordRules = [(value) => !!value || "Password is required."];
 
 const handleSubmit = async () => {
@@ -26,13 +27,19 @@ const handleSubmit = async () => {
 
   try {
     const response = await authServices.loginUser({
-      username: username.value.trim(),
+      email: email.value.trim(),
       password: password.value,
     });
 
     Utils.setStore("user", response.data);
     window.dispatchEvent(new CustomEvent("user-logged-in"));
-    await router.push({ name: "home" });
+    snackbar.value = true;
+
+    if (response.data.role === "admin") {
+      await router.push({ name: "semesters" });
+    } else if (response.data.role === "student") {
+      await router.push({ name: "enrollments" });
+    }
   } catch (error) {
     errorMessage.value = error.response?.data?.message || "Login failed.";
   } finally {
@@ -46,16 +53,16 @@ const handleSubmit = async () => {
     <v-row align="center" justify="center" class="fill-height">
       <v-col cols="12" sm="8" md="5" lg="4">
         <v-card elevation="2">
-          <v-card-title class="text-h5">Sign in</v-card-title>
+          <v-card-title class="text-h5">Login</v-card-title>
 
           <v-card-text>
             <v-form ref="form" @submit.prevent="handleSubmit">
               <v-text-field
-                v-model="username"
-                label="Username"
+                v-model="email"
+                label="Email"
                 density="comfortable"
-                autocomplete="username"
-                :rules="usernameRules"
+                autocomplete="email"
+                :rules="emailRules"
                 class="mb-2"
               />
 
@@ -85,7 +92,7 @@ const handleSubmit = async () => {
                 block
                 :loading="loading"
               >
-                Sign in
+                Login
               </v-btn>
             </v-form>
           </v-card-text>
@@ -98,5 +105,9 @@ const handleSubmit = async () => {
         </v-card>
       </v-col>
     </v-row>
+
+    <v-snackbar v-model="snackbar" timeout="3000">
+      Login successful!
+    </v-snackbar>
   </v-container>
 </template>

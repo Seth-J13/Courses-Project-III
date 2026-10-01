@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { Op } from "sequelize";
 import db from "../models/index.js";
@@ -115,35 +116,76 @@ exports.register = async (req, res) => {
     return res.status(500).send({ message: "Registration failed." });
   }
 };
+const readBasicCredentials = (req) => {
+  const header = req.headers.authorization || "";
+  if (!header.startsWith("Basic ")) {
+    return null;
+  }
+
+  const decoded = Buffer.from(header.slice("Basic ".length), "base64").toString("utf8");
+  const separator = decoded.indexOf(":");
+  if (separator < 0) {
+    return null;
+  }
+
+  return {
+    email: decoded.slice(0, separator).trim(),
+    password: decoded.slice(separator + 1),
+  };
+};
+
+const passwordMatches = (password, user) => {
+  const salt = Buffer.isBuffer(user.salt) ? user.salt : Buffer.from(user.salt);
+  const stored = Buffer.isBuffer(user.password) ? user.password : Buffer.from(user.password);
+  const hash = crypto.scryptSync(password, salt, stored.length);
+  if (stored.length !== hash.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(stored, hash);
+};
+
+const encryptSessionId = (id) => {
+  const iv = crypto.randomBytes(12);
+  const key = crypto.createHash("sha256").update(authConfig.secret).digest();
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([cipher.update(String(id), "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return Buffer.concat([iv, tag, encrypted]).toString("base64url");
+};
 
 exports.login = async (req, res) => {
   try {
-    const { username, password } = req.body;
-
-    if (!username?.trim()) {
-      return res.status(400).send({ message: "Username is required." });
-    }
-    if (!password) {
-      return res.status(400).send({ message: "Password is required." });
+    const credentials = readBasicCredentials(req);
+    if (!credentials?.email || !credentials.password) {
+      return res.status(401).send({ message: "Email and password are required." });
     }
 
-    const normalizedUsername = username.trim().toLowerCase();
     const user = await db.user.unscoped().findOne({
-      where: { username: normalizedUsername },
+      where: { email: credentials.email },
     });
 
     if (!user) {
-      return res.status(401).send({ message: "Invalid username or password." });
+      return res.status(401).send({ message: "User not found!" });
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    if (!passwordMatch) {
-      return res.status(401).send({ message: "Invalid username or password." });
+    if (!passwordMatches(credentials.password, user)) {
+      return res.status(401).send({ message: "Invalid password!" });
     }
 
-    const token = await createOrReuseSession(user);
+    const session = await db.session.create({
+      email: user.email,
+      expirationDate: new Date(Date.now() + SESSION_TTL_MS),
+      userId: user.id,
+    });
 
-    return res.status(200).send(buildAuthResponse(user, token));
+    return res.status(200).send({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      token: encryptSessionId(session.id),
+    });
   } catch (err) {
     logger.error(`Login failed: ${err.message}`);
     return res.status(500).send({ message: "Login failed." });
