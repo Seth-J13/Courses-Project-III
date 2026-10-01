@@ -7,8 +7,12 @@ const authServices = {
     return apiClient.post("Register", payload);
   },
 
-  loginUser(credentials) {
-    return apiClient.post("Login", credentials);
+  loginUser({ email, password }) {
+    return apiClient.post("login", {}, {
+      headers: {
+        Authorization: `Basic ${btoa(`${email}:${password}`)}`,
+      },
+    });
   },
 
   async logoutUser() {
