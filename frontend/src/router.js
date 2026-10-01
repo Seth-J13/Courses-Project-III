@@ -4,7 +4,7 @@ import Login from "./views/Login.vue";
 import Register from "./views/Register.vue";
 import Games from "./views/Games.vue";
 import TeamList from "./views/TeamList.vue";
-import Team from "./views/Team.vue";
+import Teams from "./views/Team.vue";
 import PeopleList from "./views/PeopleList.vue";
 import Season from "./views/Season.vue";
 import SeasonList from "./views/SeasonList.vue";
@@ -38,9 +38,9 @@ const router = createRouter({
       component: TeamList,
     },
     {
-      path: "/team",
-      name: "Team",
-      component: Team,
+      path: "/teams",
+      name: "Teams",
+      component: Teams,
     },
     {
       path: "/people-list",

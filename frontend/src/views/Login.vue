@@ -32,7 +32,7 @@ const handleSubmit = async () => {
 
     Utils.setStore("user", response.data);
     window.dispatchEvent(new CustomEvent("user-logged-in"));
-    await router.push({ name: "Home" });
+    await router.push({ name: "SeasonList" });
   } catch (error) {
     errorMessage.value = error.response?.data?.message || "Login failed.";
   } finally {
