@@ -4,7 +4,7 @@ import gameServices from "../services/gameServices.js";
 import seasonServices from "../services/seasonServices.js";
 import teamServices from "../services/teamServices.js";
 import GameForm from "../components/GameForm.vue";
-import { toDateInputValue, formatDate } from "../config/validation.js";
+import { toDateInputValue, formatDueDate } from "../config/validation.js";
 
 const emptyForm = () => ({
   seasonId: null,
@@ -231,7 +231,7 @@ onMounted(retrieveGames);
           </thead>
           <tbody>
             <tr v-for="game in games" :key="game.id">
-              <td>{{ formatDate(game.gameDate) }}</td>
+              <td>{{ formatDueDate(game.gameDate) }}</td>
               <td>{{ toTimeInputValue(game.startTime) }}</td>
               <td>{{ game.location }}</td>
               <td>{{ game.homeTeam?.name }}</td>

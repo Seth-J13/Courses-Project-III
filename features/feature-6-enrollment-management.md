@@ -14,7 +14,7 @@
 
 ### US-6.1: View Current Enrollments
 
-**As an** authenticated student user
+**As a** authenticated student user
 **I want to** see a list of all sections I am currently enrolled in
 **So that** I can know what I have on my schedule.
 
@@ -24,7 +24,7 @@
 
 ### US-6.2: Enrollment Details
 
-**As an** authenticated student user
+**As a** authenticated student user
 **I want to** see the details of a selected `enrollment`
 **So that** I can know about its details.
 
@@ -34,7 +34,7 @@
 
 ### US-6.3: Add Enrollment
 
-**As an** authenticated student user
+**As a** authenticated student user
 **I want to** add `enrollment`s to my `enrollment`s list
 **So that** I can change what I'm doing this semester.
 
@@ -44,7 +44,7 @@
 
 ### US-6.4: Remove Enrollment
 
-**As an** authenticated student user
+**As a** authenticated student user
 **I want to** remove `enrollment`s from my `enrollment`s list
 **So that** I can drop out of a `section`
 
@@ -54,7 +54,7 @@
 
 ### US-6.5: Seek semesters pagination
 
-**As any** authenticated student user
+**As a** authenticated student user
 **I want to** press the `Previous` and `Next` buttons in the `EnrollmentList.vue` view
 **So that** I can see my different semester's enrollments
 
@@ -64,7 +64,7 @@
 
 ### US-6.6: No editing enrollments
 
-**As any** authenticated student user
+**As a** authenticated student user
 **I want to** reject `PUT` on `enrollment` routes
 **So that** I can map `enrollment` accurately to the enroll/drop/withdraw process
 
@@ -147,8 +147,8 @@ This feature uses the `enrollment`s endpoints below (CUD sections and CUD semest
 | -------- | ----------------------------------------------------------- | ---- | --------------------------------------------------------------------------------- |
 | `GET`    | `/courses/enrollments/:universityId/`                       | Yes  | List the enrollments for the user where `:universityId === req.user.universityId` |
 | `POST`   | `/courses/enrollments/:universityId/`                       | Yes  | Add an `enrollment` to the user where `:universityId === req.user.universityId`   |
-| `GET`    | `/courses/enrollments/:universityId/semesters/:semesterId`  | Yes  | List only the enrollments the user `:universityId === req.user.universityId`      |
-| `GET`    | `/courses/sections/:sectionId`                              | Yes  | List the details of the `section` whose `sectionId === :sectionId`                |
+| `GET`    | `/courses/enrollments/:universityId/:semesterId`            | Yes  | List only the enrollments the user `:universityId === req.user.universityId`      |
+| `GET`    | `/courses/enrollments/:universityId/:semesterId/:sectionId` | Yes  | List details of the enrollment specified by the route parameters                  |
 | `DELETE` | `/courses/enrollments/:universityId/:semesterId/:sectionId` | Yes  | Remove the enrollment specified by the route parameters                           |
 
 **Unauthenticated write:** `401` `{ "message": "Unauthorized! No Auth Header" }` (or expired-token message).
@@ -293,8 +293,7 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 
 - **Given** I am a signed-in student user with `universityId` `1114442`
 - **And** enrollments exist for `universityId` `1027599`
-- **When** I request `GET /courses/enrollments/1027599`
-- **Or** I request `GET /courses/enrollments/1027599/semesters/:semesterId`
+- **When** I request `GET /courses/enrollments/1027599` or `GET /courses/enrollments/1027599/semesters/:semesterId`
 - **Then** the API returns `404` with `{ "message": "Cannot find Enrollment with universityId=1027599." }`
 - **And** I do not receive another user's enrollment data
 
@@ -384,8 +383,7 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 #### Scenario: Create enrollment with improper course ID
 
 - **Given** I am viewing the `Add Enrollment` modal
-- **When** I input a `courseId` in the `Course` combobox that does not exist
-- **Or** the `courseId` I inputted is not offered this semester
+- **When** I input a `courseId` in the `Course` combobox that does not exist or the `courseId` I inputted is not offered this semester
 - **And** I attempt to confirm
 - **Then** inline validation blocks the request
 - **And** I see the message **"Please select a course offered this semester"**
