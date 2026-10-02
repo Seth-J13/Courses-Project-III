@@ -2,151 +2,144 @@ import db from "../models/index.js";
 import logger from "../config/logger.js";
 import { parseId, requiredText } from "../helpers/fields.js";
 
-const SPORTS = ["soccer", "baseball", "volleyball", "football"];
 const exports = {};
+
+const checkValidation = (body) => {
+  const courseId = requiredText(body.courseId);
+  const dayOfWeek = requiredText(body.dayOfWeek);
+  const roomNum = requiredText(body.roomNum);
+  const timeStart = requiredText(body.timeStart);
+  const timeEnd = requiredText(body.timeEnd);
+  const facultyId = parseId(body.facultyId);
+
+  if (!courseId) return { error: "courseId is required." };
+  if (!dayOfWeek) return { error: "dayOfWeek is required." };
+  if (!roomNum) return { error: "roomNum is required." };
+  if (!timeStart) return { error: "timeStart is required." };
+  if (!timeEnd) return { error: "timeEnd is required." };
+  if (facultyId === null) return { error: "facultyId is required." };
+  if (timeStart >= timeEnd) {
+    return { error: "Time start must be less than time end." };
+  }
+
+  return { courseId, dayOfWeek, roomNum, timeStart, timeEnd, facultyId };
+};
+
+const timeOverlaps = (timeStart, timeEnd, otherTimeStart, otherTimeEnd) => {
+  return timeStart < otherTimeEnd && timeEnd > otherTimeStart;
+};
+
+const nextSection = (section, otherSection) => {
+  return section.timeStart > otherSection.timeEnd;
+};
+
+const conflicts = (section, otherSection) => {
+  if (
+    section.sectionId != null &&
+    String(section.sectionId) === String(otherSection.sectionId)
+  ) {
+    return false;
+  }
+  if (section.dayOfWeek !== otherSection.dayOfWeek) {
+    return false;
+  }
+  if (nextSection(section, otherSection) || nextSection(otherSection, section)) {
+    return false;
+  }
+  return timeOverlaps(
+    section.timeStart,
+    section.timeEnd,
+    otherSection.timeStart,
+    otherSection.timeEnd
+  );
+};
+
+const conflictMessage = (section, otherSections) => {
+  for (const otherSection of otherSections) {
+    if (!conflicts(section, otherSection)) continue;
+    if (String(section.facultyId) === String(otherSection.facultyId)) {
+      return "Faculty is already taken for this time.";
+    }
+    if (String(section.roomNum) === String(otherSection.roomNum)) {
+      return "Room is already taken for this time.";
+    }
+  }
+  return null;
+};
 
 exports.findAll = async (req, res) => {
   try {
-    const leagues = await db.league.findAll({
-      order: [["name", "ASC"]],
-    });
-
-    return res.send(leagues);
+    const sections = await db.section.findAll();
+    return res.send(sections);
   } catch (err) {
-    logger.error(`league findAll failed: ${err.message}`);
-    return res.status(500).send({ message: "Failed to fetch leagues." });
+    logger.error(`section findAll failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to fetch sections." });
   }
 };
 
 exports.create = async (req, res) => {
   try {
-    const name = requiredText(req.body.name);
-    const sport = requiredText(req.body.sport);
-
-    if (!name || !sport) {
-      return res.status(400).send({ message: "Required" });
+    const validated = checkValidation(req.body);
+    if (validated.error) {
+      return res.status(400).send({ message: validated.error });
     }
 
-    if (name.length > 50) {
-      return res.status(400).send({
-        message: "League name must be 50 characters or fewer.",
-      });
+    const others = await db.section.findAll();
+    const message = conflictMessage(validated, others);
+    if (message) {
+      return res.status(400).send({ message });
     }
 
-    if (!SPORTS.includes(sport)) {
-      return res.status(400).send({
-        message: "Sport must be soccer, baseball, volleyball, or football.",
-      });
-    }
-
-    const existing = await db.league.findOne({
-      where: { name },
-    });
-    if (existing) {
-      return res.status(400).send({ message: "League name is already taken." });
-    }
-
-    const league = await db.league.create({
-      name,
-      sport,
-    });
-
-    return res.status(201).send(league);
+    const section = await db.section.create(validated);
+    return res.status(201).send(section);
   } catch (err) {
-    logger.error(`league create failed: ${err.message}`);
-    return res.status(500).send({ message: "Failed to create league." });
+    logger.error(`section create failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to create section." });
   }
 };
 
 exports.update = async (req, res) => {
   try {
-    const leagueId = parseId(req.params.leagueId ?? req.body.leagueId);
-    const name = requiredText(req.body.name);
-    const sport = requiredText(req.body.sport);
-
-    if (leagueId === null) {
-      return res.status(400).send({ message: "Invalid league id." });
-    }
-
-    const existing = await db.league.findByPk(leagueId);
+    const sectionId = parseId(req.params.sectionId);
+    const existing = sectionId === null ? null : await db.section.findByPk(sectionId);
     if (!existing) {
-      return res.status(404).send({
-        message: `League with id=${leagueId} not found.`,
-      });
+      return res.status(400).send({ message: "Section does not exist." });
     }
 
-    if (!name || !sport) {
-      return res.status(400).send({ message: "Required" });
+    const validated = checkValidation(req.body);
+    if (validated.error) {
+      return res.status(400).send({ message: validated.error });
     }
 
-    if (name.length > 50) {
-      return res.status(400).send({
-        message: "League name must be 50 characters or fewer.",
-      });
+    const candidate = { ...validated, sectionId };
+    const others = await db.section.findAll();
+    const message = conflictMessage(candidate, others);
+    if (message) {
+      return res.status(400).send({ message });
     }
 
-    if (!SPORTS.includes(sport)) {
-      return res.status(400).send({
-        message: "Sport must be soccer, baseball, volleyball, or football.",
-      });
-    }
-
-    const duplicate = await db.league.findOne({
-      where: { name },
-    });
-    if (duplicate && duplicate.id !== leagueId) {
-      return res.status(400).send({ message: "League name is already taken." });
-    }
-
-    await db.league.update(
-      {
-        name,
-        sport,
-      },
-      { where: { id: leagueId } }
-    );
-
-    return res.status(200).send({ message: "league updated successfully." });
+    await db.section.update(validated, { where: { sectionId } });
+    const section = await db.section.findByPk(sectionId);
+    return res.send(section);
   } catch (err) {
-    logger.error(`league update failed: ${err.message}`);
-    return res.status(500).send({ message: "Failed to update league." });
+    logger.error(`section update failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to update section." });
   }
 };
 
 exports.remove = async (req, res) => {
   try {
-    const leagueId = parseId(req.params.leagueId);
-    if (leagueId === null) {
-      return res.status(400).send({ message: "Invalid league id." });
-    }
-
-    const existing = await db.league.findByPk(leagueId);
+    const sectionId = parseId(req.params.sectionId);
+    const existing = sectionId === null ? null : await db.section.findByPk(sectionId);
     if (!existing) {
-      return res.status(404).send({
-        message: `League with id=${leagueId} not found.`,
-      });
+      return res.status(400).send({ message: "Section does not exist." });
     }
 
-    const seasonCount = await db.season.count({ where: { leagueId } });
-    if (seasonCount > 0) {
-      return res.status(400).send({
-        message: "Cannot delete league: seasons still exist.",
-      });
-    }
-
-    const teamCount = await db.team.count({ where: { leagueId } });
-    if (teamCount > 0) {
-      return res.status(400).send({
-        message: "Cannot delete league: teams still exist.",
-      });
-    }
-
-    await db.league.destroy({ where: { id: leagueId } });
-
-    return res.status(200).send({ message: "league deleted successfully." });
+    await db.section.destroy({ where: { sectionId } });
+    return res.send({ message: "Section deleted." });
   } catch (err) {
-    logger.error(`league delete failed: ${err.message}`);
-    return res.status(500).send({ message: "Failed to delete league." });
+    logger.error(`section delete failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to delete section." });
   }
 };
 
