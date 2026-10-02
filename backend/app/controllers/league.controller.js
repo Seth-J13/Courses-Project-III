@@ -4,77 +4,143 @@ import { parseId, requiredText } from "../helpers/fields.js";
 
 const exports = {};
 
-const requiredFields = {
-  sectionId: "sectionId",
-  courseId: "CourseId",
-  dayOfWeek: "dayOfWeek",
-  roomNum: "RoomNum",
-  timeStart: "TimeStart",
-  timeEnd: "TimeEnd",
-  facultyId: "FacultyId",
+const checkValidation = (body) => {
+  const courseId = requiredText(body.courseId);
+  const dayOfWeek = requiredText(body.dayOfWeek);
+  const roomNum = requiredText(body.roomNum);
+  const timeStart = requiredText(body.timeStart);
+  const timeEnd = requiredText(body.timeEnd);
+  const facultyId = parseId(body.facultyId);
+
+  if (!courseId) return { error: "courseId is required." };
+  if (!dayOfWeek) return { error: "dayOfWeek is required." };
+  if (!roomNum) return { error: "roomNum is required." };
+  if (!timeStart) return { error: "timeStart is required." };
+  if (!timeEnd) return { error: "timeEnd is required." };
+  if (facultyId === null) return { error: "facultyId is required." };
+  if (timeStart >= timeEnd) {
+    return { error: "Time start must be less than time end." };
+  }
+
+  return { courseId, dayOfWeek, roomNum, timeStart, timeEnd, facultyId };
 };
 
-const checkValidation = (req) => {
- /* const body {
-
-      sectionId: "sectionId",
-      courseId: "CourseId",
-      dayOfWeek: "dayOfWeek",
-      roomNum: "RoomNum",
-      timeStart: "TimeStart",
-      timeEnd: "TimeEnd",
-      facultyId: "FacultyId",
-}*/
-
-    if (req.body.courseId === null)  { return"courseId is required." };
-    if (req.body.dayOfWeek === null) { return "dayOfWeek is required." };
-    if (req.body.roomNum  === null)  { return "roomNum is required." };
-    if (req.body.timeStart  === null) { return "timeStart is required." };
-    if (req.body.timeEnd  === null) { return "timeEnd is required." };
-    if (req.body.facultyId === null) { return "facultyId is required." };
-    if (req.body.timeStart >= req.body.timeEnd) { return "Time start must be less than time end." };
-    
-return { courseId: req.body.courseId, dayOfWeek: req.body.dayOfWeek, roomNum: req.body.roomNum, timeStart: req.body.timeStart, timeEnd: req.body.timeEnd, facultyId: req.body.facultyId }; 
-  
-};
 const timeOverlaps = (timeStart, timeEnd, otherTimeStart, otherTimeEnd) => {
   return timeStart < otherTimeEnd && timeEnd > otherTimeStart;
 };
 
-const conflicts = (section) => {
-  return section.timeOverlaps(section.timeStart, section.timeEnd, otherSection.timeStart, otherSection.timeEnd);
-};
-
-const nextSection = (section) => {
+const nextSection = (section, otherSection) => {
   return section.timeStart > otherSection.timeEnd;
 };
+
+const conflicts = (section, otherSection) => {
+  if (
+    section.sectionId != null &&
+    String(section.sectionId) === String(otherSection.sectionId)
+  ) {
+    return false;
+  }
+  if (section.dayOfWeek !== otherSection.dayOfWeek) {
+    return false;
+  }
+  if (nextSection(section, otherSection) || nextSection(otherSection, section)) {
+    return false;
+  }
+  return timeOverlaps(
+    section.timeStart,
+    section.timeEnd,
+    otherSection.timeStart,
+    otherSection.timeEnd
+  );
+};
+
+const conflictMessage = (section, otherSections) => {
+  for (const otherSection of otherSections) {
+    if (!conflicts(section, otherSection)) continue;
+    if (String(section.facultyId) === String(otherSection.facultyId)) {
+      return "Faculty is already taken for this time.";
+    }
+    if (String(section.roomNum) === String(otherSection.roomNum)) {
+      return "Room is already taken for this time.";
+    }
+  }
+  return null;
+};
+
+exports.findAll = async (req, res) => {
+  try {
+    const sections = await db.section.findAll();
+    return res.send(sections);
+  } catch (err) {
+    logger.error(`section findAll failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to fetch sections." });
+  }
+};
+
 exports.create = async (req, res) => {
-  const { courseId, dayOfWeek, roomNum, timeStart, timeEnd, facultyId } = validateSection(req.body);
-  if (conflicts(section)) {
-    return res.status(400).send({ message: "Section conflicts with another section." });
+  try {
+    const validated = checkValidation(req.body);
+    if (validated.error) {
+      return res.status(400).send({ message: validated.error });
+    }
+
+    const others = await db.section.findAll();
+    const message = conflictMessage(validated, others);
+    if (message) {
+      return res.status(400).send({ message });
+    }
+
+    const section = await db.section.create(validated);
+    return res.status(201).send(section);
+  } catch (err) {
+    logger.error(`section create failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to create section." });
   }
-  if (nextSection(section)) {
-    return res.status(400).send({ message: "Section conflicts with another section." });
-  }
-  const section = await db.section.create({ courseId, dayOfWeek, roomNum, timeStart, timeEnd, facultyId });
-  return res.send(section);
 };
 
 exports.update = async (req, res) => {
-  const { courseId, dayOfWeek, roomNum, timeStart, timeEnd, facultyId } = validateSection(req.body);
-  if (conflicts(section)) {
-    return res.status(400).send({ message: "Section conflicts with another section." });
+  try {
+    const sectionId = parseId(req.params.sectionId);
+    const existing = sectionId === null ? null : await db.section.findByPk(sectionId);
+    if (!existing) {
+      return res.status(400).send({ message: "Section does not exist." });
+    }
+
+    const validated = checkValidation(req.body);
+    if (validated.error) {
+      return res.status(400).send({ message: validated.error });
+    }
+
+    const candidate = { ...validated, sectionId };
+    const others = await db.section.findAll();
+    const message = conflictMessage(candidate, others);
+    if (message) {
+      return res.status(400).send({ message });
+    }
+
+    await db.section.update(validated, { where: { sectionId } });
+    const section = await db.section.findByPk(sectionId);
+    return res.send(section);
+  } catch (err) {
+    logger.error(`section update failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to update section." });
   }
-  if (nextSection(section)) {
-    return res.status(400).send({ message: "Section conflicts with another section." });
-  }
-  const section = await db.section.update({ courseId, dayOfWeek, roomNum, timeStart, timeEnd, facultyId });
-  return res.send(section);
 };
 
-exports.delete = async (req, res) => {
-  const { sectionId } = validateSection(req.body);
-  const section = await db.section.destroy({ where: { sectionId } });
-  return res.send(section);
+exports.remove = async (req, res) => {
+  try {
+    const sectionId = parseId(req.params.sectionId);
+    const existing = sectionId === null ? null : await db.section.findByPk(sectionId);
+    if (!existing) {
+      return res.status(400).send({ message: "Section does not exist." });
+    }
+
+    await db.section.destroy({ where: { sectionId } });
+    return res.send({ message: "Section deleted." });
+  } catch (err) {
+    logger.error(`section delete failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to delete section." });
+  }
 };
+
 export default exports;

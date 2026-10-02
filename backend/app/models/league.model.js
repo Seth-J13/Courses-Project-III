@@ -5,7 +5,7 @@ export default (sequelize, Sequelize) => {
       primaryKey: true,
       autoIncrement: true,
     },
-    CourseId: {
+    courseId: {
       type: Sequelize.STRING(50),
       allowNull: false,
     },
@@ -13,23 +13,23 @@ export default (sequelize, Sequelize) => {
       type: Sequelize.STRING(50),
       allowNull: false,
     },
-    RoomNum:{
-      type: Sequelize.INTEGER,
+    roomNum: {
+      type: Sequelize.STRING(7),
       allowNull: false,
     },
-    TimeStart: {
+    timeStart: {
       type: Sequelize.TIME,
       allowNull: false,
     },
-    TimeEnd: {
+    timeEnd: {
       type: Sequelize.TIME,
       allowNull: false,
     },
-    FacultyId: {
+    facultyId: {
       type: Sequelize.INTEGER,
       allowNull: false,
     },
   });
 
-  return section;
+  return League;
 };

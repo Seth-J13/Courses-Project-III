@@ -1,5 +1,5 @@
 import { Router } from "express";
-import sectionController from "../controllers/section.controller.js";
+import sectionController from "../controllers/league.controller.js";
 import { authenticate, authenticateAdmin } from "../authorization/authorization.js";
 
 const router = Router();
