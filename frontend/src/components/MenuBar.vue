@@ -157,7 +157,7 @@ const handleLogout = async () => {
 
 <template>
   <v-app-bar color="primary" density="comfortable">
-    <v-app-bar-title>League Management System</v-app-bar-title>
+    <v-app-bar-title>Enrollment Management System</v-app-bar-title>
 
     <v-btn
       v-if="user?.role === 'admin'"

@@ -4,7 +4,6 @@ import { useRouter } from "vue-router";
 import teamServices from "../services/teamServices.js";
 import leagueServices from "../services/leagueServices.js";
 import peopleServices from "../services/peopleServices.js";
-import TeamForm from "../components/TeamForm.vue";
 import Utils from "../config/utils.js";
 
 const router = useRouter();

@@ -4,8 +4,6 @@ import { useRoute } from "vue-router";
 import teamServices from "../services/teamServices.js";
 import leagueServices from "../services/leagueServices.js";
 import peopleServices from "../services/peopleServices.js";
-import TeamForm from "../components/TeamForm.vue";
-import PlayerForm from "../components/PlayerForm.vue";
 import MenuBar from "../components/MenuBar.vue";
 import Utils from "../config/utils.js";
 
@@ -335,13 +333,13 @@ watch(() => route.params.teamId, retrieveTeam);
       <v-card rounded="lg">
         <v-card-title>Edit Team</v-card-title>
         <v-card-text>
-          <TeamForm
+          <!-- <TeamForm
             ref="formRef"
             v-model="form"
             :leagues="leagues"
             :people="people"
             @submit="saveTeam"
-          />
+          /> This was the old team form, no longer needed for coureses -->
           <v-alert v-if="formError" type="error" density="compact" class="mt-2">
             {{ formError }}
           </v-alert>
@@ -366,12 +364,12 @@ watch(() => route.params.teamId, retrieveTeam);
       <v-card rounded="lg">
         <v-card-title>{{ playerFormTitle }}</v-card-title>
         <v-card-text>
-          <PlayerForm
+          <!-- <PlayerForm
             ref="playerFormRef"
             v-model="playerForm"
             :people="people"
             @submit="savePlayer"
-          />
+          /> This was the old player form, no longer needed for courses -->
           <v-alert
             v-if="playerFormError"
             type="error"

@@ -1,13 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Home from "./views/Home.vue";
 import Login from "./views/Login.vue";
+import Faculty from "./views/Faculty.vue";
 import Register from "./views/Register.vue";
-import Games from "./views/Games.vue";
-import TeamList from "./views/TeamList.vue";
-import Teams from "./views/Team.vue";
-import PeopleList from "./views/PeopleList.vue";
-import Season from "./views/Season.vue";
-import SeasonList from "./views/SeasonList.vue";
+import Semester from "./views/Semester.vue/";
+import CourseList from "./views/CourseList.vue";
+import SectionsList from "./views/SectionsList.vue"
+import EnrollmentList from "./views/EnrollmentList.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -23,39 +21,29 @@ const router = createRouter({
       component: Register,
     },
     {
-      path: "/home",
-      name: "Home",
-      component: Home,
+      path: "/course-list",
+      name: "CourseList",
+      component: CourseList,
     },
     {
-      path: "/games",
-      name: "Games",
-      component: Games,
+      path: "/faculty",
+      name: "Faculty",
+      component: Faculty,
     },
     {
-      path: "/team-list",
-      name: "TeamList",
-      component: TeamList,
+      path: "/semester",
+      name: "Semester",
+      component: Semester,
     },
     {
-      path: "/teams",
-      name: "Teams",
-      component: Teams,
+      path: "/sections",
+      name: "Sections",
+      component: SectionsList
     },
     {
-      path: "/people-list",
-      name: "PeopleList",
-      component: PeopleList,  
-    },
-    {
-      path: "/season",
-      name: "Season",
-      component: Season,
-    },
-    {
-      path: "/season-list",
-      name: "SeasonList",
-      component: SeasonList,
+      path: "/enrollment-list",
+      name: "EnrollmentList",
+      component: EnrollmentList,
     },
     {
       path: "/:pathMatch(.*)*",

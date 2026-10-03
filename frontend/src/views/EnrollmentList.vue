@@ -3,7 +3,6 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import seasonServices from "../services/seasonServices.js";
 import leagueServices from "../services/leagueServices.js";
-import SeasonForm from "../components/SeasonForm.vue";
 import { toDateInputValue, formatDueDate } from "../config/validation.js";
 
 const router = useRouter();
@@ -254,12 +253,12 @@ onMounted(retrieveSeasons);
       <v-card rounded="lg">
         <v-card-title>{{ formTitle }}</v-card-title>
         <v-card-text>
-          <SeasonForm
+          <!-- <SeasonForm
             ref="formRef"
             v-model="form"
             :leagues="leagues"
             @submit="saveSeason"
-          />
+          /> This was the old season form, not needed for courses-->
           <v-alert
             v-if="formError"
             type="error"
