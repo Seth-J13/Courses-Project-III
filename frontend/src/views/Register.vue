@@ -49,7 +49,7 @@ const handleSubmit = async () => {
 
     Utils.setStore("user", response.data);
     window.dispatchEvent(new CustomEvent("user-logged-in"));
-    await router.push({ name: "Home" });
+    await router.push({ name: "EnrollmentList" });
   } catch (error) {
     errorMessage.value = error.response?.data?.message || "Registration failed.";
   } finally {

@@ -21,6 +21,11 @@ const router = createRouter({
       component: Register,
     },
     {
+      path: "/sections",
+      name: "Sections",
+      component: SectionsList
+    },
+    {
       path: "/course-list",
       name: "CourseList",
       component: CourseList,
@@ -34,11 +39,6 @@ const router = createRouter({
       path: "/semester",
       name: "Semester",
       component: Semester,
-    },
-    {
-      path: "/sections",
-      name: "Sections",
-      component: SectionsList
     },
     {
       path: "/enrollment-list",

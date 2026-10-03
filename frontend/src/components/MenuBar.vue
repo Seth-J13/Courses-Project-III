@@ -163,43 +163,34 @@ const handleLogout = async () => {
       v-if="user?.role === 'admin'"
       variant="text"
       color="white"
-      to="/leagues"
+      to="/sections"
     >
-      Leagues
-    </v-btn>
-    <v-btn
-      v-if="user?.role === 'admin' || user?.role === 'manager'"
-      variant="text"
-      color="white"
-      to="/teams"
-    >
-      Teams
+      Sections
     </v-btn>
     <v-btn
       v-if="user?.role === 'admin'"
       variant="text"
       color="white"
-      to="/games"
+      to="/course"
     >
-      Games
+      Courses
     </v-btn>
     <v-btn
       v-if="user?.role === 'admin'"
       variant="text"
       color="white"
-      to="/people"
+      to="/faculty"
     >
-      People
+      Faculty
     </v-btn>
     <v-btn
       v-if="user?.role === 'admin'"
       variant="text"
       color="white"
-      to="/seasons"
+      to="/semester"
     >
-      Seasons
+      Semester
     </v-btn>
-
     <v-spacer />
 
     <v-menu

@@ -36,9 +36,9 @@ const handleSubmit = async () => {
     snackbar.value = true;
 
     if (response.data.role === "admin") {
-      await router.push({ name: "semesters" });
+      await router.push({ name: "Semester" });
     } else if (response.data.role === "student") {
-      await router.push({ name: "enrollments" });
+      await router.push({ name: "EnrollmentList" });
     }
   } catch (error) {
     errorMessage.value = error.response?.data?.message || "Login failed.";

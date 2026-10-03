@@ -1,5 +1,5 @@
 import { Router } from "express";
-import courseController from "../controllers/course.controller.js";
+import courseRoutes from "./course.routes.js"
 import authRoutes from "./auth.routes.js";
 import userRoutes from "./user.routes.js";
 import enrollmentRoutes from "./enrollment.routes.js"
@@ -14,7 +14,7 @@ router.get("/health", (_req, res) => {
 // import authRoutes from "./auth.routes.js";
 // router.use("/", authRoutes);
 router.use("/", authRoutes);
-router.use("/courses", courseController);
+router.use("/courses", courseRoutes);
 router.use("/users", userRoutes);
 router.get("/enrollments", enrollmentRoutes);
 router.use("/faculty", facultyRoutes);
