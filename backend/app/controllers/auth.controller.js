@@ -1,12 +1,10 @@
-import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import jwt from "jsonwebtoken";
 import { Op } from "sequelize";
 import db from "../models/index.js";
 import authConfig from "../config/auth.config.js";
 import logger from "../config/logger.js";
+import { decryptSessionId } from "../authorization/authorization.js"
 
-const SALT_ROUNDS = 10;
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
 const buildAuthResponse = (user, token) => ({
@@ -18,13 +16,21 @@ const buildAuthResponse = (user, token) => ({
   token,
 });
 
+const encryptSessionId = (id) => {
+  const iv = crypto.randomBytes(12);
+  const key = crypto.createHash("sha256").update(authConfig.secret).digest();
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([cipher.update(String(id), "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return Buffer.concat([iv, tag, encrypted]).toString("base64url");
+};
+
 const createOrReuseSession = async (user) => {
   const existingSession = await db.session.findOne({
     where: {
       userId: user.id,
       email: user.email,
-      expirationDate: { [Op.gte]: new Date() },
-      token: { [Op.ne]: "" },
+      expirationDate: { [Op.gte]: new Date() }
     },
   });
 
@@ -33,11 +39,6 @@ const createOrReuseSession = async (user) => {
   }
 
   const expirationDate = new Date(Date.now() + SESSION_TTL_MS);
-  const token = jwt.sign(
-    { userId: user.id, email: user.email },
-    authConfig.secret,
-    { expiresIn: 86400 }
-  );
 
   await db.session.create({
     token,
@@ -46,7 +47,7 @@ const createOrReuseSession = async (user) => {
     userId: user.id,
   });
 
-  return token;
+  return encryptSessionId(session.id);
 };
 
 const exports = {};
@@ -125,15 +126,6 @@ const passwordMatches = (password, user) => {
   return crypto.timingSafeEqual(stored, hash);
 };
 
-const encryptSessionId = (id) => {
-  const iv = crypto.randomBytes(12);
-  const key = crypto.createHash("sha256").update(authConfig.secret).digest();
-  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
-  const encrypted = Buffer.concat([cipher.update(String(id), "utf8"), cipher.final()]);
-  const tag = cipher.getAuthTag();
-  return Buffer.concat([iv, tag, encrypted]).toString("base64url");
-};
-
 exports.login = async (req, res) => {
   try {
     const credentials = readBasicCredentials(req);
@@ -179,7 +171,10 @@ exports.logout = async (req, res) => {
     const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
 
     if (token) {
-      await db.session.update({ token: "" }, { where: { token } });
+      const sessionId = decryptSessionId(token);
+      if (sessionId != null) {
+        await db.session.destroy({ where: { id: sessionId } });
+      }
     }
 
     return res.status(200).send({ message: "Signed out successfully." });
