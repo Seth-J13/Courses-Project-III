@@ -44,7 +44,7 @@ describe("Feature 6 — Game Management", () => {
       });
 
       const response = await request(app)
-        .post("/courses/games")
+        .post("/courses-t3/games")
         .set(authHeader(token))
         .send(
           validGame({
@@ -74,7 +74,7 @@ describe("Feature 6 — Game Management", () => {
       });
 
       const response = await request(app)
-        .post("/courses/games")
+        .post("/courses-t3/games")
         .set(authHeader(token))
         .send(
           validGame({
@@ -106,7 +106,7 @@ describe("Feature 6 — Game Management", () => {
       });
 
       const response = await request(app)
-        .post("/courses/games")
+        .post("/courses-t3/games")
         .set(authHeader(token))
         .send(
           validGame({
@@ -144,7 +144,7 @@ describe("Feature 6 — Game Management", () => {
       });
 
       const response = await request(app)
-        .get("/courses/games")
+        .get("/courses-t3/games")
         .set(authHeader(token));
 
       expect(response.status).toBe(200);
@@ -162,7 +162,7 @@ describe("Feature 6 — Game Management", () => {
       const created = await createGame(app, token);
 
       const response = await request(app)
-        .put(`/courses/games/${created.body.id}`)
+        .put(`/courses-t3/games/${created.body.id}`)
         .set(authHeader(token))
         .send({
           seasonId: created.body.seasonId,
@@ -191,7 +191,7 @@ describe("Feature 6 — Game Management", () => {
       const created = await createGame(app, token);
 
       const response = await request(app)
-        .delete(`/courses/games/${created.body.id}`)
+        .delete(`/courses-t3/games/${created.body.id}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(200);
@@ -210,7 +210,7 @@ describe("Feature 6 — Game Management", () => {
       });
 
       const response = await request(app)
-        .get("/courses/games")
+        .get("/courses-t3/games")
         .set(authHeader(student.body.token));
 
       expect(response.status).toBe(200);
@@ -236,7 +236,7 @@ describe("Feature 6 — Game Management", () => {
       });
 
       const response = await request(app)
-        .post("/courses/games")
+        .post("/courses-t3/games")
         .set(authHeader(student.body.token))
         .send(
           validGame({
@@ -252,7 +252,7 @@ describe("Feature 6 — Game Management", () => {
     });
 
     it("Unauthenticated API request to games", async () => {
-      const response = await request(app).get("/courses/games");
+      const response = await request(app).get("/courses-t3/games");
 
       expect(response.status).toBe(401);
       expect(response.body.message).toMatch(/Unauthorized/i);
@@ -265,7 +265,7 @@ describe("Feature 6 — Game Management", () => {
       const created = await createGame(app, token);
 
       const response = await request(app)
-        .delete(`/courses/seasons/${created.body.seasonId}`)
+        .delete(`/courses-t3/seasons/${created.body.seasonId}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(400);
@@ -281,7 +281,7 @@ describe("Feature 6 — Game Management", () => {
       const created = await createGame(app, token);
 
       const response = await request(app)
-        .delete(`/courses/teams/${created.body.homeTeamId}`)
+        .delete(`/courses-t3/teams/${created.body.homeTeamId}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(400);

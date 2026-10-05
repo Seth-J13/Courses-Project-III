@@ -106,10 +106,10 @@
 
 | Method | Endpoint | Auth | Purpose |
 |--------|----------|------|---------|
-| `GET` | `/courses/faculty` | Yes | Retrieve all faculty |
-| `POST` | `/courses/faculty` | Yes | Create a new faculty |
-| `PUT` | `/courses/faculty/:facultyId` | Yes | Update a faculty with specified facultyId |
-| `DELETE` | `/courses/faculty/:facultyId` | Yes | Delete a faculty with specified facultyId |
+| `GET` | `/courses-t3/faculty` | Yes | Retrieve all faculty |
+| `POST` | `/courses-t3/faculty` | Yes | Create a new faculty |
+| `PUT` | `/courses-t3/faculty/:facultyId` | Yes | Update a faculty with specified facultyId |
+| `DELETE` | `/courses-t3/faculty/:facultyId` | Yes | Delete a faculty with specified facultyId |
 
 
 **Create/Update faculty request body:**
