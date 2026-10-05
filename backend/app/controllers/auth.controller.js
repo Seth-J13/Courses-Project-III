@@ -35,13 +35,12 @@ const createOrReuseSession = async (user) => {
   });
 
   if (existingSession) {
-    return existingSession.token;
+    return existingSession.id;
   }
 
   const expirationDate = new Date(Date.now() + SESSION_TTL_MS);
 
-  await db.session.create({
-    token,
+  const session = await db.session.create({
     email: user.email,
     expirationDate,
     userId: user.id,
