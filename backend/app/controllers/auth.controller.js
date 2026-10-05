@@ -11,7 +11,6 @@ const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
 const buildAuthResponse = (user, token) => ({
   userId: user.id,
-  username: user.username,
   email: user.email,
   fName: user.fName,
   lName: user.lName,
@@ -54,7 +53,7 @@ const exports = {};
 
 exports.register = async (req, res) => {
   try {
-    const { fName, lName, email, username, password } = req.body;
+    const { fName, lName, email, password } = req.body;
 
     if (!fName?.trim()) {
       return res.status(400).send({ message: "First name is required." });
@@ -65,23 +64,11 @@ exports.register = async (req, res) => {
     if (!email?.trim()) {
       return res.status(400).send({ message: "Email is required." });
     }
-    if (!username?.trim()) {
-      return res.status(400).send({ message: "Username is required." });
-    }
     if (!password) {
       return res.status(400).send({ message: "Password is required." });
     }
     if (password.length < 8) {
       return res.status(400).send({ message: "Password must be at least 8 characters." });
-    }
-
-    const normalizedUsername = username.trim().toLowerCase();
-
-    const existingUsername = await db.user.findOne({
-      where: { username: normalizedUsername },
-    });
-    if (existingUsername) {
-      return res.status(400).send({ message: "Username is already taken." });
     }
 
     const existingEmail = await db.user.findOne({
@@ -90,23 +77,17 @@ exports.register = async (req, res) => {
     if (existingEmail) {
       return res.status(400).send({ message: "Email is already registered." });
     }
+    const salt = crypto.randomBytes(16);
+    const passwordHash = crypto.scryptSync(password, salt, 64);
 
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     const user = await db.user.create({
       fName: fName.trim(),
       lName: lName.trim(),
       email: email.trim(),
-      username: normalizedUsername,
-      password: hashedPassword,
+      password: passwordHash,
+      salt: salt,
+      role: "student",
     });
-
-    const normalizedEmail = email.trim().toLowerCase();
-    const matchingPeople = (await db.person.findAll()).filter((person) =>
-      person.email.trim().toLowerCase() === normalizedEmail
-    );
-    if (matchingPeople.length === 1 && matchingPeople[0].userId == null) {
-      await matchingPeople[0].update({ userId: user.id });
-    }
 
     const token = await createOrReuseSession(user);
 

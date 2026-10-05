@@ -10,7 +10,6 @@ const form = ref(null);
 const fName = ref("");
 const lName = ref("");
 const email = ref("");
-const username = ref("");
 const password = ref("");
 const confirmPassword = ref("");
 const loading = ref(false);
@@ -18,7 +17,6 @@ const errorMessage = ref("");
 
 const fNameRules = [(value) => !!value?.trim() || "First name is required."];
 const lNameRules = [(value) => !!value?.trim() || "Last name is required."];
-const usernameRules = [(value) => !!value?.trim() || "Username is required."];
 const passwordRules = [
   (value) => !!value || "Password is required.",
   (value) => value.length >= 8 || "Password must be at least 8 characters.",
@@ -43,7 +41,6 @@ const handleSubmit = async () => {
       fName: fName.value.trim(),
       lName: lName.value.trim(),
       email: email.value.trim(),
-      username: username.value.trim(),
       password: password.value,
     });
 
@@ -99,15 +96,6 @@ const handleSubmit = async () => {
                   />
                 </v-col>
 
-                <v-col cols="12">
-                  <v-text-field
-                    v-model="username"
-                    label="Username"
-                    density="comfortable"
-                    autocomplete="username"
-                    :rules="usernameRules"
-                  />
-                </v-col>
 
                 <v-col cols="12" md="6">
                   <v-text-field
