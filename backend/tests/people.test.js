@@ -111,7 +111,7 @@ describe("Feature 4 — People Management", () => {
       await createPerson(app, token);
 
       const response = await request(app)
-        .get("/courses-t3/people")
+        .get("/course-t3/people")
         .set(authHeader(token));
 
       expect(response.status).toBe(200);
@@ -126,7 +126,7 @@ describe("Feature 4 — People Management", () => {
       const created = await createPerson(app, token);
 
       const response = await request(app)
-        .put(`/courses-t3/people/${created.body.id}`)
+        .put(`/course-t3/people/${created.body.id}`)
         .set(authHeader(token))
         .send({
           personId: created.body.id,
@@ -151,7 +151,7 @@ describe("Feature 4 — People Management", () => {
       const created = await createPerson(app, token);
 
       const response = await request(app)
-        .delete(`/courses-t3/people/${created.body.id}`)
+        .delete(`/course-t3/people/${created.body.id}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(200);
@@ -169,7 +169,7 @@ describe("Feature 4 — People Management", () => {
       });
 
       const response = await request(app)
-        .delete(`/courses-t3/people/${created.body.id}`)
+        .delete(`/course-t3/people/${created.body.id}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(200);
@@ -189,7 +189,7 @@ describe("Feature 4 — People Management", () => {
       });
 
       const response = await request(app)
-        .get("/courses-t3/people")
+        .get("/course-t3/people")
         .set(authHeader(student.body.token));
 
       expect(response.status).toBe(200);
@@ -204,7 +204,7 @@ describe("Feature 4 — People Management", () => {
       });
 
       const response = await request(app)
-        .post("/courses-t3/people")
+        .post("/course-t3/people")
         .set(authHeader(student.body.token))
         .send(validPerson());
 
@@ -220,7 +220,7 @@ describe("Feature 4 — People Management", () => {
       });
 
       const response = await request(app)
-        .get("/courses-t3/users")
+        .get("/course-t3/users")
         .set(authHeader(student.body.token));
 
       expect(response.status).toBe(403);
@@ -228,7 +228,7 @@ describe("Feature 4 — People Management", () => {
     });
 
     it("Unauthenticated API request to people", async () => {
-      const response = await request(app).get("/courses-t3/people");
+      const response = await request(app).get("/course-t3/people");
 
       expect(response.status).toBe(401);
       expect(response.body.message).toMatch(/Unauthorized/i);
@@ -246,7 +246,7 @@ describe("Feature 4 — People Management", () => {
       });
 
       const response = await request(app)
-        .delete(`/courses-t3/people/${person.body.id}`)
+        .delete(`/course-t3/people/${person.body.id}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(400);
@@ -289,7 +289,7 @@ describe("Feature 4 — People Management", () => {
       });
 
       const response = await request(app)
-        .delete(`/courses-t3/people/${person.body.id}`)
+        .delete(`/course-t3/people/${person.body.id}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(400);

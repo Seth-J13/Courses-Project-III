@@ -6,7 +6,7 @@
 **Created:** 2026-09-18
 **Input:** CRD enrollment for users.
 **Depends on:** [Feature 1 -- User Auth & Sessions](feature-1-user-auth-session-management.md), [Feature 2 -- Semesters](feature-2-semester-management.md), [Feature 3 -- Courses](feature-3-course-management.md), [Feature 5 -- Sections](feature-5-section-management.md)
-**Related:** `frontend/src/views/EnrollmentList.vue`, `frontend/src/views/Section.vue`, `backend/app/routes/courses-t3.routes.js`, `backend/app/routes/users.routes.js`, `backend/app/routes/sections.routes.js`, `backend/app/routes/enrollments.routes.js`, `backend/app/routes/semester.routes.js`
+**Related:** `frontend/src/views/EnrollmentList.vue`, `frontend/src/views/Section.vue`, `backend/app/routes/course-t3.routes.js`, `backend/app/routes/users.routes.js`, `backend/app/routes/sections.routes.js`, `backend/app/routes/enrollments.routes.js`, `backend/app/routes/semester.routes.js`
 
 ---
 
@@ -121,9 +121,9 @@ Each user owns their enrollments. Enrollments belong to one user, and a user can
 
 | Rule                  | Requirement                                                                                                                                                                                            |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Read scope**        | For student users only, the semester page loads a list of enrollments by route id (`GET /courses-t3/enrollments/:universityId/:semesterId`)                                                               |
+| **Read scope**        | For student users only, the semester page loads a list of enrollments by route id (`GET /course-t3/enrollments/:universityId/:semesterId`)                                                               |
 | **Write scope**       | Enrollments cannot be manually edited since they consist of only foreign keys. They should be created and removed instead                                                                              |
-| **Create scope**      | `POST /courses-t3/enrollments/:universityId/*` succeeds only when the row does not already exist and `:universityId === req.user.universityId`.                                                           |
+| **Create scope**      | `POST /course-t3/enrollments/:universityId/*` succeeds only when the row does not already exist and `:universityId === req.user.universityId`.                                                           |
 | **Cross-user access** | Another user’s enrollment on read/create/delete → `404` `{ "message": "Cannot find Enrollment with universityId=${universityId}." }` (not `403`). Missing/invalid Bearer token on routes → `401`.      |
 | **UI scope**          | `EnrollmentList.vue` shows the enrollments for `:universityId`. Navigation to `EnrollmentList.vue` comes from signing into the application as a student.                                               |
 | **Implementation**    | Enrollment operations already check for auth (`req.user.universityId`). Prefer a shared helper in `app/authorization/` for enrollment ownership rather than duplicating the check in every controller. |
@@ -139,21 +139,21 @@ Each user owns their enrollments. Enrollments belong to one user, and a user can
 
 ## API Requirements
 
-Mount prefix: `/courses-t3`. Flat JSON (no `{ success, data }` envelope). Errors: `{ "message": "Human-readable explanation." }`. Authenticated writes send `Authorization: Bearer <token>`.
+Mount prefix: `/course-t3`. Flat JSON (no `{ success, data }` envelope). Errors: `{ "message": "Human-readable explanation." }`. Authenticated writes send `Authorization: Bearer <token>`.
 
 This feature uses the `enrollment`s endpoints below (CUD sections and CUD semesters stay in other features).
 
 | Method   | Endpoint                                                    | Auth | Purpose                                                                           |
 | -------- | ----------------------------------------------------------- | ---- | --------------------------------------------------------------------------------- |
-| `GET`    | `/courses-t3/enrollments/:universityId/`                       | Yes  | List the enrollments for the user where `:universityId === req.user.universityId` |
-| `POST`   | `/courses-t3/enrollments/:universityId/`                       | Yes  | Add an `enrollment` to the user where `:universityId === req.user.universityId`   |
-| `GET`    | `/courses-t3/enrollments/:universityId/:semesterId`            | Yes  | List only the enrollments the user `:universityId === req.user.universityId`      |
-| `GET`    | `/courses-t3/enrollments/:universityId/:semesterId/:sectionId` | Yes  | List details of the enrollment specified by the route parameters                  |
-| `DELETE` | `/courses-t3/enrollments/:universityId/:semesterId/:sectionId` | Yes  | Remove the enrollment specified by the route parameters                           |
+| `GET`    | `/course-t3/enrollments/:universityId/`                       | Yes  | List the enrollments for the user where `:universityId === req.user.universityId` |
+| `POST`   | `/course-t3/enrollments/:universityId/`                       | Yes  | Add an `enrollment` to the user where `:universityId === req.user.universityId`   |
+| `GET`    | `/course-t3/enrollments/:universityId/:semesterId`            | Yes  | List only the enrollments the user `:universityId === req.user.universityId`      |
+| `GET`    | `/course-t3/enrollments/:universityId/:semesterId/:sectionId` | Yes  | List details of the enrollment specified by the route parameters                  |
+| `DELETE` | `/course-t3/enrollments/:universityId/:semesterId/:sectionId` | Yes  | Remove the enrollment specified by the route parameters                           |
 
 **Unauthenticated write:** `401` `{ "message": "Unauthorized! No Auth Header" }` (or expired-token message).
 
-### Load enrollments (`GET /courses-t3/enrollments/:universityId`)
+### Load enrollments (`GET /course-t3/enrollments/:universityId`)
 
 **Success** (`200`): array with all enrollments for that user (frontend uses index `0`)
 
@@ -174,7 +174,7 @@ This feature uses the `enrollment`s endpoints below (CUD sections and CUD semest
 
 **Server error:** `500` `{ "message": "…" }`.
 
-### Add enrollment (`POST /courses-t3/enrollments/:universityId`)
+### Add enrollment (`POST /course-t3/enrollments/:universityId`)
 
 **Request body** (fields the add request sends):
 
@@ -192,7 +192,7 @@ Duplicate combination of all three → `409` conflict.
 
 **Server error:** `500` `{ "message": "…" }`.
 
-### Remove Enrollment (`DELETE /courses-t3/enrollments/:universityId/:semesterId/:sectionId`)
+### Remove Enrollment (`DELETE /course-t3/enrollments/:universityId/:semesterId/:sectionId`)
 
 **Success** (`204`)
 
@@ -293,7 +293,7 @@ This feature uses the existing `users`, `courses`, `sections`, and `semesters` t
 
 - **Given** I am a signed-in student user with `universityId` `1114442`
 - **And** enrollments exist for `universityId` `1027599`
-- **When** I request `GET /courses-t3/enrollments/1027599` or `GET /courses-t3/enrollments/1027599/semesters/:semesterId`
+- **When** I request `GET /course-t3/enrollments/1027599` or `GET /course-t3/enrollments/1027599/semesters/:semesterId`
 - **Then** the API returns `404` with `{ "message": "Cannot find Enrollment with universityId=1027599." }`
 - **And** I do not receive another user's enrollment data
 

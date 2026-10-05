@@ -38,7 +38,7 @@
 **So that** other users cannot read the courses I have signed up for
 
 **Priority:** P1  
-**Independent test:** Cross-user course access returns `404`; `GET /courses-t3/` never returns another user's rows  
+**Independent test:** Cross-user course access returns `404`; `GET /course-t3/` never returns another user's rows  
 **Acceptance scenarios:** see ### US-7.3 under Acceptance Criteria
 
 ---
@@ -80,10 +80,10 @@ Each user owns their lists exclusively. Another authenticated user must not be a
 
 | Rule                  | Requirement                                                                                                                                |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Read scope**        | `GET /courses-t3/` returns only courses where `universityId = req.universityId`.                                                              |
+| **Read scope**        | `GET /course-t3/` returns only courses where `universityId = req.universityId`.                                                              |
 | **Write scope**       | `DELETE` applies only when the course row matches both `universityId` and `req.universityId`.                                              |
 | **Cross-user access** | If a user does not belong to a returned course, respond with `404` — never `403` (do not confirm the list exists).                         |
-| **UI scope**          | The course view shows only courses returned by `GET /courses-t3/` for the signed-in user.                                                     |
+| **UI scope**          | The course view shows only courses returned by `GET /course-t3/` for the signed-in user.                                                     |
 | **Implementation**    | Use a shared helper (e.g. `getAccessibleListOrNull(req, courseId)`) in `app/authorization/` — do not duplicate scope logic in controllers. |
 
 ---
@@ -92,8 +92,8 @@ Each user owns their lists exclusively. Another authenticated user must not be a
 
 | Method   | Endpoint             | Auth | Purpose                                                                                  |
 | -------- | -------------------- | ---- | ---------------------------------------------------------------------------------------- |
-| `GET`    | `/courses-t3/`          | Yes  | Fetch all lists for the authenticated user                                               |
-| `DELETE` | `/courses-t3/:courseId` | Yes  | Delete a course user is signed up for and update courses to remove user from that course |
+| `GET`    | `/course-t3/`          | Yes  | Fetch all lists for the authenticated user                                               |
+| `DELETE` | `/course-t3/:courseId` | Yes  | Delete a course user is signed up for and update courses to remove user from that course |
 
 All endpoints return **only data owned by the authenticated user**. Cross-user access attempts return `404`.
 
@@ -199,7 +199,7 @@ Replaces the Feature 1 placeholder home page. **Single Vue view** (`Dashboard.vu
 
 - **Given** user B owns signed up for `CMCS-3033`
 - **And** I am signed in as user A
-- **When** I request `GET /courses-t3/:universityId`
+- **When** I request `GET /course-t3/:universityId`
 - **Then** the response contains only courses user A is related to
 
 ---
@@ -234,7 +234,7 @@ Replaces the Feature 1 placeholder home page. **Single Vue view** (`Dashboard.vu
 #### Scenario: Unauthenticated API request to lists
 
 - **Given** I have no valid session token
-- **When** I request `GET /courses-t3/`
+- **When** I request `GET /course-t3/`
 - **Then** the API returns `401` with an unauthorized message
 
 ---

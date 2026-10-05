@@ -8,7 +8,7 @@
 **Depends on:** [Feature 1 -- User Auth & Sessions](feature-1-user-auth-session-management.md),
 [Feature 2 -- Semester Management](feature-2-semester-management.md)
 **Related:** `frontend/src/views/Courses.vue`, `backend/app/routes/users.routes.js`, `backend/app/routes/semesters.routes.js`,
-`backend/app/routes/courses-t3.routes.js`
+`backend/app/routes/course-t3.routes.js`
 
 ---
 
@@ -76,8 +76,8 @@
 - **FR-004**: course Id's MUST follow the format `XXXX-####` where `####` is a four-digit code for the course (The first digit stands for the difficulty. For example '1' is freshmen level, '2' is sophomore level, '3' is junior level, '4' is senior level, and '5' is graduate level. The second through fourth digits are mainly identifiers for which course is offered.)
 - **FR-005**: This feature MUST deliver course CRUD and a **single-view** courses UI in `Courses.vue` (dialog-based add/edit/delete). No sidebar/main split.
 - **FR-006**: typing in the on-screen course search bar updates the course list with only courses containing the search bar's content as a substring.
-- **FR-007**: signed-out users MUST NOT have access to any `/courses-t3` routes
-- **FR-008**: signed-in students MUST NOT have access to any non-`GET` `/courses-t3` routes
+- **FR-007**: signed-out users MUST NOT have access to any `/course-t3` routes
+- **FR-008**: signed-in students MUST NOT have access to any non-`GET` `/course-t3` routes
 - **FR-009**: courses MUST have a corresponding semester (FA, WI, SP, SU for fall, winter, spring, and summer semesters respectively)
 
 ---
@@ -92,7 +92,7 @@
 - Empty or whitespace-only course name → client block and/or `400`.
 - course Id longer than 9 characters → `400`.
 - Invalid `courseId` → `400`; unowned course → `404`.
-- Unauthenticated `Courses.vue` or `GET /courses-t3/semesters` → redirect or `401`.
+- Unauthenticated `Courses.vue` or `GET /course-t3/semesters` → redirect or `401`.
 
 ## Success Criteria
 
@@ -109,11 +109,11 @@ Courses are not owned by anybody; however, only administrator-role users are aut
 
 | Rule                  | Requirement                                                                                                                                   |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Read scope**        | `GET /courses-t3` returns only courses.                                                                                                          |
+| **Read scope**        | `GET /course-t3` returns only courses.                                                                                                          |
 | **Write scope**       | `PUT` and `DELETE` apply only when the course row matches both `id` and `req.user.id`.                                                        |
 | **Create scope**      | New courses owned by nobody.                                                                                                                  |
 | **Cross-user access** | If an unauthorized user tries to `PUT`, `DELETE`, or `POST` courses, respond with `403`.                                                      |
-| **UI scope**          | The courses view shows only courses returned by `GET /courses-t3` for the signed-in admin.                                                       |
+| **UI scope**          | The courses view shows only courses returned by `GET /course-t3` for the signed-in admin.                                                       |
 | **Implementation**    | Use a shared helper (e.g. `getAccessibleCoursesOrNull(req, courseId)`) in `app/authorization/` — do not duplicate scope logic in controllers. |
 
 ---
@@ -122,11 +122,11 @@ Courses are not owned by anybody; however, only administrator-role users are aut
 
 | Method   | Endpoint             | Auth       | Purpose             |
 | -------- | -------------------- | ---------- | ------------------- |
-| `GET`    | `/courses-t3`           | Yes        | Fetch all courses   |
-| `GET`    | `/courses-t3/:courseId` | Yes        | Show course details |
-| `POST`   | `/courses-t3`           | Yes, admin | Create a new course |
-| `PUT`    | `/courses-t3/:courseId` | Yes, admin | Update a course     |
-| `DELETE` | `/courses-t3/:courseId` | Yes, admin | Delete a course     |
+| `GET`    | `/course-t3`           | Yes        | Fetch all courses   |
+| `GET`    | `/course-t3/:courseId` | Yes        | Show course details |
+| `POST`   | `/course-t3`           | Yes, admin | Create a new course |
+| `PUT`    | `/course-t3/:courseId` | Yes, admin | Update a course     |
+| `DELETE` | `/course-t3/:courseId` | Yes, admin | Delete a course     |
 
 All endpoints except `GET` require **an administrator-role user** to access/operate. Non-admin user access returns `403`.
 
@@ -385,7 +385,7 @@ All endpoints except `GET` require **an administrator-role user** to access/oper
 #### Scenario: Unauthenticated API request to courses
 
 - **Given** I have no valid session token
-- **When** I request `GET /courses-t3`
+- **When** I request `GET /course-t3`
 - **Then** the API returns `401` with an unauthorized message
 
 ---
@@ -394,23 +394,23 @@ All endpoints except `GET` require **an administrator-role user** to access/oper
 
 | Story  | Scenario                                                       | Test file                                                         | Test name                                                        |
 | ------ | -------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------- |
-| US-3.1 | Admin creates a new course                                     | `backend/tests/courses-t3.test.js`, `frontend/tests/Courses.test.js` | `Admin creates a new course`                                     |
+| US-3.1 | Admin creates a new course                                     | `backend/tests/course-t3.test.js`, `frontend/tests/Courses.test.js` | `Admin creates a new course`                                     |
 | US-3.1 | Admin creates a course with an empty name                      | `frontend/tests/Courses.test.js`                                  | `Admin creates a course with an empty name`                      |
 | US-3.1 | Admin creates a course with an empty description               | `frontend/tests/Courses.test.js`                                  | `Admin creates a course with an empty description`               |
 | US-3.1 | Admin creates a course without semester                        | `frontend/tests/Courses.test.js`                                  | `Admin creates a course without semester`                        |
-| US-3.1 | Admin creates a course with a name that is too long            | `backend/tests/courses-t3.test.js`, `frontend/tests/Courses.test.js` | `Admin creates a course with a name that is too long`            |
-| US-3.1 | Admin creates a course with an id that is improperly formatted | `backend/tests/courses-t3.test.js`, `frontend/tests/Courses.test.js` | `Admin creates a course with an id that is improperly formatted` |
-| US-3.2 | Course view loads with existing semesters                      | `backend/tests/courses-t3.test.js`, `frontend/tests/Courses.test.js` | `Course view loads with existing semesters`                      |
+| US-3.1 | Admin creates a course with a name that is too long            | `backend/tests/course-t3.test.js`, `frontend/tests/Courses.test.js` | `Admin creates a course with a name that is too long`            |
+| US-3.1 | Admin creates a course with an id that is improperly formatted | `backend/tests/course-t3.test.js`, `frontend/tests/Courses.test.js` | `Admin creates a course with an id that is improperly formatted` |
+| US-3.2 | Course view loads with existing semesters                      | `backend/tests/course-t3.test.js`, `frontend/tests/Courses.test.js` | `Course view loads with existing semesters`                      |
 | US-3.2 | No courses exist                                               | `frontend/tests/Courses.test.js`                                  | `No courses exist`                                               |
 | US-3.3 | course rows show edit and delete actions                       | `frontend/tests/Courses.test.js`                                  | `course rows show edit and delete actions`                       |
-| US-3.4 | Admin edits a course                                           | `backend/tests/courses-t3.test.js`, `frontend/tests/Courses.test.js` | `Admin edits a course`                                           |
-| US-3.4 | Admin deletes a course                                         | `backend/tests/courses-t3.test.js`, `frontend/tests/Courses.test.js` | `Admin deletes a course`                                         |
+| US-3.4 | Admin edits a course                                           | `backend/tests/course-t3.test.js`, `frontend/tests/Courses.test.js` | `Admin edits a course`                                           |
+| US-3.4 | Admin deletes a course                                         | `backend/tests/course-t3.test.js`, `frontend/tests/Courses.test.js` | `Admin deletes a course`                                         |
 | US-3.5 | Search bar appears with courses                                | `frontend/tests/Courses.test.js`                                  | `Search bar appears with courses`                                |
 | US-3.5 | No search bar appears with no courses                          | `frontend/tests/Courses.test.js`                                  | `No search bar appears with no courses`                          |
 | US-3.5 | Admin types in course search bar                               | `frontend/tests/Courses.test.js`                                  | `Admin types in course search bar`                               |
 | US-3.5 | Admin types in course search bar 2                             | `frontend/tests/Courses.test.js`                                  | `Admin types in course search bar 2`                             |
 | US-3.5 | Unauthenticated user accesses the courses view                 | `frontend/tests/Courses.test.js`                                  | `Unauthenticated user accesses the courses view`                 |
-| US-3.5 | Unauthenticated API request to courses                         | `backend/tests/courses-t3.test.js`                                   | `Unauthenticated API request to courses`                         |
+| US-3.5 | Unauthenticated API request to courses                         | `backend/tests/course-t3.test.js`                                   | `Unauthenticated API request to courses`                         |
 
 ---
 
@@ -450,7 +450,7 @@ Do not implement behavior not in this spec.
 - `MenuBar` beyond basic sign-out (full nav deferred if not needed)
 - Drag-and-drop course reordering
 - Sharing courses with other users
-- `POST`/`GET`/`PUT`/`DELETE` anywhere that's not `/courses-t3/courses-t3` or `/courses-t3/:courseId`
+- `POST`/`GET`/`PUT`/`DELETE` anywhere that's not `/course-t3/course-t3` or `/course-t3/:courseId`
 
 ---
 
