@@ -12,7 +12,7 @@ Constraints:
 
 1. **SDD data model** — Feature **Data Model Requirements** and living [data-model.md](../../features/reference/data-model.md) should map 1:1 to model files under `backend/app/models/`.
 2. **ES modules** — Same `"type": "module"` style as the rest of Speckit.
-3. **Ownership queries** — Easy `where: { userId: req.user.id }` patterns for ADR-0002.
+3. **Ownership queries** — Easy `where: { universityId: req.user.id }` patterns for ADR-0002.
 4. **Classroom sync** — Dev `sync({ alter: true })` and test `sync({ force: true })` without requiring migration files in v1.
 5. **Speckit continuity** — Speckit Cursor rules (`api-conventions.mdc`) already encode Sequelize model/route patterns.
 
@@ -20,14 +20,14 @@ Constraints:
 
 Adopt **Sequelize 6** (with **`mysql2`**) as the ORM for OC CS Speckit backends:
 
-| Concern | Choice |
-|---------|--------|
-| **ORM** | Sequelize 6 |
-| **Driver** | `mysql2` |
-| **Instance** | Shared `sequelizeInstance.js`; models register in `models/index.js` |
-| **Associations** | Defined in models / `index.js` (User–Session, User–List, List–Todo) |
-| **Schema in v1** | Model definitions + `sequelize.sync` (see ADR-0003 for env strategies) |
-| **Queries** | `findOne` / `findAll` / `create` / `update` / `destroy` with explicit `where` |
+| Concern          | Choice                                                                        |
+| ---------------- | ----------------------------------------------------------------------------- |
+| **ORM**          | Sequelize 6                                                                   |
+| **Driver**       | `mysql2`                                                                      |
+| **Instance**     | Shared `sequelizeInstance.js`; models register in `models/index.js`           |
+| **Associations** | Defined in models / `index.js` (User–Session, User–List, List–Todo)           |
+| **Schema in v1** | Model definitions + `sequelize.sync` (see ADR-0003 for env strategies)        |
+| **Queries**      | `findOne` / `findAll` / `create` / `update` / `destroy` with explicit `where` |
 
 ```text
 feature Data Model Requirements
@@ -35,7 +35,7 @@ feature Data Model Requirements
         ▼
 backend/app/models/*.model.js  ──Sequelize──►  MySQL (ADR-0003)
         ▲
-controllers / auth helpers (userId in WHERE)
+controllers / auth helpers (universityId in WHERE)
 ```
 
 **Invariants:**
@@ -61,13 +61,13 @@ controllers / auth helpers (userId in WHERE)
 
 ## Alternatives considered
 
-| Option | Why not |
-|--------|---------|
-| **Prisma** | Strong DX and migrations; would rewrite all models, rules, and Speckit materials already Sequelize-based. |
-| **Knex / Objection** | Flexible query builder; less “model file ↔ spec entity” clarity for SDD beginners. |
-| **TypeORM** | Common in Nest/TS stacks; Speckit is JS + Express without requiring TypeScript. |
-| **Raw `mysql2` only** | More boilerplate for associations, sync, and consistent `userId` filters; weaker agent consistency. |
-| **Drizzle** | Modern SQL-first; not the Speckit teaching standard. |
+| Option                | Why not                                                                                                   |
+| --------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Prisma**            | Strong DX and migrations; would rewrite all models, rules, and Speckit materials already Sequelize-based. |
+| **Knex / Objection**  | Flexible query builder; less “model file ↔ spec entity” clarity for SDD beginners.                        |
+| **TypeORM**           | Common in Nest/TS stacks; Speckit is JS + Express without requiring TypeScript.                           |
+| **Raw `mysql2` only** | More boilerplate for associations, sync, and consistent `universityId` filters; weaker agent consistency. |
+| **Drizzle**           | Modern SQL-first; not the Speckit teaching standard.                                                      |
 
 ## Related artifacts
 

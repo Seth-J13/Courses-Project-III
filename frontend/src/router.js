@@ -44,6 +44,7 @@ const router = createRouter({
       path: "/enrollment-list",
       name: "EnrollmentList",
       component: EnrollmentList,
+      props: true
     },
     {
       path: "/:pathMatch(.*)*",

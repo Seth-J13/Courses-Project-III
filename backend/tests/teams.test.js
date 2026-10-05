@@ -159,7 +159,7 @@ describe("Feature 5 — Team Management", () => {
         username: "student1",
         email: "student1@example.com",
       });
-      const studentUser = await db.user.findByPk(student.body.userId);
+      const studentUser = await db.user.findByPk(student.body.universityId);
       studentUser.role = "student";
       await studentUser.save();
 
@@ -512,7 +512,7 @@ describe("Feature 5 — Team Management", () => {
       });
       const league = await createLeague(app, adminToken);
       const person = await createPerson(app, adminToken, {
-        userId: manager.body.userId,
+        universityId: manager.body.universityId,
       });
       await createTeam(app, adminToken, {
         leagueId: league.body.id,
@@ -557,7 +557,7 @@ describe("Feature 5 — Team Management", () => {
       });
       const league = await createLeague(app, adminToken);
       const managerPerson = await createPerson(app, adminToken, {
-        userId: manager.body.userId,
+        universityId: manager.body.universityId,
       });
       const playerPerson = await createPerson(app, adminToken, {
         firstName: "Robert",
@@ -586,7 +586,7 @@ describe("Feature 5 — Team Management", () => {
       });
       const league = await createLeague(app, adminToken);
       const managerPerson = await createPerson(app, adminToken, {
-        userId: manager.body.userId,
+        universityId: manager.body.universityId,
       });
       const playerPerson = await createPerson(app, adminToken, {
         firstName: "Robert",
@@ -625,7 +625,7 @@ describe("Feature 5 — Team Management", () => {
       });
       const league = await createLeague(app, adminToken);
       const managerPerson = await createPerson(app, adminToken, {
-        userId: manager.body.userId,
+        universityId: manager.body.universityId,
       });
       const playerPerson = await createPerson(app, adminToken, {
         firstName: "Robert",

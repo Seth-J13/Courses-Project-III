@@ -73,12 +73,12 @@ const openEditDialog = async () => {
   profileMenuOpen.value = false;
   profileError.value = "";
 
-  if (!user.value?.userId) {
+  if (!user.value?.universityId) {
     return;
   }
 
   try {
-    const response = await userServices.getUser(user.value.userId);
+    const response = await userServices.getUser(user.value.universityId);
     populateEditForm(response.data);
     editDialogOpen.value = true;
   } catch (error) {
@@ -99,7 +99,7 @@ const handleSaveProfile = async () => {
   profileError.value = "";
   const { valid } = await editForm.value.validate();
 
-  if (!valid || !user.value?.userId) {
+  if (!valid || !user.value?.universityId) {
     return;
   }
 
@@ -118,13 +118,13 @@ const handleSaveProfile = async () => {
       payload.password = password.value;
     }
 
-    const response = await userServices.updateUser(user.value.userId, payload);
+    const response = await userServices.updateUser(user.value.universityId, payload);
     const currentUser = Utils.getStore("user");
 
     Utils.setStore("user", {
       ...currentUser,
       ...response.data,
-      userId: response.data.id,
+      universityId: response.data.id,
       fName: response.data.fName,
       lName: response.data.lName,
       email: response.data.email,

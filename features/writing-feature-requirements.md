@@ -14,52 +14,52 @@ This is the **what**, **what data exists**, and **how we know it’s done** part
 
 A **feature** is a shippable slice of the product: one capability area that can live in its own Git branch, merge to `dev`, and leave the app usable. One feature file (`feature-N-*.md`) owns that whole slice.
 
-A **user story** is one outcome *inside* that feature — something a person (or the application) can do — with its own priority, independent test, and Gherkin scenarios. Stories are **not** separate files and **not** separate branches.
+A **user story** is one outcome _inside_ that feature — something a person (or the application) can do — with its own priority, independent test, and Gherkin scenarios. Stories are **not** separate files and **not** separate branches.
 
-| | **Feature** | **User story** |
-|---|-------------|----------------|
-| **Grain** | A product capability / vertical slice | One user (or system) outcome inside that slice |
-| **Artifact** | One file: `features/feature-N-short-name.md` | Sections `US-N.n` inside that file |
-| **Git** | One branch: `feature/N-short-name` | No branch of its own |
-| **Size check** | Often days of work; several stories; shared data/API/screens | Verifiable in one independent test |
-| **Question it answers** | “What capability are we adding to the product?” | “What can someone *do* once this capability exists?” |
+|                         | **Feature**                                                  | **User story**                                       |
+| ----------------------- | ------------------------------------------------------------ | ---------------------------------------------------- |
+| **Grain**               | A product capability / vertical slice                        | One user (or system) outcome inside that slice       |
+| **Artifact**            | One file: `features/feature-N-short-name.md`                 | Sections `US-N.n` inside that file                   |
+| **Git**                 | One branch: `feature/N-short-name`                           | No branch of its own                                 |
+| **Size check**          | Often days of work; several stories; shared data/API/screens | Verifiable in one independent test                   |
+| **Question it answers** | “What capability are we adding to the product?”              | “What can someone _do_ once this capability exists?” |
 
 **Rule of thumb:** if you would open a new branch and merge a coherent chunk of app behavior, it is a **feature**. If it is one of several related outcomes that share the same screens, tables, and release, it is a **story**.
 
 ### Features in this project (examples)
 
-| Feature | Why it is a feature (not a story) |
-|---------|-----------------------------------|
-| [1 — User Authentication & Session Management](./feature-1-user-auth.md) | Whole identity boundary: register, session, protect routes. Foundation for every later feature. |
-| [2 — Todo List Management](./feature-2-todo-list-management.md) | Users own **lists** as a first-class thing (create/view/rename/delete + privacy). |
-| [3 — Todo List Item Management](./feature-3-todo-list-item-management.md) | Users own **items inside lists** (add/complete/edit/delete). Distinct entity and UI from Feature 2. |
-| [4 — User Profile Management](./feature-4-user-profile-management.md) | Profile view/edit and logout placement — account UX, not list/todo CRUD. |
-| [5 — Todo Due Date](./feature-5-todo-due-date.md) | A focused **delta** on existing todos (optional `dueDate` + overdue display). Still its own feature because it has its own FRs, AC, and branch. |
+| Feature                                                                   | Why it is a feature (not a story)                                                                                                               |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| [1 — User Authentication & Session Management](./feature-1-user-auth.md)  | Whole identity boundary: register, session, protect routes. Foundation for every later feature.                                                 |
+| [2 — Todo List Management](./feature-2-todo-list-management.md)           | Users own **lists** as a first-class thing (create/view/rename/delete + privacy).                                                               |
+| [3 — Todo List Item Management](./feature-3-todo-list-item-management.md) | Users own **items inside lists** (add/complete/edit/delete). Distinct entity and UI from Feature 2.                                             |
+| [4 — User Profile Management](./feature-4-user-profile-management.md)     | Profile view/edit and logout placement — account UX, not list/todo CRUD.                                                                        |
+| [5 — Todo Due Date](./feature-5-todo-due-date.md)                         | A focused **delta** on existing todos (optional `dueDate` + overdue display). Still its own feature because it has its own FRs, AC, and branch. |
 
 ### Stories inside a feature (examples)
 
 Feature 1 is one capability (**auth**). Its stories are the outcomes that make up that capability:
 
-| Story | Outcome (not a separate feature) |
-|-------|----------------------------------|
-| US-1.1 Register an account | Create credentials |
-| US-1.2 Sign in | Start a session |
-| US-1.3 Stay signed in across page loads | Persist session in the browser |
-| US-1.4 Sign out | End session |
-| US-1.5 Block unauthenticated access | Guard protected routes/API |
+| Story                                   | Outcome (not a separate feature) |
+| --------------------------------------- | -------------------------------- |
+| US-1.1 Register an account              | Create credentials               |
+| US-1.2 Sign in                          | Start a session                  |
+| US-1.3 Stay signed in across page loads | Persist session in the browser   |
+| US-1.4 Sign out                         | End session                      |
+| US-1.5 Block unauthenticated access     | Guard protected routes/API       |
 
 Feature 2 is **list management**; stories carve that into create / view / manage rows / rename-delete / privacy — all one feature, five stories.
 
-Feature 5 is smaller but still a feature: the *capability* is “due dates on todos.” Stories are set / view / edit-clear / overdue highlighting — not four separate features.
+Feature 5 is smaller but still a feature: the _capability_ is “due dates on todos.” Stories are set / view / edit-clear / overdue highlighting — not four separate features.
 
 ### Common mistakes
 
-| Mistake | Better split |
-|---------|----------------|
-| One “mega feature” for the whole Todo app | Split like this repo: auth → lists → items → profile / due date |
+| Mistake                                                          | Better split                                                                        |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| One “mega feature” for the whole Todo app                        | Split like this repo: auth → lists → items → profile / due date                     |
 | One feature file per tiny UI tweak with no shared release intent | Often a story (or a small delta feature like Feature 5 if it has its own AC/branch) |
-| Treating “Sign in” as Feature 1 and “Register” as Feature 2 | Same capability area → one feature, two stories (as in Feature 1) |
-| Putting list CRUD and todo-item CRUD in one feature | Separate features when entities, APIs, and screens diverge (Features 2 vs 3) |
+| Treating “Sign in” as Feature 1 and “Register” as Feature 2      | Same capability area → one feature, two stories (as in Feature 1)                   |
+| Putting list CRUD and todo-item CRUD in one feature              | Separate features when entities, APIs, and screens diverge (Features 2 vs 3)        |
 
 **Dependencies:** features may depend on earlier features (`Depends on:`). Stories within a feature share that feature’s branch and ship together.
 
@@ -69,11 +69,11 @@ Feature 5 is smaller but still a feature: the *capability* is “due dates on to
 
 The feature name appears in three places that must stay aligned:
 
-| Place | Form | Example |
-|-------|------|---------|
-| Spec title (`# Feature: …`) | Title Case, human-readable | `Todo List Management` |
-| File name | `feature-N-short-name.md` | `feature-2-todo-list-management.md` |
-| Git branch | `feature/N-short-name` | `feature/2-todo-list-management` |
+| Place                       | Form                       | Example                             |
+| --------------------------- | -------------------------- | ----------------------------------- |
+| Spec title (`# Feature: …`) | Title Case, human-readable | `Todo List Management`              |
+| File name                   | `feature-N-short-name.md`  | `feature-2-todo-list-management.md` |
+| Git branch                  | `feature/N-short-name`     | `feature/2-todo-list-management`    |
 
 The **short-name** is a kebab-case slug of the title (no Feature ID words like `feature` inside the slug). Epic titles in Agility export come from `# Feature: …`, so name it carefully.
 
@@ -83,20 +83,20 @@ The **short-name** is a kebab-case slug of the title (no Feature ID words like `
 2. **Be specific enough to tell features apart.** “Lists” vs “List Items” matters — this repo uses **Todo List Management** (Feature 2) and **Todo List Item Management** (Feature 3) on purpose.
 3. **Keep it short (about 2–5 words).** Long enough to be clear; short enough for a branch name. Drop filler (“The Amazing New…”, “Module”, “System”, “Implementation”).
 4. **Use product language, not stack language.** Good: `User Profile Management`. Bad: `Sequelize User Controller` / `Vuetify MenuBar Dropdown`.
-5. **Prefer durable domain terms.** Name what the product *is* about, not a temporary UI widget. Good: `Todo Due Date`. Weaker: `Orange Date Picker On Dashboard`.
+5. **Prefer durable domain terms.** Name what the product _is_ about, not a temporary UI widget. Good: `Todo Due Date`. Weaker: `Orange Date Picker On Dashboard`.
 6. **Match title ↔ file ↔ branch.** Same words, same order. If you rename the title, rename the file and branch pattern (and update the catalog).
 7. **Do not put story verbs in the feature title.** Story titles carry the verbs (`Register an account`, `Sign in`). The feature title names the whole area those stories belong to.
 8. **Delta features still get a clear capability name.** Feature 5 is `Todo Due Date` — not `Update Feature 3` or `Misc Todo Tweaks`.
 
 ### Good vs weak names (this project)
 
-| Prefer | Avoid | Why |
-|--------|-------|-----|
-| User Authentication & Session Management | Login Page | Capability vs one screen/story |
-| Todo List Management | CRUD for lists | Product term, not tech jargon |
-| Todo List Item Management | Todos | Too vague — lists vs items collide |
-| User Profile Management | MenuBar Changes | Names the capability, not the widget |
-| Todo Due Date | Add dueDate Column | Product outcome, not a schema ticket |
+| Prefer                                   | Avoid              | Why                                  |
+| ---------------------------------------- | ------------------ | ------------------------------------ |
+| User Authentication & Session Management | Login Page         | Capability vs one screen/story       |
+| Todo List Management                     | CRUD for lists     | Product term, not tech jargon        |
+| Todo List Item Management                | Todos              | Too vague — lists vs items collide   |
+| User Profile Management                  | MenuBar Changes    | Names the capability, not the widget |
+| Todo Due Date                            | Add dueDate Column | Product outcome, not a schema ticket |
 
 ### Checklist before you freeze the name
 
@@ -109,12 +109,12 @@ The **short-name** is a kebab-case slug of the title (no Feature ID words like `
 
 ## What you are authoring
 
-| Piece | Answers | ID style |
-|-------|---------|----------|
-| **User stories** | Who needs what, and why? | `US-N.n` |
-| **Functional requirements** | What must the system do (rules)? | `FR-00N` |
-| **Initial data model** | What things exist, and what fields/relationships does this feature need? | Key Entities → table sketches |
-| **Acceptance criteria** | How do we prove a story works? | Gherkin under `### US-N.n` |
+| Piece                       | Answers                                                                  | ID style                      |
+| --------------------------- | ------------------------------------------------------------------------ | ----------------------------- |
+| **User stories**            | Who needs what, and why?                                                 | `US-N.n`                      |
+| **Functional requirements** | What must the system do (rules)?                                         | `FR-00N`                      |
+| **Initial data model**      | What things exist, and what fields/relationships does this feature need? | Key Entities → table sketches |
+| **Acceptance criteria**     | How do we prove a story works?                                           | Gherkin under `### US-N.n`    |
 
 Stories describe **outcomes for a person** (or for the system as actor).  
 FRs are **testable system rules** (MUST / MUST NOT).  
@@ -135,7 +135,7 @@ Do **not** invent stack or file paths in stories. Prefer product language (“si
 **Status:** Draft
 **Created:** YYYY-MM-DD
 **Input:** One sentence — what this feature is for (intent, not technology)
-**Depends on:** [Feature X — …](feature-X-….md)   ← omit if none
+**Depends on:** [Feature X — …](feature-X-….md) ← omit if none
 **Related:** optional links to ADRs or reference docs
 ```
 
@@ -157,23 +157,23 @@ A **user story** is a short, testable statement of value from a stakeholder’s 
 
 It answers three questions:
 
-| Line | Question | Example (US-1.2) |
-|------|----------|------------------|
-| **As a** … | *Who* cares? | registered user |
-| **I want to** … | *What* can they do? | sign in with username and password |
-| **So that** … | *Why* does it matter? | access the dashboard securely |
+| Line            | Question              | Example (US-1.2)                   |
+| --------------- | --------------------- | ---------------------------------- |
+| **As a** …      | _Who_ cares?          | registered user                    |
+| **I want to** … | _What_ can they do?   | sign in with username and password |
+| **So that** …   | _Why_ does it matter? | access the dashboard securely      |
 
 Stories describe **outcomes**, not implementation. They drive FRs (rules), Gherkin AC (proof), and later tests. If you cannot name an **Independent test** for the story alone, the story is too vague or too big.
 
 **Also in every story block (this kit):**
 
-| Field | Purpose |
-|-------|---------|
-| **Short title** | Human label (`Sign in`) — used in headings and maps |
-| **`US-N.n` ID** | Traceability to AC and Test Coverage Map |
-| **Priority** | `P1` / `P2` / `P3` for what must ship in this feature |
-| **Independent test** | One-sentence way to verify this story without the rest unfinished |
-| **Acceptance scenarios** | Pointer to the matching `### US-N.n` Gherkin block |
+| Field                    | Purpose                                                           |
+| ------------------------ | ----------------------------------------------------------------- |
+| **Short title**          | Human label (`Sign in`) — used in headings and maps               |
+| **`US-N.n` ID**          | Traceability to AC and Test Coverage Map                          |
+| **Priority**             | `P1` / `P2` / `P3` for what must ship in this feature             |
+| **Independent test**     | One-sentence way to verify this story without the rest unfinished |
+| **Acceptance scenarios** | Pointer to the matching `### US-N.n` Gherkin block                |
 
 List every meaningful outcome this feature delivers. Number them **`US-<feature-id>.<story-number>`** (restart at `.1` in each file).
 
@@ -196,6 +196,7 @@ List every meaningful outcome this feature delivers. Number them **`US-<feature-
 ## User Stories
 
 ### US-N.1: Short title
+
 **As a** <role>
 **I want to** <capability>
 **So that** <benefit>
@@ -207,23 +208,24 @@ List every meaningful outcome this feature delivers. Number them **`US-<feature-
 
 ### Roles you will use often
 
-- **As a** new / registered / signed-in user — person using the product  
-- **As the** application — security, redirects, blocking bad access  
+- **As a** new / registered / signed-in user — person using the product
+- **As the** application — security, redirects, blocking bad access
 
 ### Do / don’t (quick reference)
 
-| Do | Don’t |
-|----|--------|
-| One capability per story | Bundle register + lists + due dates into one story |
-| Name a real role or `the application` | Vague “As a user I want everything to work” |
-| Make **So that** a real benefit | Repeat the “I want” in different words |
-| Set Priority and Independent test | Leave them blank or “test later” |
-| Product language | Stack language (“call the login endpoint with axios”) |
+| Do                                    | Don’t                                                 |
+| ------------------------------------- | ----------------------------------------------------- |
+| One capability per story              | Bundle register + lists + due dates into one story    |
+| Name a real role or `the application` | Vague “As a user I want everything to work”           |
+| Make **So that** a real benefit       | Repeat the “I want” in different words                |
+| Set Priority and Independent test     | Leave them blank or “test later”                      |
+| Product language                      | Stack language (“call the login endpoint with axios”) |
 
 ### Example (Feature 1 style)
 
 ```markdown
 ### US-1.2: Sign in
+
 **As a** registered user
 **I want to** sign in with my username and password
 **So that** I can access the application dashboard securely
@@ -235,12 +237,12 @@ List every meaningful outcome this feature delivers. Number them **`US-<feature-
 
 ### More examples from this project
 
-| Story | Why it works |
-|-------|----------------|
-| US-2.1 Create todo lists | One clear outcome; lists only |
+| Story                     | Why it works                                                       |
+| ------------------------- | ------------------------------------------------------------------ |
+| US-2.1 Create todo lists  | One clear outcome; lists only                                      |
 | US-2.5 Private lists only | System-as-actor style outcome (isolation), still one testable goal |
-| US-3.3 Complete tasks | Verb + object matches a single behavior |
-| US-5.4 Spot overdue todos | User-visible outcome, not “set CSS class on overdue rows” |
+| US-3.3 Complete tasks     | Verb + object matches a single behavior                            |
+| US-5.4 Spot overdue todos | User-visible outcome, not “set CSS class on overdue rows”          |
 
 Aim for **3–8 stories** for a typical feature. If you need more than ~10, the feature is probably too big — split it.
 
@@ -266,12 +268,12 @@ Restart numbering at **FR-001** in every feature file.
 
 ### How to write a good FR
 
-| Do | Don’t |
-|----|--------|
-| Use **MUST** / **MUST NOT** (testable) | “Should preferably…” without a hard rule |
-| One rule per FR | Paragraphs that mix five rules |
-| Be specific enough to fail a test | “Auth must be secure” with no rule |
-| Cover validation, ownership, and key behaviors from the stories | Duplicate the entire story text |
+| Do                                                              | Don’t                                    |
+| --------------------------------------------------------------- | ---------------------------------------- |
+| Use **MUST** / **MUST NOT** (testable)                          | “Should preferably…” without a hard rule |
+| One rule per FR                                                 | Paragraphs that mix five rules           |
+| Be specific enough to fail a test                               | “Auth must be secure” with no rule       |
+| Cover validation, ownership, and key behaviors from the stories | Duplicate the entire story text          |
 
 **Good:** `Users MUST authenticate with username + password (not email-only login).`  
 **Weak:** `Login should feel secure and fast.`
@@ -286,7 +288,7 @@ Resolve every `[NEEDS CLARIFICATION]` before `Status: Ready`.
 
 ### Bridge stories → FRs
 
-For each story, ask: *What rules make this story true?* Those become FRs. One story often yields several FRs; one FR may support more than one story.
+For each story, ask: _What rules make this story true?_ Those become FRs. One story often yields several FRs; one FR may support more than one story.
 
 ---
 
@@ -346,31 +348,33 @@ Turn entities into **tables and fields** this feature will persist. This is stil
 ## Data Model Requirements
 
 ### `users` table
-| Field | Type | Rules |
-|-------|------|-------|
-| `id` | INTEGER PK | Auto-increment |
+
+| Field      | Type        | Rules                              |
+| ---------- | ----------- | ---------------------------------- |
+| `id`       | INTEGER PK  | Auto-increment                     |
 | `username` | STRING(100) | Required, unique; stored lowercase |
-| `password` | STRING(255) | Required; bcrypt hash only |
-| … | … | … |
+| `password` | STRING(255) | Required; bcrypt hash only         |
+| …          | …           | …                                  |
 
 ### `sessions` table
-| Field | Type | Rules |
-|-------|------|-------|
-| `id` | INTEGER PK | Auto-increment |
-| `token` | STRING | Required |
-| `userId` | INTEGER FK | Required, references `users.id` |
-| … | … | … |
+
+| Field          | Type       | Rules                           |
+| -------------- | ---------- | ------------------------------- |
+| `id`           | INTEGER PK | Auto-increment                  |
+| `token`        | STRING     | Required                        |
+| `universityId` | INTEGER FK | Required, references `users.id` |
+| …              | …          | …                               |
 ```
 
 ### How to write a good initial data model
 
-| Do | Don’t |
-|----|--------|
-| One table section per new/changed entity | Invent tables for future features you are not building |
-| Field, type, and rules (required, unique, FK, default) | Vague “user stuff in the DB” |
-| Mark FKs and ownership (`userId` → `users.id`) | Forget who owns the row in a multi-user app |
-| Align fields with FRs and AC (if AC mentions email, the table needs email) | Add columns “just in case” with no story/FR |
-| Use `[NEEDS CLARIFICATION: …]` for undecided types/lengths | Leave required fields unnamed |
+| Do                                                                         | Don’t                                                  |
+| -------------------------------------------------------------------------- | ------------------------------------------------------ |
+| One table section per new/changed entity                                   | Invent tables for future features you are not building |
+| Field, type, and rules (required, unique, FK, default)                     | Vague “user stuff in the DB”                           |
+| Mark FKs and ownership (`universityId` → `users.id`)                       | Forget who owns the row in a multi-user app            |
+| Align fields with FRs and AC (if AC mentions email, the table needs email) | Add columns “just in case” with no story/FR            |
+| Use `[NEEDS CLARIFICATION: …]` for undecided types/lengths                 | Leave required fields unnamed                          |
 
 **Delta features:** if Feature N only adds a column (e.g. `dueDate` on `todos`), document **only the change** — new/changed fields — and point at existing tables in `features/reference/data-model.md` rather than rewriting the whole schema.
 
@@ -384,16 +388,16 @@ Turn entities into **tables and fields** this feature will persist. This is stil
 
 **Acceptance criteria** are the proof that a user story is done. In this kit they are written as **Gherkin scenarios**: structured examples using **Given / When / Then** (and **And**).
 
-| Part | Role |
-|------|------|
-| **`### US-N.n — Title`** | Groups all scenarios for one story (must match the user story ID/title) |
-| **`#### Scenario: …`** | One concrete example (happy path or failure) — later becomes an `it("…")` name |
-| **Given** | Preconditions / world state before the action |
-| **When** | The single action under test |
-| **Then** | Observable pass/fail outcomes |
-| **And** | Extra preconditions or outcomes (same scenario) |
+| Part                     | Role                                                                           |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| **`### US-N.n — Title`** | Groups all scenarios for one story (must match the user story ID/title)        |
+| **`#### Scenario: …`**   | One concrete example (happy path or failure) — later becomes an `it("…")` name |
+| **Given**                | Preconditions / world state before the action                                  |
+| **When**                 | The single action under test                                                   |
+| **Then**                 | Observable pass/fail outcomes                                                  |
+| **And**                  | Extra preconditions or outcomes (same scenario)                                |
 
-Stories say *what* value we want. FRs say *rules*. **Gherkin says *examples* that must pass** — specific enough that a developer can implement and a test can assert them.
+Stories say _what_ value we want. FRs say _rules_. **Gherkin says _examples_ that must pass** — specific enough that a developer can implement and a test can assert them.
 
 AC proves each user story with concrete scenarios. Group scenarios under a heading that uses the **same story ID** as the User Stories section.
 
@@ -420,35 +424,37 @@ AC proves each user story with concrete scenarios. Group scenarios under a headi
 ### US-N.1 — Short title (same as the story)
 
 #### Scenario: Descriptive name (happy path)
-*   **Given** <starting state>
-*   **When** <action>
-*   **Then** <observable result>
-*   **And** <extra result if needed>
+
+- **Given** <starting state>
+- **When** <action>
+- **Then** <observable result>
+- **And** <extra result if needed>
 
 #### Scenario: Descriptive name (failure / edge)
-*   **Given** …
-*   **When** …
-*   **Then** …
+
+- **Given** …
+- **When** …
+- **Then** …
 ```
 
 ### Given / When / Then tips
 
-| Step | Use for | Example |
-|------|---------|---------|
-| **Given** | Preconditions | “I am on the login page”, “a user with username `jdoe` exists” |
-| **When** | The action under test | “I click **Sign in**”, “I send `POST /todo/login` …” |
-| **Then** | Pass/fail outcome | “the API returns `401`”, “I am redirected to home” |
-| **And** | Extra outcomes on the same scenario | “the error is displayed in a `<v-alert type="error">`” |
+| Step      | Use for                             | Example                                                        |
+| --------- | ----------------------------------- | -------------------------------------------------------------- |
+| **Given** | Preconditions                       | “I am on the login page”, “a user with username `jdoe` exists” |
+| **When**  | The action under test               | “I click **Sign in**”, “I send `POST /todo/login` …”           |
+| **Then**  | Pass/fail outcome                   | “the API returns `401`”, “I am redirected to home”             |
+| **And**   | Extra outcomes on the same scenario | “the error is displayed in a `<v-alert type="error">`”         |
 
 ### Do / don’t (quick reference)
 
-| Do | Don’t |
-|----|--------|
-| Concrete examples with expected results | Abstract “user can authenticate successfully” |
-| Separate happy path and error scenarios | One scenario that covers five outcomes |
-| Exact messages and status codes when specified | “an error message appears” with no text |
-| Scenario names unique within the feature | Duplicate or vague names (`Test 1`, `Works`) |
-| Match `### US-N.n` to the user story | Orphan scenarios with no story |
+| Do                                             | Don’t                                         |
+| ---------------------------------------------- | --------------------------------------------- |
+| Concrete examples with expected results        | Abstract “user can authenticate successfully” |
+| Separate happy path and error scenarios        | One scenario that covers five outcomes        |
+| Exact messages and status codes when specified | “an error message appears” with no text       |
+| Scenario names unique within the feature       | Duplicate or vague names (`Test 1`, `Works`)  |
+| Match `### US-N.n` to the user story           | Orphan scenarios with no story                |
 
 ### Example
 
@@ -456,20 +462,22 @@ AC proves each user story with concrete scenarios. Group scenarios under a headi
 ### US-1.2 — Sign in
 
 #### Scenario: User signs in with valid credentials
-*   **Given** I am on the login page
-*   **And** a registered user exists with username `jdoe` and a known password
-*   **When** I enter username `jdoe` and the correct password
-*   **And** I click **Sign in**
-*   **Then** the API returns `200` with a payload containing `userId`, `username`, `token`, and `role`
-*   **And** I am redirected to the home page
+
+- **Given** I am on the login page
+- **And** a registered user exists with username `jdoe` and a known password
+- **When** I enter username `jdoe` and the correct password
+- **And** I click **Sign in**
+- **Then** the API returns `200` with a payload containing `universityId`, `username`, `token`, and `role`
+- **And** I am redirected to the home page
 
 #### Scenario: User signs in with invalid password
-*   **Given** I am on the login page
-*   **And** a registered user exists with username `jdoe`
-*   **When** I enter username `jdoe` and an incorrect password
-*   **And** I click **Sign in**
-*   **Then** the API returns `401` with `{ "message": "Invalid username or password." }`
-*   **And** I remain on the login page
+
+- **Given** I am on the login page
+- **And** a registered user exists with username `jdoe`
+- **When** I enter username `jdoe` and an incorrect password
+- **And** I click **Sign in**
+- **Then** the API returns `401` with `{ "message": "Invalid username or password." }`
+- **And** I remain on the login page
 ```
 
 **Coverage goal:** every P1 story has at least one happy-path scenario **and** the important failure cases from Edge Cases / FRs.

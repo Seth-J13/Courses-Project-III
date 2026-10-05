@@ -20,12 +20,12 @@ const isPastDate = (value) => {
   return /^\d{4}-\d{2}-\d{2}$/.test(dateOnly) && dateOnly < todayDateOnly();
 };
 
-const normalizeUserId = (userId) => {
-  if (userId === undefined || userId === null || userId === "") {
+const normalizeUniversityId = (universityId) => {
+  if (universityId === undefined || universityId === null || universityId === "") {
     return null;
   }
 
-  const parsed = parseInt(userId, 10);
+  const parsed = parseInt(universityId, 10);
   return Number.isNaN(parsed) ? NaN : parsed;
 };
 
@@ -71,14 +71,14 @@ const validatePersonFields = ({ firstName, lastName, email, birthDate, gender })
 const emailsMatch = (left, right) =>
   String(left ?? "").trim().toLowerCase() === String(right ?? "").trim().toLowerCase();
 
-const resolveUserLink = async (userId, personId, personEmail) => {
-  const normalized = normalizeUserId(userId);
+const resolveUserLink = async (universityId, personId, personEmail) => {
+  const normalized = normalizeUniversityId(universityId);
   if (Number.isNaN(normalized)) {
     return { error: { message: "User not found." } };
   }
 
   if (normalized === null) {
-    return { userId: null };
+    return { universityId: null };
   }
 
   const user = await db.user.findByPk(normalized);
@@ -86,7 +86,7 @@ const resolveUserLink = async (userId, personId, personEmail) => {
     return { error: { message: "User not found." } };
   }
 
-  const linked = await db.person.findOne({ where: { userId: normalized } });
+  const linked = await db.person.findOne({ where: { universityId: normalized } });
   if (linked && linked.id !== personId) {
     return { error: { message: "User is already linked to a person." } };
   }
@@ -95,7 +95,7 @@ const resolveUserLink = async (userId, personId, personEmail) => {
     return { error: { message: "User email must match the person's email." } };
   }
 
-  return { userId: normalized };
+  return { universityId: normalized };
 };
 
 exports.findAll = async (req, res) => {
@@ -117,7 +117,7 @@ exports.findAll = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const { firstName, lastName, email, birthDate, gender, userId } = req.body;
+    const { firstName, lastName, email, birthDate, gender, universityId } = req.body;
     const fieldError = validatePersonFields({
       firstName,
       lastName,
@@ -136,7 +136,7 @@ exports.create = async (req, res) => {
       return res.status(400).send({ message: "Email is already taken." });
     }
 
-    const link = await resolveUserLink(userId, null, email.trim());
+    const link = await resolveUserLink(universityId, null, email.trim());
     if (link.error) {
       return res.status(400).send(link.error);
     }
@@ -147,7 +147,7 @@ exports.create = async (req, res) => {
       email: email.trim(),
       birthDate: toDateOnly(birthDate),
       gender,
-      userId: link.userId,
+      universityId: link.universityId,
     });
 
     const created = await db.person.findByPk(person.id, {
@@ -164,7 +164,7 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const personId = parseInt(req.params.personId ?? req.body.personId, 10);
-    const { firstName, lastName, email, birthDate, gender, userId } = req.body;
+    const { firstName, lastName, email, birthDate, gender, universityId } = req.body;
 
     if (Number.isNaN(personId)) {
       return res.status(400).send({ message: "Invalid person id." });
@@ -195,7 +195,7 @@ exports.update = async (req, res) => {
       return res.status(400).send({ message: "Email is already taken." });
     }
 
-    const link = await resolveUserLink(userId, personId, email.trim());
+    const link = await resolveUserLink(universityId, personId, email.trim());
     if (link.error) {
       return res.status(400).send(link.error);
     }
@@ -207,7 +207,7 @@ exports.update = async (req, res) => {
         email: email.trim(),
         birthDate: toDateOnly(birthDate),
         gender,
-        userId: link.userId,
+        universityId: link.universityId,
       },
       { where: { id: personId } }
     );

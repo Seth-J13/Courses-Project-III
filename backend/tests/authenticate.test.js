@@ -18,12 +18,12 @@ describe("Feature 1 — User Authentication & Session Management", () => {
         username: "adminuser",
         email: "admin@example.com",
       });
-      const stored = await db.user.findByPk(registerResponse.body.userId);
+      const stored = await db.user.findByPk(registerResponse.body.universityId);
       stored.role = "admin";
       await stored.save();
 
       const response = await request(app)
-        .get(`/courses/users/${registerResponse.body.userId}`)
+        .get(`/courses/users/${registerResponse.body.universityId}`)
         .set(authHeader(registerResponse.body.token));
 
       expect(response.status).toBe(200);
@@ -37,7 +37,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
         username: "adminuser",
         email: "admin@example.com",
       });
-      const stored = await db.user.findByPk(registerResponse.body.userId);
+      const stored = await db.user.findByPk(registerResponse.body.universityId);
       stored.role = "admin";
       await stored.save();
 
@@ -47,7 +47,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
       );
 
       const response = await request(app)
-        .get(`/courses/users/${registerResponse.body.userId}`)
+        .get(`/courses/users/${registerResponse.body.universityId}`)
         .set(authHeader(registerResponse.body.token));
 
       expect(response.status).toBe(401);

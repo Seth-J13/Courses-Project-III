@@ -18,18 +18,18 @@ The stack must work on developer laptops (often XAMPP with MySQL already install
 
 ## Decision
 
-Use **MySQL** as the production database with **Sequelize 6** as the ORM ([ADR-0008](./0008-sequelize-orm.md)) and **relational, normalized tables** scoped by `userId` foreign keys.
+Use **MySQL** as the production database with **Sequelize 6** as the ORM ([ADR-0008](./0008-sequelize-orm.md)) and **relational, normalized tables** scoped by `universityId` foreign keys.
 
 ### Stack
 
-| Layer | Choice |
-|-------|--------|
-| **Database** | MySQL 5.7+ / 8.x (via XAMPP, Docker, or native install) |
-| **Driver** | `mysql2` |
-| **ORM** | Sequelize 6 (ES modules) |
-| **Config** | `backend/app/config/db.config.js` + `sequelizeInstance.js`; credentials from `.env` |
-| **Default database** | `todospeckit-db` |
-| **Test database** | Separate `todospeckit-db-test` (`backend/.env.test`) |
+| Layer                | Choice                                                                              |
+| -------------------- | ----------------------------------------------------------------------------------- |
+| **Database**         | MySQL 5.7+ / 8.x (via XAMPP, Docker, or native install)                             |
+| **Driver**           | `mysql2`                                                                            |
+| **ORM**              | Sequelize 6 (ES modules)                                                            |
+| **Config**           | `backend/app/config/db.config.js` + `sequelizeInstance.js`; credentials from `.env` |
+| **Default database** | `todospeckit-db`                                                                    |
+| **Test database**    | Separate `todospeckit-db-test` (`backend/.env.test`)                                |
 
 ### Schema model
 
@@ -38,20 +38,20 @@ Four core tables with explicit foreign keys (see [data-model.md](../../features/
 ```text
 users ──┬── sessions
         ├── lists ── todos
-        └── todos (direct userId for authorization queries)
+        └── todos (direct universityId for authorization queries)
 ```
 
-| Table | Purpose |
-|-------|---------|
-| `users` | Accounts; bcrypt password hash; unique `email` and `username` |
-| `sessions` | Revocable Bearer tokens; `expirationDate`; FK → `users.id` |
-| `lists` | Per-user todo lists; FK → `users.id` |
-| `todos` | Items in a list; FK → `lists.id` + `users.id`; `onDelete: CASCADE` from list |
+| Table      | Purpose                                                                      |
+| ---------- | ---------------------------------------------------------------------------- |
+| `users`    | Accounts; bcrypt password hash; unique `email` and `username`                |
+| `sessions` | Revocable Bearer tokens; `expirationDate`; FK → `users.id`                   |
+| `lists`    | Per-user todo lists; FK → `users.id`                                         |
+| `todos`    | Items in a list; FK → `lists.id` + `users.id`; `onDelete: CASCADE` from list |
 
 **Design rules:**
 
 - **Normalized relational schema** — no embedded todo arrays in list documents.
-- **`userId` on lists and todos** — enables authorization `WHERE` clauses without joins-only assumptions.
+- **`universityId` on lists and todos** — enables authorization `WHERE` clauses without joins-only assumptions.
 - **Cascade delete** — removing a list deletes its todos (US-3.6).
 - **`DATEONLY` for `dueDate`** — date-only semantics without timezone complexity (Feature 5).
 - **Timestamps** — Sequelize `createdAt` / `updatedAt` on all tables.
@@ -59,11 +59,11 @@ users ──┬── sessions
 
 ### Schema evolution
 
-| Environment | Strategy |
-|-------------|----------|
-| **Development** | `sequelize.sync({ alter: true })` on server start when `SEQUELIZE_SYNC_ALTER=true` (default in `.env.example`) |
-| **Production** | `sync()` without alter; schema changes require explicit migration discipline (out of scope for v1 teaching model) |
-| **Tests** | `sync({ force: true })` in Jest `beforeAll` — drops and recreates tables per suite; `resetTestDatabase()` truncates between tests |
+| Environment     | Strategy                                                                                                                          |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Development** | `sequelize.sync({ alter: true })` on server start when `SEQUELIZE_SYNC_ALTER=true` (default in `.env.example`)                    |
+| **Production**  | `sync()` without alter; schema changes require explicit migration discipline (out of scope for v1 teaching model)                 |
+| **Tests**       | `sync({ force: true })` in Jest `beforeAll` — drops and recreates tables per suite; `resetTestDatabase()` truncates between tests |
 
 No checked-in Sequelize migration files in v1 — schema is defined in `backend/app/models/*.model.js` and synced. Feature specs authorize schema changes; `features/reference/data-model.md` is updated in the same feature PR when schema changes (see [Agent implementation request](../../features/framework.md#agent-implementation-request)).
 
@@ -76,7 +76,7 @@ No checked-in Sequelize migration files in v1 — schema is defined in `backend/
 ### Query patterns
 
 - Sequelize model definitions + `findOne` / `findAll` with explicit `where` clauses.
-- Authorization helpers add `userId: req.user.id` to every scoped lookup.
+- Authorization helpers add `universityId: req.user.id` to every scoped lookup.
 - `User.unscoped()` only when bcrypt password comparison requires the hash column.
 
 ## Consequences
@@ -88,7 +88,7 @@ No checked-in Sequelize migration files in v1 — schema is defined in `backend/
 - Sequelize models map cleanly to SDD **Data Model Requirements** sections in feature specs.
 - Separate test database prevents dev data loss during `force: true` test sync.
 - `alter: true` in dev speeds iteration without hand-written migrations during development.
-- SQL `WHERE userId = ?` aligns with [ADR-0002](./0002-security-architecture.md) authorization model.
+- SQL `WHERE universityId = ?` aligns with [ADR-0002](./0002-security-architecture.md) authorization model.
 
 ### Negative / tradeoffs
 
@@ -100,15 +100,15 @@ No checked-in Sequelize migration files in v1 — schema is defined in `backend/
 
 ## Alternatives considered
 
-| Option | Why not |
-|--------|---------|
-| **SQLite (file DB)** | Simpler setup but weaker classroom alignment with deployed MySQL; concurrent test + dev access is awkward. |
-| **PostgreSQL** | Excellent choice for production; less universal in XAMPP/LAMP developer environments for this project. |
-| **MongoDB / document store** | Todo-in-list fits poorly without duplicating ownership; cross-user isolation harder to reason about in specs. |
-| **JSON files / in-memory store** | No real multi-user persistence; fails ADR-0001. |
-| **Prisma** | Viable ORM; rejected for Speckit in [ADR-0008](./0008-sequelize-orm.md) — Sequelize is the Speckit standard. |
-| **Raw SQL only (no ORM)** | More boilerplate; see ADR-0008. |
-| **Single shared DB for dev and test** | Risk of wiping developer data when tests run `force: true`. |
+| Option                                | Why not                                                                                                       |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **SQLite (file DB)**                  | Simpler setup but weaker classroom alignment with deployed MySQL; concurrent test + dev access is awkward.    |
+| **PostgreSQL**                        | Excellent choice for production; less universal in XAMPP/LAMP developer environments for this project.        |
+| **MongoDB / document store**          | Todo-in-list fits poorly without duplicating ownership; cross-user isolation harder to reason about in specs. |
+| **JSON files / in-memory store**      | No real multi-user persistence; fails ADR-0001.                                                               |
+| **Prisma**                            | Viable ORM; rejected for Speckit in [ADR-0008](./0008-sequelize-orm.md) — Sequelize is the Speckit standard.  |
+| **Raw SQL only (no ORM)**             | More boilerplate; see ADR-0008.                                                                               |
+| **Single shared DB for dev and test** | Risk of wiping developer data when tests run `force: true`.                                                   |
 
 ## Related artifacts
 

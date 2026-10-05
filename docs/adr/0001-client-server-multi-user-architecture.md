@@ -20,23 +20,23 @@ A single-user or offline-first design (localStorage as source of truth, optional
 
 Adopt a **classic client–server split** with a **stateless REST API** and **server-enforced user scoping**:
 
-| Layer | Choice |
-|-------|--------|
-| **Client** | Vue 3 SPA (Vite), Vuetify 4, axios |
-| **Server** | Node.js + Express + Sequelize (ES modules) |
-| **Database** | MySQL — single shared database, rows scoped by `userId` |
-| **Transport** | JSON over HTTPS; API base path `/todo/` |
-| **Auth** | Username + password; bcrypt hashes; **JWT + Session table** (token stored server-side, revocable on logout) |
-| **Client session hint** | Login response stored in `localStorage` key `user`; axios attaches `Authorization: Bearer <token>` on every request |
-| **Authorization** | `authenticate` middleware sets `req.user.id`; all list/todo queries filter by `userId`; create writes use `req.user.id`, never body; cross-user access returns **404** (not 403) |
-| **Repo layout** | Monorepo: `frontend/` + `backend/` + `features/` specs |
+| Layer                   | Choice                                                                                                                                                                                 |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Client**              | Vue 3 SPA (Vite), Vuetify 4, axios                                                                                                                                                     |
+| **Server**              | Node.js + Express + Sequelize (ES modules)                                                                                                                                             |
+| **Database**            | MySQL — single shared database, rows scoped by `universityId`                                                                                                                          |
+| **Transport**           | JSON over HTTPS; API base path `/todo/`                                                                                                                                                |
+| **Auth**                | Username + password; bcrypt hashes; **JWT + Session table** (token stored server-side, revocable on logout)                                                                            |
+| **Client session hint** | Login response stored in `localStorage` key `user`; axios attaches `Authorization: Bearer <token>` on every request                                                                    |
+| **Authorization**       | `authenticate` middleware sets `req.user.id`; all list/todo queries filter by `universityId`; create writes use `req.user.id`, never body; cross-user access returns **404** (not 403) |
+| **Repo layout**         | Monorepo: `frontend/` + `backend/` + `features/` specs                                                                                                                                 |
 
 ```text
 Browser (Vue SPA)                    Express API                 MySQL
 ─────────────────                    ───────────                 ─────
 localStorage["user"]  ──Bearer──►   authenticate middleware  ──► sessions, users
 router guards (UI)                   controllers + auth helpers    lists, todos
-                                     userId in every WHERE clause
+                                     universityId in every WHERE clause
 ```
 
 **Invariants** (must hold in every feature):
@@ -44,7 +44,7 @@ router guards (UI)                   controllers + auth helpers    lists, todos
 1. The server is the **source of truth** for lists, todos, and profile data.
 2. Every authenticated request resolves to **exactly one** `req.user.id` from a valid session row.
 3. **No endpoint** returns or mutates rows owned by another user.
-4. The client never sends a trusted `userId` on create — the server assigns ownership.
+4. The client never sends a trusted `universityId` on create — the server assigns ownership.
 
 ## Consequences
 
@@ -64,13 +64,13 @@ router guards (UI)                   controllers + auth helpers    lists, todos
 
 ## Alternatives considered
 
-| Option | Why not |
-|--------|---------|
-| **localStorage-only todos (no backend)** | No shared database, no real multi-user isolation, does not match league API/testing goals. |
+| Option                                   | Why not                                                                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **localStorage-only todos (no backend)** | No shared database, no real multi-user isolation, does not match league API/testing goals.        |
 | **JWT in cookie only, no Session table** | Harder to revoke on logout; server cannot invalidate a stolen token without extra infrastructure. |
-| **GraphQL or tRPC** | Heavier stack; REST + flat JSON matches existing rules and Agility export simplicity. |
-| **403 Forbidden on cross-user IDs** | Leaks that a resource exists; **404** treats other users' rows as not found (see `security.mdc`). |
-| **Server-rendered Vue (SSR)** | Out of scope for Vite SPA starter; auth still needs the same session model. |
+| **GraphQL or tRPC**                      | Heavier stack; REST + flat JSON matches existing rules and Agility export simplicity.             |
+| **403 Forbidden on cross-user IDs**      | Leaks that a resource exists; **404** treats other users' rows as not found (see `security.mdc`). |
+| **Server-rendered Vue (SSR)**            | Out of scope for Vite SPA starter; auth still needs the same session model.                       |
 
 ## Related artifacts
 

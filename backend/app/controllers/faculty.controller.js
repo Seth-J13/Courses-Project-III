@@ -24,7 +24,7 @@ exports.findAll = async (req, res) => {
 exports.findOne = async (req, res) => {
   try {
     const facultyId = parseInt(req.params.facultyId, 10);
-    if (Number.isNaN(userId)) {
+    if (Number.isNaN(universityId)) {
       return res.status(400).send({ message: "Invalid faculty id." });
     }
 

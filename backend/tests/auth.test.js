@@ -32,7 +32,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
         lName: "Doe",
         role: "manager",
       });
-      expect(response.body.userId).toEqual(expect.any(Number));
+      expect(response.body.universityId).toEqual(expect.any(Number));
       expect(response.body.token).toEqual(expect.any(String));
       expect(response.body.password).toBeUndefined();
 
@@ -109,7 +109,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
         username: "jdoe",
         role: "manager",
       });
-      expect(response.body.userId).toEqual(expect.any(Number));
+      expect(response.body.universityId).toEqual(expect.any(Number));
       expect(response.body.token).toEqual(expect.any(String));
       expect(response.body.password).toBeUndefined();
 
@@ -148,7 +148,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
   describe("US-1.4 — Sign out", () => {
     it("User signs out", async () => {
       const { response: registerResponse } = await registerUser(app);
-      const { token, userId } = registerResponse.body;
+      const { token, universityId } = registerResponse.body;
 
       const response = await request(app)
         .post("/courses/logout")
@@ -156,11 +156,11 @@ describe("Feature 1 — User Authentication & Session Management", () => {
 
       expect(response.status).toBe(200);
 
-      const session = await db.session.findOne({ where: { userId } });
+      const session = await db.session.findOne({ where: { universityId } });
       expect(session.token).toBe("");
 
       const protectedResponse = await request(app)
-        .get(`/courses/users/${userId}`)
+        .get(`/courses/users/${universityId}`)
         .set(authHeader(token));
 
       expect(protectedResponse.status).toBe(401);
@@ -201,7 +201,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
       const person = await db.person.findOne({
         where: { email: "jane.doe@example.com" },
       });
-      expect(person.userId).toBe(response.body.userId);
+      expect(person.universityId).toBe(response.body.universityId);
     });
 
     it("User registers when no person has that email", async () => {
@@ -215,7 +215,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
     });
 
     it("User registers when the matching person is already linked", async () => {
-      const { token, userId } = await registerAdmin(app);
+      const { token, universityId } = await registerAdmin(app);
       const personResponse = await request(app)
           .post("/courses/people")
         .set(authHeader(token))
@@ -227,7 +227,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
           gender: "female",
         });
       await db.person.update(
-        { userId },
+        { universityId },
         { where: { id: personResponse.body.id } }
       );
 
@@ -238,7 +238,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
 
       expect(response.status).toBe(201);
       const person = await db.person.findByPk(personResponse.body.id);
-      expect(person.userId).toBe(userId);
+      expect(person.universityId).toBe(universityId);
     });
   });
 });

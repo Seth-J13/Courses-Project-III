@@ -10,7 +10,7 @@ const emptyForm = () => ({
   email: "",
   birthDate: "",
   gender: "",
-  userId: null,
+  universityId: null,
 });
 
 const people = ref([]);
@@ -37,7 +37,7 @@ const saveLabel = computed(() =>
 
 const usernameFor = (person) =>
   person.user?.username ??
-  users.value.find((user) => user.id === person.userId)?.username ??
+  users.value.find((user) => user.id === person.universityId)?.username ??
   "";
 
 const retrievePeople = async () => {
@@ -76,7 +76,7 @@ const openEditDialog = (person) => {
     email: person.email ?? "",
     birthDate: String(person.birthDate ?? "").slice(0, 10),
     gender: person.gender ?? "",
-    userId: person.userId ?? null,
+    universityId: person.universityId ?? null,
   };
   formError.value = "";
   formDialogOpen.value = true;
@@ -104,7 +104,7 @@ const savePerson = async () => {
     email: form.value.email.trim(),
     birthDate: form.value.birthDate,
     gender: form.value.gender,
-    userId: form.value.userId || null,
+    universityId: form.value.universityId || null,
   };
 
   try {

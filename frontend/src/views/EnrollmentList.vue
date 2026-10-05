@@ -1,8 +1,8 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import seasonServices from "../services/seasonServices.js";
-import leagueServices from "../services/leagueServices.js";
+import enrollmentServices from "../services/enrollmentServices.js";
+import Utils from "../config/utils.js";
 import { toDateInputValue, formatDueDate } from "../config/validation.js";
 
 const router = useRouter();
@@ -17,42 +17,85 @@ const emptyForm = () => ({
   minDaysBetweenGames: "",
 });
 
-const seasons = ref([]);
-const leagues = ref([]);
+const enrollments = ref([]);
 const loading = ref(false);
 const listError = ref("");
 const formDialogOpen = ref(false);
 const isAddMode = ref(true);
 const form = ref(emptyForm());
-const formRef = ref(null);
 const formError = ref("");
 const saving = ref(false);
 const editingId = ref(null);
 const deleteDialogOpen = ref(false);
-const seasonToDelete = ref(null);
+const enrollmentToDelete = ref(null);
 const deleting = ref(false);
 
 const formTitle = computed(() =>
-  isAddMode.value ? "Add Season" : "Edit Season"
+  isAddMode.value ? "Add Enrollment" : "Edit Enrollment"
 );
 const saveLabel = computed(() =>
-  isAddMode.value ? "Create" : "Save Season"
+  isAddMode.value ? "Create" : "Save Enrollment"
 );
 
-const retrieveSeasons = async () => {
+const calcCurrentSemester = () => {
+  let season = ''
+  
+  if (new Date() === 12)
+    season = 'SP'
+  else if (new Date().getMonth() > 11)
+    season = 'WI'
+  else if (new Date().getMonth() > 7)
+    season = 'FA'
+  else if (new Date().getMonth() > 4)
+    season = 'SU'
+  else
+    season = 'SP'
+
+  return season + `${new Date().getFullYear()}`
+}
+
+const formatTime = (time) => {
+  let hour = time.substring(0,2)
+  let minute = time.substring(3,5)
+  let suffix = `AM`
+  
+  if (parseInt(hour) >= 12)
+  suffix = `PM`
+else if (parseInt(hour) > 12)
+hour = hour - 12
+
+return hour + `:` + minute + suffix
+}
+
+const getSearchParams = () => new URLSearchParams(window.location.search)
+
+const retrieveEnrollmentsThisSemester = async () => {
   loading.value = true;
   listError.value = "";
 
   try {
-    const [seasonsResponse, leaguesResponse] = await Promise.all([
-      seasonServices.getSeasons(),
-      leagueServices.getLeagues(),
-    ]);
-    seasons.value = seasonsResponse.data;
-    leagues.value = leaguesResponse.data;
+    let semester = (!Utils.getStore('lastSemChecked')) ? calcCurrentSemester() : Utils.getStore('lastSemChecked')
+    Utils.setStore('lastSemChecked', semester)
+    
+    // get the semester argument from the search bar if it exists, otherwise get the most recently-visited one
+    let sem = getSearchParams().get('semester')
+    if (sem) {
+      semester = sem
+      Utils.setStore('lastSemChecked', semester)
+    }
+    else
+      semester = Utils.getStore('lastSemChecked')
+    
+    // if there weren't any parameters, update the search bar to include parameters
+    let query = window.location.search
+    if (!query)
+      history.pushState(null, '', window.location.href + `?semester=${semester}`)
+
+    const enrollmentResponse = await enrollmentServices.getEnrollments(Utils.getStore('user').id, semester)
+    enrollments.value = enrollmentResponse.data;
   } catch (error) {
     listError.value =
-      error.response?.data?.message || "Failed to fetch seasons.";
+      error.response?.data?.message || "Failed to fetch enrollments.";
   } finally {
     loading.value = false;
   }
@@ -66,87 +109,28 @@ const openAddDialog = () => {
   formDialogOpen.value = true;
 };
 
-const openEditDialog = (season) => {
-  isAddMode.value = false;
-  editingId.value = season.id;
-  form.value = {
-    name: season.name ?? "",
-    startDate: toDateInputValue(season.startDate),
-    endDate: toDateInputValue(season.endDate),
-    leagueId: season.leagueId ?? null,
-    gameDays: Array.isArray(season.gameDays) ? [...season.gameDays] : [],
-    gameTime: String(season.gameTime ?? "").slice(0, 5),
-    minDaysBetweenGames: season.minDaysBetweenGames ?? "",
-  };
-  formError.value = "";
-  formDialogOpen.value = true;
-};
-
 const closeFormDialog = () => {
   formDialogOpen.value = false;
   formError.value = "";
   editingId.value = null;
 };
 
-const saveSeason = async () => {
-  formError.value = "";
-  const { valid } = await formRef.value.validate();
-
-  if (!valid) {
-    return;
-  }
-
-  saving.value = true;
-
-  const payload = {
-    name: form.value.name.trim(),
-    startDate: form.value.startDate,
-    endDate: form.value.endDate,
-    leagueId: form.value.leagueId,
-    gameDays: form.value.gameDays,
-    gameTime: form.value.gameTime,
-    minDaysBetweenGames: Number(form.value.minDaysBetweenGames),
-  };
-
-  try {
-    if (isAddMode.value) {
-      await seasonServices.createSeason(payload);
-    } else {
-      await seasonServices.updateSeason(editingId.value, {
-        ...payload,
-        seasonId: editingId.value,
-      });
-    }
-
-    closeFormDialog();
-    await retrieveSeasons();
-  } catch (error) {
-    formError.value =
-      error.response?.data?.message ||
-      (isAddMode.value
-        ? "Failed to create season."
-        : "Failed to update season.");
-  } finally {
-    saving.value = false;
-  }
+const openEnrollment = (enrollment) => {
+  router.push({ name: "enrollment", params: { enrollmentId: enrollment.id } });
 };
 
-const openSeason = (season) => {
-  router.push({ name: "season", params: { seasonId: season.id } });
-};
-
-const openDeleteDialog = (season) => {
-  seasonToDelete.value = season;
+const openDeleteDialog = (enrollment) => {
+  enrollmentToDelete.value = enrollment;
   deleteDialogOpen.value = true;
 };
 
 const closeDeleteDialog = () => {
   deleteDialogOpen.value = false;
-  seasonToDelete.value = null;
+  enrollmentToDelete.value = null;
 };
 
-const confirmDeleteSeason = async () => {
-  if (!seasonToDelete.value?.id) {
+const confirmDeleteEnrollment = async () => {
+  if (!enrollmentToDelete.value?.id) {
     return;
   }
 
@@ -154,25 +138,25 @@ const confirmDeleteSeason = async () => {
   listError.value = "";
 
   try {
-    await seasonServices.deleteSeason(seasonToDelete.value.id);
+    await enrollmentServices.deleteEnrollment(enrollmentToDelete.value.id);
     closeDeleteDialog();
-    await retrieveSeasons();
+    await retrieveEnrollmentsThisSemester();
   } catch (error) {
     listError.value =
-      error.response?.data?.message || "Failed to delete season.";
+      error.response?.data?.message || "Failed to delete enrollment.";
   } finally {
     deleting.value = false;
   }
 };
 
-onMounted(retrieveSeasons);
+onMounted(retrieveEnrollmentsThisSemester);
 </script>
 
 <template>
   <v-container class="py-8">
     <v-card rounded="lg">
       <v-card-item>
-        <v-card-title>Seasons</v-card-title>
+        <v-card-title>Enrollments - {{ getSearchParams().get('semester') }}</v-card-title>
         <template #append>
           <v-btn
             color="primary"
@@ -180,7 +164,7 @@ onMounted(retrieveSeasons);
             class="oc-cta"
             @click="openAddDialog"
           >
-            + New season
+            + New enrollment
           </v-btn>
         </template>
       </v-card-item>
@@ -197,48 +181,51 @@ onMounted(retrieveSeasons);
           {{ listError }}
         </v-alert>
 
-        <p v-if="!loading && seasons.length === 0" class="text-body-1">
-          No seasons yet. Create your first season.
+        <p v-if="!loading && enrollments.length === 0" class="text-body-1">
+          No enrollments yet. Create your first enrollment.
         </p>
 
-        <v-table v-if="!loading && seasons.length > 0">
+        <v-table v-if="!loading && enrollments.length > 0">
           <thead>
             <tr>
-              <th class="text-left">Season name</th>
-              <th class="text-left">League</th>
-              <th class="text-left">Start date</th>
-              <th class="text-left">End date</th>
-              <th class="text-left">Actions</th>
+              <th class="text-left">SectionId</th>
+              <th class="text-left">Name</th>
+              <th class="text-left">Days</th>
+              <th class="text-left">Time</th>
+              <th class="text-left">Room</th>
+              <th class="text-left">Instructor</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="season in seasons" :key="season.id">
-              <td>{{ season.name }}</td>
-              <td>{{ season.league?.name }}</td>
-              <td>{{ formatDueDate(season.startDate) }}</td>
-              <td>{{ formatDueDate(season.endDate) }}</td>
+            <tr v-for="enrollment in enrollments" :key="enrollment.sectionId">
+              <td>{{ enrollment.section.sectionId }}</td>
+              <td> testName until later</td>
+              <td>{{ enrollment.section.dayOfWeek }}</td>
+              <td>{{ formatTime(enrollment.section.timeStart) }} - {{ formatTime(enrollment.section.timeEnd) }}</td>
+              <td>{{ enrollment.section.roomNum }}</td>
+              <td>{{ enrollment.section.facultyId }}</td>
               <td>
                 <v-icon
                   size="small"
                   class="mx-4"
-                  aria-label="Open season"
-                  @click="openSeason(season)"
+                  aria-label="Open enrollment"
+                  @click="openEnrollment(enrollment)"
                 >
                   mdi-calendar
                 </v-icon>
                 <v-icon
                   size="small"
                   class="mx-4"
-                  aria-label="Edit season"
-                  @click="openEditDialog(season)"
+                  aria-label="Edit enrollment"
+                  @click="openEditDialog(enrollment)"
                 >
                   mdi-pencil
                 </v-icon>
                 <v-icon
                   size="small"
                   class="mx-4"
-                  aria-label="Delete season"
-                  @click="openDeleteDialog(season)"
+                  aria-label="Delete enrollment"
+                  @click="openDeleteDialog(enrollment)"
                 >
                   mdi-trash-can
                 </v-icon>
@@ -253,12 +240,12 @@ onMounted(retrieveSeasons);
       <v-card rounded="lg">
         <v-card-title>{{ formTitle }}</v-card-title>
         <v-card-text>
-          <!-- <SeasonForm
+          <!-- <EnrollmentForm
             ref="formRef"
             v-model="form"
             :leagues="leagues"
-            @submit="saveSeason"
-          /> This was the old season form, not needed for courses-->
+            @submit="saveEnrollment"
+          /> This was the old enrollment form, not needed for courses-->
           <v-alert
             v-if="formError"
             type="error"
@@ -276,7 +263,7 @@ onMounted(retrieveSeasons);
             variant="elevated"
             class="oc-cta"
             :loading="saving"
-            @click="saveSeason"
+            @click="saveEnrollment"
           >
             {{ saveLabel }}
           </v-btn>
@@ -286,8 +273,8 @@ onMounted(retrieveSeasons);
 
     <v-dialog v-model="deleteDialogOpen" max-width="420">
       <v-card rounded="lg">
-        <v-card-title>Delete Season</v-card-title>
-        <v-card-text>Delete this season?</v-card-text>
+        <v-card-title>Delete Enrollment</v-card-title>
+        <v-card-text>Delete this enrollment?</v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" @click="closeDeleteDialog">Cancel</v-btn>
@@ -296,9 +283,9 @@ onMounted(retrieveSeasons);
             variant="elevated"
             class="oc-cta"
             :loading="deleting"
-            @click="confirmDeleteSeason"
+            @click="confirmDeleteEnrollment"
           >
-            Delete Season
+            Delete Enrollment
           </v-btn>
         </v-card-actions>
       </v-card>

@@ -59,7 +59,7 @@ const loadUserFromBearer = async (req) => {
     return { error: { status: 401, message: "Unauthorized! Session expired" } };
   }
 
-  const user = await db.user.findByPk(session.userId);
+  const user = await db.user.findByPk(session.universityId);
   if (!user) {
     return { error: { status: 401, message: "Unauthorized! User not found" } };
   }

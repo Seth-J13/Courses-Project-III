@@ -1,12 +1,11 @@
 export default (sequelize, Sequelize) => {
-  const League = sequelize.define("section", {
+  const Section = sequelize.define("section", {
     sectionId: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.STRING(12),
       primaryKey: true,
-      autoIncrement: true,
     },
     courseId: {
-      type: Sequelize.STRING(50),
+      type: Sequelize.STRING(9),
       allowNull: false,
     },
     dayOfWeek: {
@@ -31,5 +30,5 @@ export default (sequelize, Sequelize) => {
     },
   });
 
-  return League;
+  return Section;
 };

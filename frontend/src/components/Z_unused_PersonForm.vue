@@ -100,14 +100,14 @@ defineExpose({ validate });
       @update:model-value="updateField('gender', $event)"
     />
     <v-select
-      :model-value="modelValue.userId"
+      :model-value="modelValue.universityId"
       label="User"
       :items="users"
       item-title="username"
       item-value="id"
       clearable
       density="comfortable"
-      @update:model-value="updateField('userId', $event)"
+      @update:model-value="updateField('universityId', $event)"
     />
   </v-form>
 </template>

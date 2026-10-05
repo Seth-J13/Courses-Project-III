@@ -8,7 +8,7 @@ import { decryptSessionId } from "../authorization/authorization.js"
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
 
 const buildAuthResponse = (user, token) => ({
-  userId: user.id,
+  universityId: user.id,
   email: user.email,
   fName: user.fName,
   lName: user.lName,
@@ -28,7 +28,7 @@ const encryptSessionId = (id) => {
 const createOrReuseSession = async (user) => {
   const existingSession = await db.session.findOne({
     where: {
-      userId: user.id,
+      universityId: user.id,
       email: user.email,
       expirationDate: { [Op.gte]: new Date() }
     },
@@ -43,7 +43,7 @@ const createOrReuseSession = async (user) => {
   const session = await db.session.create({
     email: user.email,
     expirationDate,
-    userId: user.id,
+    universityId: user.id,
   });
 
   return encryptSessionId(session.id);
@@ -147,7 +147,7 @@ exports.login = async (req, res) => {
     const session = await db.session.create({
       email: user.email,
       expirationDate: new Date(Date.now() + SESSION_TTL_MS),
-      userId: user.id,
+      universityId: user.id,
     });
 
     return res.status(200).send({

@@ -26,7 +26,7 @@ export default (sequelize, Sequelize) => {
       type: Sequelize.ENUM("male", "female", "other"),
       allowNull: false,
     },
-    userId: {
+    universityId: {
       type: Sequelize.INTEGER,
       allowNull: true,
       unique: true,

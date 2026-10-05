@@ -7,17 +7,17 @@ const enrollmentInclude = [
   {
     model: db.semester,
     as: "semester",
-    attributes: ["semesterId", "semesterName", "startDate", "endDate"]
+    attributes: ["semesterId", "startDate", "endDate"]
   },
   {
     model: db.user,
     as: "user",
-    attributes: ["universityId", "name"]
+    attributes: ["id", "fname", "lname"]
   },
   {
     model: db.section,
     as: "section",
-    attributes: ["courseId", "sectionId", "dayOfWeek", "roomNumber", "startTime", "endTime", "facultyId"]
+    attributes: ["sectionId", "courseId", "dayOfWeek", "roomNum", "timeStart", "timeEnd", "facultyId"]
   },
 ];
 
@@ -55,6 +55,7 @@ exports.findBySemester = async (req, res) => {
 
     const enrollments = await db.enrollment.findAll({
       where: {universityId, semesterId},
+      include: enrollmentInclude,
       order: [["semesterId", "ASC"]],
     });
 

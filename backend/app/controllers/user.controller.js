@@ -23,14 +23,14 @@ exports.findAll = async (req, res) => {
 
 exports.findOne = async (req, res) => {
   try {
-    const userId = parseInt(req.params.id, 10);
-    if (Number.isNaN(userId)) {
+    const universityId = parseInt(req.params.id, 10);
+    if (Number.isNaN(universityId)) {
       return res.status(400).send({ message: "Invalid user id." });
     }
 
-    const user = await db.user.findByPk(userId);
+    const user = await db.user.findByPk(universityId);
     if (!user) {
-      return res.status(404).send({ message: `User with id=${userId} not found.` });
+      return res.status(404).send({ message: `User with id=${universityId} not found.` });
     }
 
     return res.send(user);
@@ -42,14 +42,14 @@ exports.findOne = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    const userId = parseInt(req.params.id, 10);
-    if (Number.isNaN(userId)) {
+    const universityId = parseInt(req.params.id, 10);
+    if (Number.isNaN(universityId)) {
       return res.status(400).send({ message: "Invalid user id." });
     }
 
-    const user = await db.user.unscoped().findByPk(userId);
+    const user = await db.user.unscoped().findByPk(universityId);
     if (!user) {
-      return res.status(404).send({ message: `User with id=${userId} not found.` });
+      return res.status(404).send({ message: `User with id=${universityId} not found.` });
     }
 
     const { fName, lName, email, username, password, role } = req.body;
@@ -108,7 +108,7 @@ exports.update = async (req, res) => {
 
     await user.save();
 
-    const updatedUser = await db.user.findByPk(userId);
+    const updatedUser = await db.user.findByPk(universityId);
     return res.send(updatedUser);
   } catch (err) {
     logger.error(`User update failed: ${err.message}`);

@@ -53,7 +53,7 @@ exports.findAll = async (req, res) => {
 
     if (req.user.role === "manager") {
       const person = await db.person.findOne({
-        where: { userId: req.user.id },
+        where: { universityId: req.user.id },
       });
       if (!person) {
         return res.send([]);
@@ -288,7 +288,7 @@ const canManageRoster = async (user, team) => {
     return false;
   }
 
-  const person = await db.person.findOne({ where: { userId: user.id } });
+  const person = await db.person.findOne({ where: { universityId: user.id } });
   return Boolean(person && team.managerId === person.id);
 };
 

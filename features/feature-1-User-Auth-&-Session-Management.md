@@ -1,4 +1,5 @@
 # Feature: User Auth & Session Management
+
 **Feature ID:** 1
 **Branch pattern:** `Feature-1-User-Auth`
 **Status:** Ready
@@ -95,7 +96,6 @@
 
 Feature 1 starts and ends the caller’s own session. It does not return another user’s profile or token.
 
-
 | Rule                  | Requirement                                                                                         |
 | --------------------- | --------------------------------------------------------------------------------------------------- |
 | **Read scope**        | Login success returns **only** the authenticating user’s profile fields and token.                  |
@@ -106,13 +106,14 @@ Feature 1 starts and ends the caller’s own session. It does not return another
 | **Later features**    | Course APIs must never expose another user’s private courses. Cross-user → `404` (not `403`).       |
 
 ## API Requirements
-| Method   | Endpoint                         | Auth                | Purpose               |
-| -------- | -------------------------------- | ------------------- | --------------------- |
-| `GET`    | `/courses/users`                 | Yes (admin)         | Fetch all users       |
-| `GET`    | `/courses/sessions`              | Yes (admin)         | Fetch all sessions    |
-| `POST`   | `/courses/users`                 | Yes, admin          | Create a new user     |
-| `POST`    | `/courses/sessions`             | Yes, admin          | Create a new session  |
-| `DELETE` | `/courses/sessions/:sessionId`   | Yes, admin          | Delete a session      |
+
+| Method   | Endpoint                       | Auth        | Purpose              |
+| -------- | ------------------------------ | ----------- | -------------------- |
+| `GET`    | `/courses/users`               | Yes (admin) | Fetch all users      |
+| `GET`    | `/courses/sessions`            | Yes (admin) | Fetch all sessions   |
+| `POST`   | `/courses/users`               | Yes, admin  | Create a new user    |
+| `POST`   | `/courses/sessions`            | Yes, admin  | Create a new session |
+| `DELETE` | `/courses/sessions/:sessionId` | Yes, admin  | Delete a session     |
 
 ---
 
@@ -143,12 +144,10 @@ Feature 1 starts and ends the caller’s own session. It does not return another
 
 Quoted messages that tests must match:
 
-
 | Situation      | Status | `message`           |
 | -------------- | ------ | ------------------- |
 | Unknown email  | 401    | `User not found!`   |
 | Wrong password | 401    | `Invalid password!` |
-
 
 ---
 
@@ -176,26 +175,24 @@ Quoted messages that tests must match:
 This feature **uses** `users` (Feature 1) and **owns** `sessions`.
 
 ### `users` table (read for login; not created here)
-| Field         | Type       | Rules                                              |
-| ------------- | ---------- | -------------------------------------------------- |
-| `universityId`| INTEGER PK | NOT NULL, UNIQUE                                   |
-| `firstName`   | STRING     | Required                                           |
-| `lastName`    | STRING     | Required                                           |
-| `email`       | STRING     | Required, unique; login identifier                 |
-| `password`    | BLOB       | Required; salted hash only — never store plaintext |
-| `salt`        | BLOB       | Required; used to hash the password                |
 
+| Field          | Type       | Rules                                              |
+| -------------- | ---------- | -------------------------------------------------- |
+| `universityId` | INTEGER PK | NOT NULL, UNIQUE                                   |
+| `firstName`    | STRING     | Required                                           |
+| `lastName`     | STRING     | Required                                           |
+| `email`        | STRING     | Required, unique; login identifier                 |
+| `password`     | BLOB       | Required; salted hash only — never store plaintext |
+| `salt`         | BLOB       | Required; used to hash the password                |
 
 ### `sessions` table
 
-
-| Field            | Type       | Rules                           |
-| ---------------- | ---------- | ------------------------------- |
-| `sessionId`             | INTEGER PK | Auto-increment                  |
-| `email`          | STRING     | Required                        |
-| `expirationDate` | DATE       | Required; 24 hours from login   |
+| Field            | Type       | Rules                                     |
+| ---------------- | ---------- | ----------------------------------------- |
+| `sessionId`      | INTEGER PK | Auto-increment                            |
+| `email`          | STRING     | Required                                  |
+| `expirationDate` | DATE       | Required; 24 hours from login             |
 | `universityId`   | INTEGER FK | Required; references `users.universityId` |
-
 
 The client `token` is the encrypted session `id`. It is not stored as a separate column.
 
@@ -207,6 +204,7 @@ The client `token` is the encrypted session `id`. It is not stored as a separate
 ---
 
 ## Acceptance Criteria (Gherkin)
+
 ### US-1.1 — Sign in
 
 #### Scenario: Admin signs in
@@ -260,6 +258,7 @@ The client `token` is the encrypted session `id`. It is not stored as a separate
 - **And** I do not have to sign in again
 
 ### US-1.3 — Sign out
+
 #### Scenario: Logging out
 
 - **Given** I have a valid session
@@ -285,7 +284,6 @@ The client `token` is the encrypted session `id`. It is not stored as a separate
 
 Each scenario above must map to at least one automated test.
 
-
 | Story  | Scenario             | Test file                      | Test name                    |
 | ------ | -------------------- | ------------------------------ | ---------------------------- |
 | US-1.1 | Admin signs in       | `frontend/tests/Login.test.js` | `it("Admin signs in")`       |
@@ -296,9 +294,6 @@ Each scenario above must map to at least one automated test.
 | US-1.2 | Refresh pages        | `frontend/tests/Login.test.js` | `it("Refresh pages")`        |
 | US-1.3 | Logging out          | `backend/tests/auth.test.js`   | `it("Logging out)`           |
 | US-1.4 | Creating new account | `frontend/tests/Login.test.js` | `it("Creating new account")` |
-
-
-
 
 ## Definition of Done
 
@@ -316,4 +311,3 @@ Each scenario above must map to at least one automated test.
 ## Out of Scope
 
 - Create / edit / delete and per-user and admin ownership
-

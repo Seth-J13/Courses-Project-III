@@ -14,7 +14,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
   describe("US-1.3 — Stay signed in across page loads", () => {
     it("Signed-in user visits login page", async () => {
       Utils.setStore("user", {
-        userId: 1,
+        universityId: 1,
         username: "jdoe",
         fName: "Jane",
         lName: "Doe",
