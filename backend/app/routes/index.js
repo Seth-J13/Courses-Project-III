@@ -4,6 +4,7 @@ import authRoutes from "./auth.routes.js";
 import userRoutes from "./user.routes.js";
 import enrollmentRoutes from "./enrollment.routes.js"
 import facultyRoutes from "./faculty.routes.js";
+import semesterRoutes from "./semester.routes.js"
 const router = Router();
 
 router.get("/health", (_req, res) => {
@@ -18,5 +19,6 @@ router.use("/courses", courseRoutes);
 router.use("/users", userRoutes);
 router.use("/enrollments", enrollmentRoutes);
 router.use("/faculty", facultyRoutes);
+router.use("/semesters", semesterRoutes)
 
 export default router;

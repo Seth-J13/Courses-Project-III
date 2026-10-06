@@ -2,8 +2,8 @@
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import enrollmentServices from "../services/enrollmentServices.js";
+import semesterServices from "../services/semesterServices_temp.js";
 import Utils from "../config/utils.js";
-import { toDateInputValue, formatDueDate } from "../config/validation.js";
 
 const router = useRouter();
 
@@ -18,6 +18,7 @@ const emptyForm = () => ({
 });
 
 const enrollments = ref([]);
+const cardTitleSemester = ref("");
 const loading = ref(false);
 const listError = ref("");
 const formDialogOpen = ref(false);
@@ -36,6 +37,8 @@ const formTitle = computed(() =>
 const saveLabel = computed(() =>
   isAddMode.value ? "Create" : "Save Enrollment"
 );
+
+const seasonList = ['SP', 'SU', 'FA', 'WI']
 
 const calcCurrentSemester = () => {
   let season = ''
@@ -74,24 +77,24 @@ const retrieveEnrollmentsThisSemester = async () => {
   listError.value = "";
 
   try {
-    let semester = (!Utils.getStore('lastSemChecked')) ? calcCurrentSemester() : Utils.getStore('lastSemChecked')
-    Utils.setStore('lastSemChecked', semester)
-    
     // get the semester argument from the search bar if it exists, otherwise get the most recently-visited one
     let sem = getSearchParams().get('semester')
+    let semester = Utils.getStore('lastSemChecked') 
     if (sem) {
-      semester = sem
+      Utils.setStore('lastSemChecked', sem)
+    }
+    else {
+      if (!semester) semester = calcCurrentSemester() // if we haven't checked a semester before, calculate it now
       Utils.setStore('lastSemChecked', semester)
     }
-    else
-      semester = Utils.getStore('lastSemChecked')
     
     // if there weren't any parameters, update the search bar to include parameters
-    let query = window.location.search
-    if (!query)
-      history.pushState(null, '', window.location.href + `?semester=${semester}`)
+    if (!sem) {
+      window.history.replaceState({}, '', window.location.href + `?semester=${semester}`)
+    }
 
     const enrollmentResponse = await enrollmentServices.getEnrollments(Utils.getStore('user').id, semester)
+    cardTitleSemester.value = Utils.getStore('lastSemChecked')
     enrollments.value = enrollmentResponse.data;
   } catch (error) {
     listError.value =
@@ -149,6 +152,38 @@ const confirmDeleteEnrollment = async () => {
   }
 };
 
+const nav = async (mode) => {
+  try {
+    // get the semester argument from the search bar if it exists, otherwise get the most recently-visited one
+    let semester = getSearchParams().get('semester')
+    let season = semester.substring(0,2)
+    let year = semester.substring(2,6)
+    
+    let index = seasonList.indexOf(season)
+    if (mode === 'next') {
+      year = (index === 3) ? (parseInt(year)+1).toString() : year
+      season = (index === 3) ? seasonList[0] : seasonList[index+1]
+    }
+    else {
+      year = (index === 0) ? (parseInt(year)-1).toString() : year
+      season = (index === 0) ? seasonList[3] : seasonList[index-1]
+    }
+
+    semester = season + year
+
+    //console.log(semesterServices.getSemesters())
+    
+    window.history.replaceState({}, '', window.location.origin + window.location.pathname + `?semester=${semester}`)
+
+    retrieveEnrollmentsThisSemester()
+  } catch (error) {
+    listError.value =
+      error.response?.data?.message || "Failed to navigate semesters.";
+  } finally {
+    loading.value = false;
+  }
+}
+
 onMounted(retrieveEnrollmentsThisSemester);
 </script>
 
@@ -156,7 +191,26 @@ onMounted(retrieveEnrollmentsThisSemester);
   <v-container class="py-8">
     <v-card rounded="lg">
       <v-card-item>
-        <v-card-title>Enrollments - {{ getSearchParams().get('semester') }}</v-card-title>
+        <v-card-title>Enrollments - {{ cardTitleSemester }}</v-card-title>
+        
+          <div class="d-flex justify-space-between align-center mt-2" style="width: 40px; padding: 0 0 3px 3px">
+            <v-btn 
+              variant="elevated"
+              class="oc-cta"
+              @click="nav('prev')"
+              style="margin: 0 90px 0 0"
+            >
+              Prev
+            </v-btn>
+          <v-btn 
+            variant="elevated"
+            class="oc-cta"
+            @click="nav('next')"
+          >
+            Next
+          </v-btn>
+        </div>
+
         <template #append>
           <v-btn
             color="primary"
