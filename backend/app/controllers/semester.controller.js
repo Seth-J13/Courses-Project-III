@@ -6,8 +6,8 @@ const exports = {};
 exports.findAll = async (req, res) => {
   try {
     const semester = await db.semester.findAll({
-      attributes: ["semesterId", "department", "fName", "lName"],
-      order: [["lName", "ASC"]],
+      attributes: ["semesterId", "startDate", "endDate"],
+      order: [["semesterId", "ASC"]],
     });
 
     return res.send(semester);

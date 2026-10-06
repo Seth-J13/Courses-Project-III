@@ -1,7 +1,8 @@
 import apiClient from "./services.js";
 
 const enrollmentServices = {
-  getEnrollment(universityId) {
+  getEnrollments(universityId) {
+    console.log("test")
     return apiClient.get(`enrollments/${universityId}`);
   },
 
@@ -9,7 +10,7 @@ const enrollmentServices = {
     return apiClient.post(`enrollments/${universityId}`);
   },
 
-  getEnrollments(universityId, semesterId) {
+  getEnrollmentsBySemester(universityId, semesterId) {
     return apiClient.get(`enrollments/${universityId}/${semesterId}`);
   },
 

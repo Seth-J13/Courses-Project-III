@@ -8,19 +8,17 @@ import Utils from "../config/utils.js";
 const router = useRouter();
 
 const emptyForm = () => ({
-  name: "",
-  startDate: "",
-  endDate: "",
-  leagueId: null,
-  gameDays: [],
-  gameTime: "",
-  minDaysBetweenGames: "",
+  course: "",
+  section: ""
 });
 
 const enrollments = ref([]);
 const cardTitleSemester = ref("");
 const loading = ref(false);
+const semesterIds = ref([]);
 const listError = ref("");
+const selectedSemester = ref("");
+
 const formDialogOpen = ref(false);
 const isAddMode = ref(true);
 const form = ref(emptyForm());
@@ -40,19 +38,24 @@ const saveLabel = computed(() =>
 
 const seasonList = ['SP', 'SU', 'FA', 'WI']
 
+const loadAllSemesterIds = async () => {
+  let semesters = []
+  
+  await semesterServices.getSemesters()
+  .then((response) => {
+    response.data.forEach(element => {
+      semesters.push(element.semesterId)
+    });
+  }).catch((error) => {
+    console.log(error.response?.data?.message || error.message)
+  })
+
+  semesterIds.value = semesters
+}
+
 const calcCurrentSemester = () => {
   let season = ''
-  
-  if (new Date() === 12)
-    season = 'SP'
-  else if (new Date().getMonth() > 11)
-    season = 'WI'
-  else if (new Date().getMonth() > 7)
-    season = 'FA'
-  else if (new Date().getMonth() > 4)
-    season = 'SU'
-  else
-    season = 'SP'
+  season = seasonList[Math.floor(new Date().getMonth()/4)]
 
   return season + `${new Date().getFullYear()}`
 }
@@ -63,39 +66,45 @@ const formatTime = (time) => {
   let suffix = `AM`
   
   if (parseInt(hour) >= 12)
-  suffix = `PM`
-else if (parseInt(hour) > 12)
-hour = hour - 12
+    suffix = `PM`
+  else if (parseInt(hour) > 12)
+    hour = hour - 12
 
 return hour + `:` + minute + suffix
 }
 
 const getSearchParams = () => new URLSearchParams(window.location.search)
 
-const retrieveEnrollmentsThisSemester = async () => {
+const retrieveEnrollments = async () => {
   loading.value = true;
   listError.value = "";
 
   try {
-    // get the semester argument from the search bar if it exists, otherwise get the most recently-visited one
+    // get the semester argument from the search bar if it exists,
+    // otherwise get the most recently-visited one if it exists,
+    // otherwise calculate it based on the current date
     let sem = getSearchParams().get('semester')
-    let semester = Utils.getStore('lastSemChecked') 
-    if (sem) {
-      Utils.setStore('lastSemChecked', sem)
-    }
-    else {
-      if (!semester) semester = calcCurrentSemester() // if we haven't checked a semester before, calculate it now
-      Utils.setStore('lastSemChecked', semester)
-    }
+    let semester = sem || Utils.getStore('lastSemChecked') || calcCurrentSemester()
     
     // if there weren't any parameters, update the search bar to include parameters
     if (!sem) {
       window.history.replaceState({}, '', window.location.href + `?semester=${semester}`)
     }
 
-    const enrollmentResponse = await enrollmentServices.getEnrollments(Utils.getStore('user').id, semester)
-    cardTitleSemester.value = Utils.getStore('lastSemChecked')
+    let enrollmentResponse = {}
+    if (semester !== 'null') {
+      enrollmentResponse = await enrollmentServices.getEnrollmentsBySemester(Utils.getStore('user').id, semester)
+      cardTitleSemester.value = semester
+    }
+    else {
+      enrollmentResponse = await enrollmentServices.getEnrollments(Utils.getStore('user').id)
+      cardTitleSemester.value = "all"
+      semester = calcCurrentSemester()
+    }
     enrollments.value = enrollmentResponse.data;
+
+    // update storage and title values
+    Utils.setStore('lastSemChecked', semester)
   } catch (error) {
     listError.value =
       error.response?.data?.message || "Failed to fetch enrollments.";
@@ -143,7 +152,7 @@ const confirmDeleteEnrollment = async () => {
   try {
     await enrollmentServices.deleteEnrollment(enrollmentToDelete.value.id);
     closeDeleteDialog();
-    await retrieveEnrollmentsThisSemester();
+    await retrieveEnrollments();
   } catch (error) {
     listError.value =
       error.response?.data?.message || "Failed to delete enrollment.";
@@ -156,26 +165,40 @@ const nav = async (mode) => {
   try {
     // get the semester argument from the search bar if it exists, otherwise get the most recently-visited one
     let semester = getSearchParams().get('semester')
-    let season = semester.substring(0,2)
-    let year = semester.substring(2,6)
+    let season = ''
+    let year = ''
+
+    if (semester === 'null') {
+      season = Utils.getStore('lastSemChecked').substr(0,2)
+      year = Utils.getStore('lastSemChecked').substr(2,6)
+    }
+    else {
+      season = semester.substring(0,2)
+      year = semester.substring(2,6)
+    }
     
     let index = seasonList.indexOf(season)
     if (mode === 'next') {
       year = (index === 3) ? (parseInt(year)+1).toString() : year
       season = (index === 3) ? seasonList[0] : seasonList[index+1]
     }
-    else {
+    else if (mode === 'clear') {
+      window.history.replaceState({}, '', window.location.origin + window.location.pathname + `?semester=null`)
+      year = 'null'
+      season = ''
+      selectedSemester.value = ''
+    }
+    else if (mode === 'prev') {
       year = (index === 0) ? (parseInt(year)-1).toString() : year
       season = (index === 0) ? seasonList[3] : seasonList[index-1]
     }
 
-    semester = season + year
+    semester = (mode === 'jump') ? selectedSemester.value : season + year
 
-    //console.log(semesterServices.getSemesters())
-    
-    window.history.replaceState({}, '', window.location.origin + window.location.pathname + `?semester=${semester}`)
+    //console.log(semesterServices.getSemesters()    
+    if (mode !== 'clear') window.history.replaceState({}, '', window.location.origin + window.location.pathname + `?semester=${semester}`)
 
-    retrieveEnrollmentsThisSemester()
+    retrieveEnrollments()
   } catch (error) {
     listError.value =
       error.response?.data?.message || "Failed to navigate semesters.";
@@ -184,7 +207,8 @@ const nav = async (mode) => {
   }
 }
 
-onMounted(retrieveEnrollmentsThisSemester);
+onMounted(retrieveEnrollments);
+onMounted(loadAllSemesterIds);
 </script>
 
 <template>
@@ -192,23 +216,42 @@ onMounted(retrieveEnrollmentsThisSemester);
     <v-card rounded="lg">
       <v-card-item>
         <v-card-title>Enrollments - {{ cardTitleSemester }}</v-card-title>
-        
-          <div class="d-flex justify-space-between align-center mt-2" style="width: 40px; padding: 0 0 3px 3px">
+          <v-combobox
+            v-model="selectedSemester"
+            label="Find Semester"
+            class="oc-cta"
+            placeholder="e.g. FA2026"
+            persistent-placeholder:true
+            style="max-width: 250px; margin-top: 5px"
+            @update:model-value="nav('jump')"
+            :items=semesterIds
+          ></v-combobox>
+          <div class="d-flex justify-space-between align-center mt-2" style="width: 40px; margin: -10px 0 0 0; padding: 0 0 3px 3px">
             <v-btn 
               variant="elevated"
               class="oc-cta"
               @click="nav('prev')"
-              style="margin: 0 90px 0 0"
+              style="margin: 0 25px 0 0"
             >
               Prev
             </v-btn>
-          <v-btn 
-            variant="elevated"
-            class="oc-cta"
-            @click="nav('next')"
-          >
-            Next
-          </v-btn>
+
+            <v-btn 
+              variant="elevated"
+              class="oc-cta"
+              @click="nav('clear')"
+              style="margin: 0 25px 0 0"
+            >
+              Clear
+            </v-btn>
+            
+            <v-btn 
+              variant="elevated"
+              class="oc-cta"
+              @click="nav('next')"
+            >
+              Next
+            </v-btn>
         </div>
 
         <template #append>
@@ -266,14 +309,6 @@ onMounted(retrieveEnrollmentsThisSemester);
                   @click="openEnrollment(enrollment)"
                 >
                   mdi-calendar
-                </v-icon>
-                <v-icon
-                  size="small"
-                  class="mx-4"
-                  aria-label="Edit enrollment"
-                  @click="openEditDialog(enrollment)"
-                >
-                  mdi-pencil
                 </v-icon>
                 <v-icon
                   size="small"

@@ -33,6 +33,7 @@ exports.findAll = async (req, res) => {
 
     const enrollments = await db.enrollment.findAll({
       where: {universityId},
+      include: enrollmentInclude,
       order: [["semesterId", "ASC"]],
     });
 
