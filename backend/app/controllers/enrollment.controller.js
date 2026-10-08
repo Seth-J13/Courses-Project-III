@@ -23,6 +23,11 @@ const enrollmentInclude = [
         model: db.course,
         as: "course",
         attributes: ["courseId", "courseName"]
+      },
+      {
+        model: db.faculty,
+        as: "faculty",
+        attributes: ["facultyId", "fName", "lName"]
       }
     ]
   },

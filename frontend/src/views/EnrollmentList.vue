@@ -1,15 +1,11 @@
 <script setup>
 import { onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
 import enrollmentServices from "../services/enrollmentServices.js";
 import EnrollmentForm from "../components/EnrollmentForm.vue";
 import semesterServices from "../services/semesterServices_temp.js";
 import courseServices from "../services/courseServices_temp.js";
 import sectionServices from "../services/sectionServices_temp.js";
-import facultyServices from "../services/facultyServices_temp.js";
 import Utils from "../config/utils.js";
-
-const router = useRouter();
 
 const emptyForm = () => ({
   course: "",
@@ -35,6 +31,10 @@ const sections = ref([])
 const showSectionBox = ref(false)
 const showSectionDetails = ref(false)
 const sectionDetails = ref("")
+
+const faculty = ref([])
+const sectionFaculty = ref([])
+const facultyName = ref("")
 
 const saving = ref(false);
 const deleteDialogOpen = ref(false);
@@ -92,9 +92,8 @@ const retrieveEnrollments = async () => {
     let semester = sem || Utils.getStore('lastSemChecked') || calcCurrentSemester()
     
     // if there weren't any parameters, update the search bar to include parameters
-    if (!sem) {
+    if (!sem)
       window.history.replaceState({}, '', window.location.href + `?semester=${semester}`)
-    }
 
     let enrollmentResponse = {}
     if (semester !== 'null') {
@@ -107,6 +106,18 @@ const retrieveEnrollments = async () => {
       semester = calcCurrentSemester()
     }
     enrollments.value = enrollmentResponse.data;
+
+    console.log(enrollments.value)
+
+    // enrollments.value.map((enrollment) => {
+    //   console.log(enrollment)
+    //   return {
+    //     universityId: enrollment.universityId,
+    //     semesterId: enrollment.semesterId,
+    //     sectionId: enrollment.sectionId,
+    //     faculty: 
+    //   }
+    // })
 
     // update storage and title values
     Utils.setStore('lastSemChecked', semester)
@@ -352,7 +363,7 @@ onMounted(loadAllSemesterIds);
               <td>{{ enrollment.section.dayOfWeek }}</td>
               <td>{{ formatTime(enrollment.section.timeStart) }} - {{ formatTime(enrollment.section.timeEnd) }}</td>
               <td>{{ enrollment.section.roomNum }}</td>
-              <td>{{ enrollment.section.facultyId }}</td>
+              <td>{{ enrollment.section.faculty.fName + ' ' + enrollment.section.faculty.lName}}</td>
               <td>
                 <v-icon
                   size="small"
