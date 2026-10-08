@@ -10,7 +10,6 @@ const form = ref(null);
 const fName = ref("");
 const lName = ref("");
 const email = ref("");
-const username = ref("");
 const password = ref("");
 const confirmPassword = ref("");
 const loading = ref(false);
@@ -18,7 +17,6 @@ const errorMessage = ref("");
 
 const fNameRules = [(value) => !!value?.trim() || "First name is required."];
 const lNameRules = [(value) => !!value?.trim() || "Last name is required."];
-const usernameRules = [(value) => !!value?.trim() || "Username is required."];
 const passwordRules = [
   (value) => !!value || "Password is required.",
   (value) => value.length >= 8 || "Password must be at least 8 characters.",
@@ -43,13 +41,12 @@ const handleSubmit = async () => {
       fName: fName.value.trim(),
       lName: lName.value.trim(),
       email: email.value.trim(),
-      username: username.value.trim(),
       password: password.value,
     });
 
     Utils.setStore("user", response.data);
     window.dispatchEvent(new CustomEvent("user-logged-in"));
-    await router.push({ name: "home" });
+    await router.push({ name: "EnrollmentList" });
   } catch (error) {
     errorMessage.value = error.response?.data?.message || "Registration failed.";
   } finally {
@@ -99,15 +96,6 @@ const handleSubmit = async () => {
                   />
                 </v-col>
 
-                <v-col cols="12">
-                  <v-text-field
-                    v-model="username"
-                    label="Username"
-                    density="comfortable"
-                    autocomplete="username"
-                    :rules="usernameRules"
-                  />
-                </v-col>
 
                 <v-col cols="12" md="6">
                   <v-text-field
@@ -154,7 +142,7 @@ const handleSubmit = async () => {
           </v-card-text>
 
           <v-card-actions>
-            <v-btn variant="text" :to="{ name: 'login' }">
+            <v-btn variant="text" :to="{ name: 'Login' }">
               Already have an account? Sign in
             </v-btn>
           </v-card-actions>

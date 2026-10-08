@@ -83,7 +83,7 @@ describe("Feature 5 — Team Management", () => {
       });
 
       const response = await request(app)
-        .get("/league/teams")
+        .get("/course-t3/teams")
         .set(authHeader(token));
 
       expect(response.status).toBe(200);
@@ -102,7 +102,7 @@ describe("Feature 5 — Team Management", () => {
       const created = await createTeam(app, token, { leagueId: league.body.id });
 
       const response = await request(app)
-        .put(`/league/teams/${created.body.id}`)
+        .put(`/course-t3/teams/${created.body.id}`)
         .set(authHeader(token))
         .send({
           teamId: created.body.id,
@@ -124,7 +124,7 @@ describe("Feature 5 — Team Management", () => {
       const created = await createTeam(app, token, { leagueId: league.body.id });
 
       const response = await request(app)
-        .delete(`/league/teams/${created.body.id}`)
+        .delete(`/course-t3/teams/${created.body.id}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(200);
@@ -139,7 +139,7 @@ describe("Feature 5 — Team Management", () => {
       await createPlayer(app, token, team.body.id, { personId: person.body.id });
 
       const response = await request(app)
-        .delete(`/league/teams/${team.body.id}`)
+        .delete(`/course-t3/teams/${team.body.id}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(200);
@@ -164,7 +164,7 @@ describe("Feature 5 — Team Management", () => {
       await studentUser.save();
 
       const response = await request(app)
-        .get("/league/teams")
+        .get("/course-t3/teams")
         .set(authHeader(student.body.token));
 
       expect(response.status).toBe(200);
@@ -181,7 +181,7 @@ describe("Feature 5 — Team Management", () => {
       });
 
       const response = await request(app)
-        .post("/league/teams")
+        .post("/course-t3/teams")
         .set(authHeader(student.body.token))
         .send(validTeam({ leagueId: league.body.id }));
 
@@ -201,7 +201,7 @@ describe("Feature 5 — Team Management", () => {
       });
 
       const response = await request(app)
-        .post(`/league/teams/${team.body.id}/players`)
+        .post(`/course-t3/teams/${team.body.id}/players`)
         .set(authHeader(student.body.token))
         .send(validPlayer({ personId: person.body.id }));
 
@@ -211,7 +211,7 @@ describe("Feature 5 — Team Management", () => {
     });
 
     it("Unauthenticated API request to teams", async () => {
-      const response = await request(app).get("/league/teams");
+      const response = await request(app).get("/course-t3/teams");
 
       expect(response.status).toBe(401);
       expect(response.body.message).toMatch(/Unauthorized/i);
@@ -306,7 +306,7 @@ describe("Feature 5 — Team Management", () => {
       });
 
       const response = await request(app)
-        .put(`/league/teams/${team.body.id}/players/${player.body.id}`)
+        .put(`/course-t3/teams/${team.body.id}/players/${player.body.id}`)
         .set(authHeader(token))
         .send({
           personId: person.body.id,
@@ -330,7 +330,7 @@ describe("Feature 5 — Team Management", () => {
       });
 
       const response = await request(app)
-        .delete(`/league/teams/${team.body.id}/players/${player.body.id}`)
+        .delete(`/course-t3/teams/${team.body.id}/players/${player.body.id}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(200);
@@ -346,7 +346,7 @@ describe("Feature 5 — Team Management", () => {
       const team = await createTeam(app, token, { leagueId: league.body.id });
 
       const response = await request(app)
-        .delete(`/league/leagues/${league.body.id}`)
+        .delete(`/course-t3/leagues/${league.body.id}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(400);
@@ -362,7 +362,7 @@ describe("Feature 5 — Team Management", () => {
       const created = await createGame(app, token);
 
       const response = await request(app)
-        .delete(`/league/teams/${created.body.homeTeamId}`)
+        .delete(`/course-t3/teams/${created.body.homeTeamId}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(400);
@@ -383,7 +383,7 @@ describe("Feature 5 — Team Management", () => {
       });
 
       const response = await request(app)
-        .delete(`/league/people/${person.body.id}`)
+        .delete(`/course-t3/people/${person.body.id}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(400);
@@ -449,7 +449,7 @@ describe("Feature 5 — Team Management", () => {
       });
 
       const response = await request(app)
-        .put(`/league/teams/${team.body.id}`)
+        .put(`/course-t3/teams/${team.body.id}`)
         .set(authHeader(token))
         .send({
           ...validTeam({ leagueId: league.body.id, managerId: second.body.id }),
@@ -470,7 +470,7 @@ describe("Feature 5 — Team Management", () => {
       });
 
       const response = await request(app)
-        .put(`/league/teams/${team.body.id}`)
+        .put(`/course-t3/teams/${team.body.id}`)
         .set(authHeader(token))
         .send(validTeam({ leagueId: league.body.id, managerId: null }));
 
@@ -491,7 +491,7 @@ describe("Feature 5 — Team Management", () => {
       });
 
       const response = await request(app)
-        .delete(`/league/people/${person.body.id}`)
+        .delete(`/course-t3/people/${person.body.id}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(400);
@@ -525,7 +525,7 @@ describe("Feature 5 — Team Management", () => {
       });
 
       const response = await request(app)
-        .get("/league/teams")
+        .get("/course-t3/teams")
         .set(authHeader(manager.body.token));
 
       expect(response.status).toBe(200);
@@ -542,7 +542,7 @@ describe("Feature 5 — Team Management", () => {
       await createTeam(app, adminToken, { leagueId: league.body.id });
 
       const response = await request(app)
-        .get("/league/teams")
+        .get("/course-t3/teams")
         .set(authHeader(manager.body.token));
 
       expect(response.status).toBe(200);
@@ -603,7 +603,7 @@ describe("Feature 5 — Team Management", () => {
       });
 
       const response = await request(app)
-        .put(`/league/teams/${team.body.id}/players/${player.body.id}`)
+        .put(`/course-t3/teams/${team.body.id}/players/${player.body.id}`)
         .set(authHeader(manager.body.token))
         .send({
           personId: playerPerson.body.id,
@@ -642,7 +642,7 @@ describe("Feature 5 — Team Management", () => {
       });
 
       const response = await request(app)
-        .delete(`/league/teams/${team.body.id}/players/${player.body.id}`)
+        .delete(`/course-t3/teams/${team.body.id}/players/${player.body.id}`)
         .set(authHeader(manager.body.token));
 
       expect(response.status).toBe(200);

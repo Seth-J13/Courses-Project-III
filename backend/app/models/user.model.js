@@ -20,31 +20,22 @@ export default (sequelize, Sequelize) => {
         allowNull: false,
         unique: true,
       },
-      username: {
-        type: Sequelize.STRING(100),
-        allowNull: false,
-        unique: true,
-      },
       password: {
-        type: Sequelize.STRING(255),
+        type: Sequelize.BLOB,
+        allowNull: false,
+      },
+      salt: {
+        type: Sequelize.BLOB,
         allowNull: false,
       },
       role: {
-        type: Sequelize.STRING(20),
+        type: Sequelize.ENUM("admin", "student"),
         allowNull: false,
-        defaultValue: "manager",
       },
     },
     {
       defaultScope: {
-        attributes: { exclude: ["password"] },
-      },
-      hooks: {
-        beforeValidate(user) {
-          if (user.username) {
-            user.username = user.username.trim().toLowerCase();
-          }
-        },
+        attributes: { exclude: ["password", "salt"] },
       },
     }
   );
