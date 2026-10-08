@@ -2,8 +2,8 @@ import db from "../models/index.js";
 import logger from "../config/logger.js";
 import { parseId, requiredText } from "../helpers/fields.js";
 
-const semesterOffered = ["FA", "WI", "SP", "SU"];
-const offeringFrequency = ["none", "everyYear", "oddYears", "evenYears"];
+const SEMESTER_OFFERED = ["FA", "WI", "SP", "SU"];
+const OFFERING_FREQUENCY = ["none", "everyYear", "oddYears", "evenYears"];
 const exports = {};
 
 exports.findAll = async (req, res) => {
@@ -21,11 +21,11 @@ exports.findAll = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const courseId = requiredText(req.body.courseId);
-    const courseName = requiredText(req.body.courseName);
-    const semesterOffered = requiredText(req.body.semesterOffered);
-    const offeringFrequency = requiredText(req.body.offeringFrequency);
-    const description = requiredText(req.body.description);
+    const courseId = req.body.courseId; //requiredText()
+    const courseName = req.body.courseName;
+    const semesterOffered = req.body.semesterOffered;
+    const offeringFrequency = req.body.offeringFrequency;
+    const description = req.body.description;
 
     if (!courseName || !courseId || !semesterOffered || !offeringFrequency) {
       return res.status(400).send({ message: "Required" });
@@ -39,7 +39,13 @@ exports.create = async (req, res) => {
 
     if (!SEMESTER_OFFERED.includes(semesterOffered)) {
       return res.status(400).send({
-        message: "Sport must be FA, WI, SP, or SU.",
+        message: "Semester offered must be FA, WI, SP, or SU.",
+      });
+    }
+
+    if (!OFFERING_FREQUENCY.includes(offeringFrequency)) {
+      return res.status(400).send({
+        message: "Offering frequency must be none, everyYear, oddYears, or evenYears.",
       });
     }
 
@@ -67,7 +73,7 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    const leagueId = parseId(req.params.courseId ?? req.body.courseId);
+    const courseId = requiredText(req.params.courseId ?? req.body.courseId);
     const courseName = requiredText(req.body.courseName);
     const semesterOffered = requiredText(req.body.semesterOffered);
     const offeringFrequency = requiredText(req.body.offeringFrequency);
@@ -127,9 +133,11 @@ exports.update = async (req, res) => {
 
 exports.remove = async (req, res) => {
   try {
-    const courseId = parseId(req.params.courseId);
-    if (courseId === null) {
-      return res.status(400).send({ message: "Invalid course id." });
+    const courseId = requiredText(req.params.courseId);
+    if (!courseId || !/^[A-Za-z]{4}-\d{4}$/.test(courseId)) {
+      return res.status(400).send({
+        message: "Course id must look like CMSC-5322.",
+      });
     }
 
     const existing = await db.course.findByPk(courseId);
@@ -139,7 +147,7 @@ exports.remove = async (req, res) => {
       });
     }
 
-    await db.course.destroy({ where: { id: courseId } });
+    await db.course.destroy({ where: { courseId } });
 
     return res.status(200).send({ message: "course deleted successfully." });
   } catch (err) {

@@ -171,7 +171,7 @@ const handleLogout = async () => {
       v-if="user?.role === 'admin'"
       variant="text"
       color="white"
-      to="/course"
+      to="/course-list"
     >
       Courses
     </v-btn>

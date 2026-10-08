@@ -3,18 +3,21 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import courseServices from "../services/courseServices.js";
 import Utils from "../config/utils.js";
+import CourseForm from "../components/CoursesForm.vue";
 
 const router = useRouter();
 
 const emptyForm = () => ({
   courseId: "",
-  name: "",
+  courseName: "",
   semesterOffered: "",
   offeringFrequency: "",
   description: "",
 });
 
 const courses = ref([]);
+const loading = ref(false);
+const loadingCourses = ref(false);
 const listError = ref("");
 const formDialogOpen = ref(false);
 const form = ref(emptyForm());
@@ -26,7 +29,7 @@ const courseToDelete = ref(null);
 const deleting = ref(false);
 const isAdmin = computed(() => Utils.getStore("user")?.role === "admin");
 
-const retrieveTeams = async () => {
+const retrieveCourses = async () => {
   loading.value = true;
   listError.value = "";
 
@@ -67,7 +70,7 @@ const saveCourse = async () => {
   try {
     await courseServices.createCourse({
       courseId: form.value.courseId.trim(),
-      name: form.value.name.trim(),
+      courseName: form.value.courseName.trim(),
       semesterOffered: form.value.semesterOffered.trim(),
       offeringFrequency: form.value.offeringFrequency.trim(),
       description: form.value.description.trim(),
@@ -82,8 +85,15 @@ const saveCourse = async () => {
   }
 };
 
-const openCourse = (cpurse) => {
-  router.push({ name: "course", params: { courseId: course.id } });
+const openCourse = (course) => {
+  form.value = {
+    courseId: course.courseId,
+    courseName: course.courseName,
+    semesterOffered: course.semesterOffered,
+    offeringFrequency: course.offeringFrequency,
+    description: course.description,
+  };
+  formDialogOpen.value = true;
 };
 
 const openDeleteDialog = (course) => {
@@ -97,7 +107,7 @@ const closeDeleteDialog = () => {
 };
 
 const confirmDeleteCourse = async () => {
-  if (!courseToDelete.value?.id) {
+  if (!courseToDelete.value?.courseId) {
     return;
   }
 
@@ -105,7 +115,7 @@ const confirmDeleteCourse = async () => {
   listError.value = "";
 
   try {
-    await courseServices.deleteCourse(courseToDelete.value.id);
+    await courseServices.deleteCourse(courseToDelete.value.courseId);
     closeDeleteDialog();
     await retrieveCourses();
   } catch (error) {
@@ -123,7 +133,7 @@ onMounted(retrieveCourses);
   <v-container class="py-8">
     <v-card rounded="lg">
       <v-card-item>
-        <v-card-title>Teams</v-card-title>
+        <v-card-title>Courses</v-card-title>
         <template #append>
           <v-btn
             v-if="isAdmin"
@@ -156,7 +166,7 @@ onMounted(retrieveCourses);
           <thead>
             <tr>
               <th class="text-left">Course Id</th>
-              <th class="text-left">Name</th>
+              <th class="text-left">Course Name</th>
               <th class="text-left">Semester Offered</th>
               <th class="text-left">Offer Frequency</th>
               <th class="text-left">Description</th>
@@ -164,9 +174,9 @@ onMounted(retrieveCourses);
             </tr>
           </thead>
           <tbody>
-            <tr v-for="course in courses" :key="team.id">
+            <tr v-for="course in courses" :key="course.courseId">
               <td>{{ course.courseId }}</td>
-              <td>{{ course.name }}</td>
+              <td>{{ course.courseName }}</td>
               <td>{{ course.semesterOffered }}</td>
               <td>{{ course.offeringFrequency }}</td>
               <td>{{ course.description }}</td>
