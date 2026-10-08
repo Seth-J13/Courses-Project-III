@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "./views/Home.vue";
+import SectionManagement from "./views/SectionManagement.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -10,9 +11,15 @@ const router = createRouter({
       component: Home,
     },
     {
+      path: "/sections/:sectionId",
+      name: "section",
+      component: SectionManagement,
+    },
+    {
       path: "/:pathMatch(.*)*",
       redirect: { name: "home" },
     },
+    
   ],
 });
 
