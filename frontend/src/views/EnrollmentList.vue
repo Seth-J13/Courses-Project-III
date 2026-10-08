@@ -125,7 +125,9 @@ const openAddDialog = async () => {
   formDialogOpen.value = true;
 
   courses.value = (await courseServices.getCourses()).data;
-  courses.value = courses.value.filter((course) => course.semesterOffered.includes(cardTitleSemester.value.substring(0,2)))
+  
+  if (cardTitleSemester === 'all')
+    courses.value = courses.value.filter((course) => course.semesterOffered.includes(cardTitleSemester.value.substring(0,2)))
   courses.value = courses.value.map((course) => course.courseName.substring(0,50) + ((course.courseName.length > 50) ? `...` : '') + ` (${course.courseId})`)
 };
 
@@ -162,7 +164,7 @@ const enroll = async () => {
   formError.value = "";
   try {
     await enrollmentServices.createEnrollment({
-      universityId: Utils.getStore("user").d,
+      universityId: Utils.getStore("user").id,
       semesterId: selectedSemester.value || getSearchParams().get('semester'),
       sectionId: form.value.section.substring(0,12),
     });
