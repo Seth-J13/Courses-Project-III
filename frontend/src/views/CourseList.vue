@@ -139,7 +139,7 @@ onMounted(retrieveTeams);
             class="oc-cta"
             @click="openAddDialog"
           >
-            + New team
+            + New course
           </v-btn>
         </template>
       </v-card-item>
@@ -151,40 +151,38 @@ onMounted(retrieveTeams);
           {{ listError }}
         </v-alert>
 
-        <p v-if="!loading && teams.length === 0" class="text-body-1">
+        <p v-if="!loading && courses.length === 0" class="text-body-1">
           {{
             isAdmin
-              ? "No teams yet. Create your first team."
-              : "No teams assigned."
+              ? "No courses yet. Create your first course."
+              : "No courses assigned."
           }}
         </p>
 
-        <v-table v-if="!loading && teams.length > 0">
+        <v-table v-if="!loading && courses.length > 0">
           <thead>
             <tr>
-              <th class="text-left">Team name</th>
-              <th class="text-left">League</th>
-              <th class="text-left">Manager</th>
-              <th class="text-left">Players</th>
+              <th class="text-left">Course Id</th>
+              <th class="text-left">Name</th>
+              <th class="text-left">Description</th>
+              <th class="text-left">Semester Offered</th>
+              <th class="text-left">Sections</th>
               <th class="text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="team in teams" :key="team.id">
-              <td>{{ team.name }}</td>
-              <td>{{ team.league?.name }}</td>
-              <td>
-                <template v-if="team.manager">
-                  {{ team.manager.lastName }}, {{ team.manager.firstName }}
-                </template>
-              </td>
-              <td>{{ team.players?.length ?? 0 }}</td>
+            <tr v-for="course in courses" :key="team.id">
+              <td>{{ course.courseId }}</td>
+              <td>{{ course.name }}</td>
+              <td>{{ course.description }}</td>
+              <td>{{ course.semesterOffered }}</td>
+              <td>{{ course.sections?.length ?? 0 }}</td>
               <td>
                 <v-icon
                   size="small"
                   class="mx-4"
-                  aria-label="Open team"
-                  @click="openTeam(team)"
+                  aria-label="Open course"
+                  @click="openCourse(course)"
                 >
                   mdi-account-group
                 </v-icon>
@@ -192,8 +190,8 @@ onMounted(retrieveTeams);
                   v-if="isAdmin"
                   size="small"
                   class="mx-4"
-                  aria-label="Delete team"
-                  @click="openDeleteDialog(team)"
+                  aria-label="Delete course"
+                  @click="openDeleteDialog(course)"
                 >
                   mdi-trash-can
                 </v-icon>
@@ -206,15 +204,9 @@ onMounted(retrieveTeams);
 
     <v-dialog v-model="formDialogOpen" max-width="520">
       <v-card rounded="lg">
-        <v-card-title>Add Team</v-card-title>
+        <v-card-title>Add Course</v-card-title>
         <v-card-text>
-          <TeamForm
-            ref="formRef"
-            v-model="form"
-            :leagues="leagues"
-            :people="people"
-            @submit="saveTeam"
-          />
+          <CourseForm ref="formRef" v-model="form" @submit="saveCourse" />
           <v-alert v-if="formError" type="error" density="compact" class="mt-2">
             {{ formError }}
           </v-alert>
@@ -227,7 +219,7 @@ onMounted(retrieveTeams);
             variant="elevated"
             class="oc-cta"
             :loading="saving"
-            @click="saveTeam"
+            @click="saveCourse"
           >
             Create
           </v-btn>
@@ -237,8 +229,8 @@ onMounted(retrieveTeams);
 
     <v-dialog v-model="deleteDialogOpen" max-width="420">
       <v-card rounded="lg">
-        <v-card-title>Delete Team</v-card-title>
-        <v-card-text>Delete this team?</v-card-text>
+        <v-card-title>Delete Course</v-card-title>
+        <v-card-text>Delete this course?</v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" @click="closeDeleteDialog">Cancel</v-btn>
@@ -247,9 +239,9 @@ onMounted(retrieveTeams);
             variant="elevated"
             class="oc-cta"
             :loading="deleting"
-            @click="confirmDeleteTeam"
+            @click="confirmDeleteCourse"
           >
-            Delete Team
+            Delete Course
           </v-btn>
         </v-card-actions>
       </v-card>
