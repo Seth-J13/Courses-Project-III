@@ -22,6 +22,7 @@ const saving = ref(false);
 const loading = ref(false);
 const addModelOpen = ref(false);
 const savingFaculty = ref(false);
+const editingFaculty = ref(false);
 const removingFaculty = ref(false);
 const removeFacultyDialogOpen = ref(false);
 const faculties = ref([]);
@@ -93,39 +94,30 @@ const addFaculty = async () => {
 
 const updateFaculty = async () => {
   facultyFormError.value = "";
-  const result = await playerFormRef.value?.validate();
-
-  if (!result?.valid || !team.value) {
-    return;
-  }
-
   savingFaculty.value = true;
 
   const payload = {
-    personId: playerForm.value.personId,
-    position: String(playerForm.value.position).trim(),
-    number: parseInt(playerForm.value.number, 10),
+    facultyId: facultyForm.value?.facultyId,
+    fName: facultyForm.value?.fName,
+    lName: facultyForm.value?.lName,
+    department: facultyForm.value?.department
   };
 
-  try {
-    if (isAddPlayerMode.value) {
-      await teamServices.createPlayer(team.value.id, payload);
-    } else {
-      await teamServices.updatePlayer(
-        team.value.id,
-        editingFacultyId.value,
-        payload,
-      );
-    }
-
+  try 
+  {
+    await facultyServices.updateFaculty(
+      editingFacultyId.value,
+      facultyForm.value,
+    );
+    
+    await retrieveFaculty();
     closeFacultyEditDialog();
-    await retrieveTeam();
-  } catch (error) {
+  } 
+  catch (error) 
+  {
     facultyFormError.value =
       error.response?.data?.message ||
-      (isAddPlayerMode.value
-        ? "Failed to add player."
-        : "Failed to update player.");
+      ("Failed to update faculty.");
   } finally {
     savingFaculty.value = false;
   }
@@ -138,20 +130,15 @@ const openAddFacultyDialog = () => {
   addModelOpen.value = true;
 };
 
-const openEditPlayerDialog = (player) => {
-  isAddPlayerMode.value = false;
-  editingFacultyId.value = player.id;
-  playerForm.value = {
-    personId: player.personId ?? null,
-    position: player.position ?? "",
-    number: player.number,
-  };
+const openEditFacultyDialog = (faculty) => {
+  editingFaculty.value = true;
+  editingFacultyId.value = faculty.facultyId;
+  facultyForm.value = faculty;
   facultyFormError.value = "";
-  playerDialogOpen.value = true;
 };
 
 const closeFacultyEditDialog = () => {
-  playerDialogOpen.value = false;
+  editingFaculty.value = false;
   facultyFormError.value = "";
   editingFacultyId.value = null;
 };
@@ -223,7 +210,7 @@ onMounted(retrieveFaculty);
                     color="primary"
                     variant="elevated"
                     class="oc-cta mr-2"
-                    @click="debug">
+                    @click="openEditFacultyDialog(faculty)">
                   mdi-pencil
                   </v-icon>
                   <v-icon
@@ -275,16 +262,16 @@ onMounted(retrieveFaculty);
     </v-dialog>
     
     <!-- Edit Faculty Dialog -->
-    <v-dialog v-model="playerDialogOpen" max-width="520">
+    <v-dialog v-model="editingFaculty" max-width="520">
       <v-card rounded="lg">
-        <v-card-title>{{ playerFormTitle }}</v-card-title>
+        <v-card-title>Edit Faculty</v-card-title>
         <v-card-text>
-          <!-- <PlayerForm
-            ref="playerFormRef"
-            v-model="playerForm"
-            :people="people"
-            @submit="savePlayer"
-          /> This was the old player form, no longer needed for courses -->
+          <FacultyForm
+          ref="formRef"
+          v-model="form"
+          v-model:model-value="facultyForm"
+          @submit="updateFaculty"
+          />
           <v-alert
             v-if="facultyFormError"
             type="error"
@@ -296,7 +283,12 @@ onMounted(retrieveFaculty);
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="closeFacultyEditDialog">Cancel</v-btn>
+          <v-btn 
+          variant="text" 
+          @click="closeFacultyEditDialog"
+          >
+            Cancel
+          </v-btn>
           <v-btn
             color="primary"
             variant="elevated"
@@ -304,7 +296,7 @@ onMounted(retrieveFaculty);
             :loading="savingFaculty"
             @click="updateFaculty"
           >
-            {{ playerSaveLabel }}
+            Update Faculty
           </v-btn>
         </v-card-actions>
       </v-card>
