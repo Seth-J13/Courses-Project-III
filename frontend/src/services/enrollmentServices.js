@@ -6,8 +6,8 @@ const enrollmentServices = {
     return apiClient.get(`enrollments/${universityId}`);
   },
 
-  createEnrollment(universityId) {
-    return apiClient.post(`enrollments/${universityId}`);
+  createEnrollment(body) {
+    return apiClient.post(`enrollments/${body.universityId}`, body);
   },
 
   getEnrollmentsBySemester(universityId, semesterId) {

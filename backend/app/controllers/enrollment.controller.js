@@ -17,7 +17,14 @@ const enrollmentInclude = [
   {
     model: db.section,
     as: "section",
-    attributes: ["sectionId", "courseId", "dayOfWeek", "roomNum", "timeStart", "timeEnd", "facultyId"]
+    attributes: ["sectionId", "courseId", "dayOfWeek", "roomNum", "timeStart", "timeEnd", "facultyId"],
+    include: [
+      {
+        model: db.course,
+        as: "course",
+        attributes: ["courseId", "courseName"]
+      }
+    ]
   },
 ];
 
@@ -90,9 +97,19 @@ exports.findOne = async (req, res) => {
   }
 }
 
+exports.update = async (req, res) => {
+  try {
+    return res.status(405).send({ message: "enrollments are dropped, not edited" })
+  } catch (err) {
+    logger.error(`Server error: ${err.message}`);
+    return res.status(500).send({ message: "Server error." });
+  }
+
+}
+
 exports.create = async (req, res) => {
   try {
-    const { semesterId, universityId, sectionId } = req.body;
+    const { universityId, semesterId, sectionId } = req.body;
 
     if (Number.isNaN(universityId)) {
       return res.status(400).send({ message: "Invalid enrollment id." });
@@ -116,7 +133,7 @@ exports.create = async (req, res) => {
 
 exports.delete = async (req, res) => {
   try {
-    const { semesterId, universityId, sectionId } = req.body;
+    const { universityId, semesterId, sectionId } = req.params;
 
     if (Number.isNaN(universityId)) {
       return res.status(400).send({ message: "Invalid enrollment id." });
@@ -125,7 +142,7 @@ exports.delete = async (req, res) => {
       return res.status(404).send({ message: `no enrollments for user=${universityId} found` });
 
     const existing = await db.enrollment.findOne({
-      where: {semesterId, universityId, sectionId}
+      where: {universityId, semesterId, sectionId}
     });
     if (!existing) {
       return res.status(404).send({
@@ -135,7 +152,7 @@ exports.delete = async (req, res) => {
 
     await db.enrollment.destroy({ where: { semesterId: semesterId, universityId: universityId, sectionId: sectionId } });
 
-    return res.status(204);
+    return res.status(204).send({ message: "Successfully deleted enrollment"});
   } catch (err) {
     logger.error(`enrollment delete failed: ${err.message}`);
     return res.status(500).send({ message: "Failed to delete enrollment." });

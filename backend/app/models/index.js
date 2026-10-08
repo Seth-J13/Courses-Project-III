@@ -7,6 +7,7 @@ import enrollmentModel from "./enrollment.model.js";
 import semesterModel from "./semester.model.js";
 
 import sectionModel from "./section.model.js";
+import courseModel from "./course.model.js";
 
 const db = {};
 db.Sequelize = Sequelize;
@@ -21,6 +22,7 @@ db.semester = semesterModel(sequelize, Sequelize);
 
 db.enrollment = enrollmentModel(sequelize, Sequelize);
 
+db.course = courseModel(sequelize, Sequelize);
 
 db.section = sectionModel(sequelize, Sequelize);
 
@@ -45,8 +47,35 @@ db.enrollment.belongsTo(db.user, {
     targetKey: "id",
     as: "user",
 });
+db.enrollment.belongsTo(db.course, {
+  foreignKey: "courseId",
+  targetKey: "courseId",
+  as: "course",
+});
 
-db.faculty.belongsTo(db.section, { foreignKey: "facultyId" })
+db.course.hasMany(db.section, {
+  foreignKey: "courseId",
+  sourceKey: "courseId",
+  as: "sections",
+});
+
+db.section.belongsTo(db.course, {
+  foreignKey: "courseId",
+  targetKey: "courseId",
+  as: "course",
+});
+
+db.faculty.hasMany(db.section, {
+  foreignKey: "facultyId",
+  sourceKey: "facultyId",
+  as: "sections",
+});
+
+db.section.belongsTo(db.faculty, {
+  foreignKey: "facultyId",
+  targetKey: "facultyId",
+  as: "faculty",
+});
 
 // VVV Must be last VVV
 db.sequelize = sequelize;

@@ -5,7 +5,7 @@ import { authenticate, authenticateAdmin } from "../authorization/authorization.
 const router = Router();
 
 router.get("/", [authenticate], courseController.findAll);
-router.get("/:courseId", [authenticate], courseController.findAll);
+router.get("/:courseId", [authenticate], courseController.findOne);
 router.post("/", [authenticateAdmin], courseController.create);
 router.put("/:courseId", [authenticateAdmin], courseController.update);
 router.delete("/:courseId", [authenticateAdmin], courseController.remove);

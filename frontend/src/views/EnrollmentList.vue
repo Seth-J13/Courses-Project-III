@@ -1,8 +1,12 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import enrollmentServices from "../services/enrollmentServices.js";
+import EnrollmentForm from "../components/EnrollmentForm.vue";
 import semesterServices from "../services/semesterServices_temp.js";
+import courseServices from "../services/courseServices_temp.js";
+import sectionServices from "../services/sectionServices_temp.js";
+import facultyServices from "../services/facultyServices_temp.js";
 import Utils from "../config/utils.js";
 
 const router = useRouter();
@@ -18,23 +22,24 @@ const loading = ref(false);
 const semesterIds = ref([]);
 const listError = ref("");
 const selectedSemester = ref("");
-
 const formDialogOpen = ref(false);
-const isAddMode = ref(true);
 const form = ref(emptyForm());
 const formError = ref("");
+
+const courses = ref([])
+const selectedCourse = ref("")
+const showCourseDetails = ref(false)
+const courseDetails = ref("")
+
+const sections = ref([])
+const showSectionBox = ref(false)
+const showSectionDetails = ref(false)
+const sectionDetails = ref("")
+
 const saving = ref(false);
-const editingId = ref(null);
 const deleteDialogOpen = ref(false);
 const enrollmentToDelete = ref(null);
 const deleting = ref(false);
-
-const formTitle = computed(() =>
-  isAddMode.value ? "Add Enrollment" : "Edit Enrollment"
-);
-const saveLabel = computed(() =>
-  isAddMode.value ? "Create" : "Save Enrollment"
-);
 
 const seasonList = ['SP', 'SU', 'FA', 'WI']
 
@@ -67,7 +72,7 @@ const formatTime = (time) => {
   
   if (parseInt(hour) >= 12)
     suffix = `PM`
-  else if (parseInt(hour) > 12)
+  if (parseInt(hour) > 12)
     hour = hour - 12
 
 return hour + `:` + minute + suffix
@@ -93,11 +98,11 @@ const retrieveEnrollments = async () => {
 
     let enrollmentResponse = {}
     if (semester !== 'null') {
-      enrollmentResponse = await enrollmentServices.getEnrollmentsBySemester(Utils.getStore('user').id, semester)
+      enrollmentResponse = await enrollmentServices.getEnrollmentsBySemester(Utils.getStore('user').universityId, semester)
       cardTitleSemester.value = semester
     }
     else {
-      enrollmentResponse = await enrollmentServices.getEnrollments(Utils.getStore('user').id)
+      enrollmentResponse = await enrollmentServices.getEnrollments(Utils.getStore('user').universityId)
       cardTitleSemester.value = "all"
       semester = calcCurrentSemester()
     }
@@ -113,22 +118,61 @@ const retrieveEnrollments = async () => {
   }
 };
 
-const openAddDialog = () => {
-  isAddMode.value = true;
-  editingId.value = null;
+const openAddDialog = async () => {
+  
   form.value = emptyForm();
   formError.value = "";
   formDialogOpen.value = true;
+
+  courses.value = (await courseServices.getCourses()).data;
+  courses.value = courses.value.filter((course) => course.semesterOffered.includes(cardTitleSemester.value.substring(0,2)))
+  courses.value = courses.value.map((course) => course.courseName.substring(0,50) + ((course.courseName.length > 50) ? `...` : '') + ` (${course.courseId})`)
 };
+
+const loadSections = async () => {
+  try {
+    selectedCourse.value = form.value.course
+    let code = selectedCourse.value.substring( selectedCourse.value.indexOf("(") + 1, selectedCourse.value.search(/[0-9]/) + 4 )
+    let course = (code) ? (await courseServices.getCourse(code)).data : null;
+
+    sections.value = (await sectionServices.getSections(code)).data;
+    sections.value = sections.value.map((section) => section.sectionId + `: ` + formatTime(section.timeStart) + '-' + formatTime(section.timeEnd))
+    showSectionBox.value = Boolean(course);
+    
+    courseDetails.value = `Description: ${course.description}`
+    showCourseDetails.value = true;
+
+    let section = (code) ? (await sectionServices.getSectionDetails(form.value.section.substring(0,12))).data : null;
+    sectionDetails.value = `Meeting Times: ${section.dayOfWeek} ${formatTime(section.timeStart)} - ${formatTime(section.timeEnd)}
+Room: ${section.roomNum} 
+Instructor: ${section.facultyId}`
+    showSectionDetails.value = true
+  } catch (err) {
+
+  }
+}
 
 const closeFormDialog = () => {
   formDialogOpen.value = false;
   formError.value = "";
-  editingId.value = null;
 };
 
-const openEnrollment = (enrollment) => {
-  router.push({ name: "enrollment", params: { enrollmentId: enrollment.id } });
+const enroll = async () => {
+  saving.value = true;
+  formError.value = "";
+  try {
+    await enrollmentServices.createEnrollment({
+      universityId: Utils.getStore("user").universityId,
+      semesterId: selectedSemester.value || getSearchParams().get('semester'),
+      sectionId: form.value.section.substring(0,12),
+    });
+    closeFormDialog();
+    await retrieveEnrollments();
+  } catch (e) {
+    formError.value = e.response?.data?.message || "Failed to enroll.";
+  } finally {
+    saving.value = false;
+  }
 };
 
 const openDeleteDialog = (enrollment) => {
@@ -142,15 +186,15 @@ const closeDeleteDialog = () => {
 };
 
 const confirmDeleteEnrollment = async () => {
-  if (!enrollmentToDelete.value?.id) {
+  if (!enrollmentToDelete.value) {
     return;
   }
 
   deleting.value = true;
   listError.value = "";
-
+  
   try {
-    await enrollmentServices.deleteEnrollment(enrollmentToDelete.value.id);
+    await enrollmentServices.deleteEnrollment(enrollmentToDelete.value.universityId, enrollmentToDelete.value.semesterId, enrollmentToDelete.value.sectionId);
     closeDeleteDialog();
     await retrieveEnrollments();
   } catch (error) {
@@ -159,6 +203,7 @@ const confirmDeleteEnrollment = async () => {
   } finally {
     deleting.value = false;
   }
+  closeDeleteDialog()
 };
 
 const nav = async (mode) => {
@@ -195,7 +240,7 @@ const nav = async (mode) => {
 
     semester = (mode === 'jump') ? selectedSemester.value : season + year
 
-    //console.log(semesterServices.getSemesters()    
+    //console.log(semesterServices.getSemesters()
     if (mode !== 'clear') window.history.replaceState({}, '', window.location.origin + window.location.pathname + `?semester=${semester}`)
 
     retrieveEnrollments()
@@ -206,6 +251,11 @@ const nav = async (mode) => {
     loading.value = false;
   }
 }
+
+const onFormUpdate = async (next) => {
+  form.value = next;
+  await loadSections();
+};
 
 onMounted(retrieveEnrollments);
 onMounted(loadAllSemesterIds);
@@ -296,20 +346,12 @@ onMounted(loadAllSemesterIds);
           <tbody>
             <tr v-for="enrollment in enrollments" :key="enrollment.sectionId">
               <td>{{ enrollment.section.sectionId }}</td>
-              <td> testName until later</td>
+              <td>{{ enrollment.section.course.courseName }}</td>
               <td>{{ enrollment.section.dayOfWeek }}</td>
               <td>{{ formatTime(enrollment.section.timeStart) }} - {{ formatTime(enrollment.section.timeEnd) }}</td>
               <td>{{ enrollment.section.roomNum }}</td>
               <td>{{ enrollment.section.facultyId }}</td>
               <td>
-                <v-icon
-                  size="small"
-                  class="mx-4"
-                  aria-label="Open enrollment"
-                  @click="openEnrollment(enrollment)"
-                >
-                  mdi-calendar
-                </v-icon>
                 <v-icon
                   size="small"
                   class="mx-4"
@@ -327,14 +369,22 @@ onMounted(loadAllSemesterIds);
 
     <v-dialog v-model="formDialogOpen" max-width="560">
       <v-card rounded="lg">
-        <v-card-title>{{ formTitle }}</v-card-title>
+        <v-card-title>Add Enrollment</v-card-title>
         <v-card-text>
-          <!-- <EnrollmentForm
-            ref="formRef"
-            v-model="form"
-            :leagues="leagues"
-            @submit="saveEnrollment"
-          /> This was the old enrollment form, not needed for courses-->
+          <EnrollmentForm
+          ref="formRef"
+          label="addEnrollment"
+          :model-value="form"
+          :courses="courses"
+          :course-details="courseDetails"
+          :sections="sections"
+          :section-details="sectionDetails"
+          :show_course="showCourseDetails"
+          :show_section_box="showSectionBox"
+          :show_section="showSectionDetails"
+          @update:model-value="onFormUpdate"
+          @submit=""
+          />
           <v-alert
             v-if="formError"
             type="error"
@@ -352,9 +402,9 @@ onMounted(loadAllSemesterIds);
             variant="elevated"
             class="oc-cta"
             :loading="saving"
-            @click="saveEnrollment"
+            @click="enroll"
           >
-            {{ saveLabel }}
+            Enroll
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -362,8 +412,8 @@ onMounted(loadAllSemesterIds);
 
     <v-dialog v-model="deleteDialogOpen" max-width="420">
       <v-card rounded="lg">
-        <v-card-title>Delete Enrollment</v-card-title>
-        <v-card-text>Delete this enrollment?</v-card-text>
+        <v-card-title>Drop this class?</v-card-title>
+        <v-card-text>Hitting 'Drop' will remove you from this section</v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" @click="closeDeleteDialog">Cancel</v-btn>
@@ -374,7 +424,7 @@ onMounted(loadAllSemesterIds);
             :loading="deleting"
             @click="confirmDeleteEnrollment"
           >
-            Delete Enrollment
+            Drop
           </v-btn>
         </v-card-actions>
       </v-card>
