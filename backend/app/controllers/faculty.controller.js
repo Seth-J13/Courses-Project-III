@@ -9,7 +9,7 @@ const exports = {};
 
 exports.findAll = async (req, res) => {
   try {
-    const faculty = await db.user.findAll({
+    const faculty = await db.faculty.findAll({
       attributes: ["facultyId", "department", "fName", "lName"],
       order: [["lName", "ASC"]],
     });
@@ -28,7 +28,7 @@ exports.findOne = async (req, res) => {
       return res.status(400).send({ message: "Invalid faculty id." });
     }
 
-    const faculty = await db.user.findByPk(facultyId);
+    const faculty = await db.faculty.findByPk(facultyId);
     if (!faculty) {
       return res.status(404).send({ message: `Faculty with id=${facultyId} not found.` });
     }
