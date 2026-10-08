@@ -1,24 +1,20 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import teamServices from "../services/teamServices.js";
-import leagueServices from "../services/leagueServices.js";
-import peopleServices from "../services/peopleServices.js";
+import courseServices from "../services/courseServices.js";
 import Utils from "../config/utils.js";
 
 const router = useRouter();
 
 const emptyForm = () => ({
+  courseId: "",
   name: "",
-  leagueId: null,
-  homeField: "",
-  managerId: null,
+  semesterOffered: "",
+  offeringFrequency: "",
+  description: "",
 });
 
-const teams = ref([]);
-const leagues = ref([]);
-const people = ref([]);
-const loading = ref(false);
+const courses = ref([]);
 const listError = ref("");
 const formDialogOpen = ref(false);
 const form = ref(emptyForm());
@@ -26,7 +22,7 @@ const formRef = ref(null);
 const formError = ref("");
 const saving = ref(false);
 const deleteDialogOpen = ref(false);
-const teamToDelete = ref(null);
+const courseToDelete = ref(null);
 const deleting = ref(false);
 const isAdmin = computed(() => Utils.getStore("user")?.role === "admin");
 
@@ -35,17 +31,13 @@ const retrieveTeams = async () => {
   listError.value = "";
 
   try {
-    const [teamsResponse, leaguesResponse, peopleResponse] = await Promise.all([
-      teamServices.getTeams(),
-      leagueServices.getLeagues(),
-      peopleServices.getPeople(),
+    const [coursesResponse] = await Promise.all([
+      courseServices.getCourses(),
     ]);
-    teams.value = teamsResponse.data;
-    leagues.value = leaguesResponse.data;
-    people.value = peopleResponse.data;
+    courses.value = coursesResponse.data;
   } catch (error) {
     listError.value =
-      error.response?.data?.message || "Failed to fetch teams.";
+      error.response?.data?.message || "Failed to fetch courses.";
   } finally {
     loading.value = false;
   }
@@ -62,7 +54,7 @@ const closeFormDialog = () => {
   formError.value = "";
 };
 
-const saveTeam = async () => {
+const saveCourse = async () => {
   formError.value = "";
   const result = await formRef.value?.validate();
 
@@ -73,38 +65,39 @@ const saveTeam = async () => {
   saving.value = true;
 
   try {
-    await teamServices.createTeam({
+    await courseServices.createCourse({
+      courseId: form.value.courseId.trim(),
       name: form.value.name.trim(),
-      leagueId: form.value.leagueId,
-      homeField: form.value.homeField.trim(),
-      managerId: form.value.managerId || null,
+      semesterOffered: form.value.semesterOffered.trim(),
+      offeringFrequency: form.value.offeringFrequency.trim(),
+      description: form.value.description.trim(),
     });
     closeFormDialog();
-    await retrieveTeams();
+    await retrieveCourses();
   } catch (error) {
     formError.value =
-      error.response?.data?.message || "Failed to create team.";
+      error.response?.data?.message || "Failed to create course.";
   } finally {
     saving.value = false;
   }
 };
 
-const openTeam = (team) => {
-  router.push({ name: "team", params: { teamId: team.id } });
+const openCourse = (cpurse) => {
+  router.push({ name: "course", params: { courseId: course.id } });
 };
 
-const openDeleteDialog = (team) => {
-  teamToDelete.value = team;
-  deleteDialogOpen.value = true;
+const openDeleteDialog = (course) => {
+  courseToDelete.value = course;
+  deleteDialogOpen.value = course;
 };
 
 const closeDeleteDialog = () => {
   deleteDialogOpen.value = false;
-  teamToDelete.value = null;
+  courseToDelete.value = null;
 };
 
-const confirmDeleteTeam = async () => {
-  if (!teamToDelete.value?.id) {
+const confirmDeleteCourse = async () => {
+  if (!courseToDelete.value?.id) {
     return;
   }
 
@@ -112,18 +105,18 @@ const confirmDeleteTeam = async () => {
   listError.value = "";
 
   try {
-    await teamServices.deleteTeam(teamToDelete.value.id);
+    await courseServices.deleteCourse(courseToDelete.value.id);
     closeDeleteDialog();
-    await retrieveTeams();
+    await retrieveCourses();
   } catch (error) {
     listError.value =
-      error.response?.data?.message || "Failed to delete team.";
+      error.response?.data?.message || "Failed to delete course.";
   } finally {
     deleting.value = false;
   }
 };
 
-onMounted(retrieveTeams);
+onMounted(retrieveCourses);
 </script>
 
 <template>
@@ -164,9 +157,9 @@ onMounted(retrieveTeams);
             <tr>
               <th class="text-left">Course Id</th>
               <th class="text-left">Name</th>
-              <th class="text-left">Description</th>
               <th class="text-left">Semester Offered</th>
-              <th class="text-left">Sections</th>
+              <th class="text-left">Offer Frequency</th>
+              <th class="text-left">Description</th>
               <th class="text-left">Actions</th>
             </tr>
           </thead>
@@ -174,9 +167,9 @@ onMounted(retrieveTeams);
             <tr v-for="course in courses" :key="team.id">
               <td>{{ course.courseId }}</td>
               <td>{{ course.name }}</td>
-              <td>{{ course.description }}</td>
               <td>{{ course.semesterOffered }}</td>
-              <td>{{ course.sections?.length ?? 0 }}</td>
+              <td>{{ course.offeringFrequency }}</td>
+              <td>{{ course.description }}</td>
               <td>
                 <v-icon
                   size="small"
