@@ -69,7 +69,7 @@
 
 ## Assumptions
 
-- The courses app shell (Vue 3 frontend, Express API mounted at `/courses`, MySQL) already exists in this repo.
+- The courses app shell (Vue 3 frontend, Express API mounted at `/course-t3`, MySQL) already exists in this repo.
 - Login identifier is **email**, matching the running courses UI and `users.email`.
 
 ---
@@ -106,6 +106,7 @@ Feature 1 starts and ends the caller’s own session. It does not return another
 | **Later features**    | Course APIs must never expose another user’s private courses. Cross-user → `404` (not `403`).       |
 
 ## API Requirements
+<<<<<<< HEAD
 
 | Method   | Endpoint                       | Auth        | Purpose              |
 | -------- | ------------------------------ | ----------- | -------------------- |
@@ -114,6 +115,15 @@ Feature 1 starts and ends the caller’s own session. It does not return another
 | `POST`   | `/courses/users`               | Yes, admin  | Create a new user    |
 | `POST`   | `/courses/sessions`            | Yes, admin  | Create a new session |
 | `DELETE` | `/courses/sessions/:sessionId` | Yes, admin  | Delete a session     |
+=======
+| Method   | Endpoint                         | Auth                | Purpose               |
+| -------- | -------------------------------- | ------------------- | --------------------- |
+| `GET`    | `/course-t3/users`                 | Yes (admin)         | Fetch all users       |
+| `GET`    | `/course-t3/sessions`              | Yes (admin)         | Fetch all sessions    |
+| `POST`   | `/course-t3/users`                 | Yes, admin          | Create a new user     |
+| `POST`    | `/course-t3/sessions`             | Yes, admin          | Create a new session  |
+| `DELETE` | `/course-t3/sessions/:sessionId`   | Yes, admin          | Delete a session      |
+>>>>>>> 4b68fcd9c94a3ee78156b10b4f099350d7eb26a1
 
 ---
 

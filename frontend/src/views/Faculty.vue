@@ -1,88 +1,46 @@
 <script setup>
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import teamServices from "../services/teamServices.js";
-import leagueServices from "../services/leagueServices.js";
-import peopleServices from "../services/peopleServices.js";
-import MenuBar from "../components/MenuBar.vue";
 import Utils from "../config/utils.js";
+import facultyServices from "../services/facultyServices.js";
+import FacultyForm from "../components/FacultyForm.vue";
 
 const route = useRoute();
 
-const emptyTeamForm = () => ({
-  name: "",
-  leagueId: null,
-  homeField: "",
-  managerId: null,
+const emptyFacultyForm = () => ({
+  facultyId: "",
+  fName: "",
+  lName: "",
+  department: "",
 });
 
-const emptyPlayerForm = () => ({
-  personId: null,
-  position: "",
-  number: "",
-});
-
-const team = ref(null);
-const leagues = ref([]);
-const people = ref([]);
-const loading = ref(false);
-const listError = ref("");
-const formDialogOpen = ref(false);
-const form = ref(emptyTeamForm());
+const faculty = ref(null)
 const formRef = ref(null);
-const formError = ref("");
+const facultyToRemove = ref(null);
+const editingFacultyId = ref(null);
 const saving = ref(false);
-const playerDialogOpen = ref(false);
-const isAddPlayerMode = ref(true);
-const playerForm = ref(emptyPlayerForm());
-const playerFormRef = ref(null);
-const playerFormError = ref("");
-const savingPlayer = ref(false);
-const editingPlayerId = ref(null);
-const removePlayerDialogOpen = ref(false);
-const playerToRemove = ref(null);
-const removingPlayer = ref(false);
+const loading = ref(false);
+const addModelOpen = ref(false);
+const savingFaculty = ref(false);
+const editingFaculty = ref(false);
+const removingFaculty = ref(false);
+const removeFacultyDialogOpen = ref(false);
+const faculties = ref([]);
+const listError = ref("");
+const formError = ref("");
+const facultyFormError = ref("");
+const facultyForm = ref(emptyFacultyForm());
 
-const teamId = computed(() => parseInt(route.params.teamId, 10));
-const playerFormTitle = computed(() =>
-  isAddPlayerMode.value ? "Add Player" : "Edit Player",
-);
-const playerSaveLabel = computed(() =>
-  isAddPlayerMode.value ? "Add" : "Save Player",
-);
-const rosterPlayers = computed(() => team.value?.players ?? []);
-const isAdmin = computed(() => Utils.getStore("user")?.role === "admin");
-const canManagePlayers = computed(
-  () => isAdmin.value || Utils.getStore("user")?.role === "manager"
-);
-
-const playerName = (player) => {
-  const lastName = player.person?.lastName ?? "";
-  const firstName = player.person?.firstName ?? "";
-  return `${lastName}, ${firstName}`.trim();
-};
-
-const retrieveTeam = async () => {
+const retrieveFaculty = async () => {
   loading.value = true;
   listError.value = "";
 
   try {
-    const [teamsResponse, leaguesResponse, peopleResponse] = await Promise.all([
-      teamServices.getTeams(),
-      leagueServices.getLeagues(),
-      peopleServices.getPeople(),
-    ]);
-    leagues.value = leaguesResponse.data;
-    people.value = peopleResponse.data;
-    team.value =
-      teamsResponse.data.find((row) => row.id === teamId.value) ?? null;
-
-    if (!team.value) {
-      listError.value = `Team with id=${teamId.value} not found.`;
-    }
+    const facultyResponse = await facultyServices.getFaculty();
+    faculties.value = facultyResponse.data;
   } catch (error) {
     listError.value =
-      error.response?.data?.message || "Failed to fetch team.";
+      error.response?.data?.message || "Failed to fetch faculty.";
   } finally {
     loading.value = false;
   }
@@ -104,242 +62,185 @@ const openEditDialog = () => {
 };
 
 const closeFormDialog = () => {
-  formDialogOpen.value = false;
+  addModelOpen.value = false;
   formError.value = "";
 };
 
-const saveTeam = async () => {
+const addFaculty = async () => {
   formError.value = "";
   const result = await formRef.value?.validate();
 
-  if (!result?.valid || !team.value) {
+  if (!result?.valid) {
     return;
   }
 
   saving.value = true;
 
   try {
-    await teamServices.updateTeam(team.value.id, {
-      name: form.value.name.trim(),
-      leagueId: form.value.leagueId,
-      homeField: form.value.homeField.trim(),
-      managerId: form.value.managerId || null,
-      teamId: team.value.id,
+    await facultyServices.createFaculty({
+      fName: facultyForm.value.fName.trim(),
+      lName: facultyForm.value.lName.trim(),
+      department: facultyForm.value.department.trim()
     });
     closeFormDialog();
-    await retrieveTeam();
+    await retrieveFaculty();
   } catch (error) {
     formError.value =
-      error.response?.data?.message || "Failed to update team.";
+    error.response?.data?.message || "Failed to add faculty.";
   } finally {
     saving.value = false;
   }
 };
 
-const openAddPlayerDialog = () => {
-  isAddPlayerMode.value = true;
-  editingPlayerId.value = null;
-  playerForm.value = emptyPlayerForm();
-  playerFormError.value = "";
-  playerDialogOpen.value = true;
-};
-
-const openEditPlayerDialog = (player) => {
-  isAddPlayerMode.value = false;
-  editingPlayerId.value = player.id;
-  playerForm.value = {
-    personId: player.personId ?? null,
-    position: player.position ?? "",
-    number: player.number,
-  };
-  playerFormError.value = "";
-  playerDialogOpen.value = true;
-};
-
-const closePlayerDialog = () => {
-  playerDialogOpen.value = false;
-  playerFormError.value = "";
-  editingPlayerId.value = null;
-};
-
-const savePlayer = async () => {
-  playerFormError.value = "";
-  const result = await playerFormRef.value?.validate();
-
-  if (!result?.valid || !team.value) {
-    return;
-  }
-
-  savingPlayer.value = true;
+const updateFaculty = async () => {
+  facultyFormError.value = "";
+  savingFaculty.value = true;
 
   const payload = {
-    personId: playerForm.value.personId,
-    position: String(playerForm.value.position).trim(),
-    number: parseInt(playerForm.value.number, 10),
+    facultyId: facultyForm.value?.facultyId,
+    fName: facultyForm.value?.fName,
+    lName: facultyForm.value?.lName,
+    department: facultyForm.value?.department
   };
 
-  try {
-    if (isAddPlayerMode.value) {
-      await teamServices.createPlayer(team.value.id, payload);
-    } else {
-      await teamServices.updatePlayer(
-        team.value.id,
-        editingPlayerId.value,
-        payload,
-      );
-    }
-
-    closePlayerDialog();
-    await retrieveTeam();
-  } catch (error) {
-    playerFormError.value =
+  try 
+  {
+    await facultyServices.updateFaculty(
+      editingFacultyId.value,
+      facultyForm.value,
+    );
+    
+    await retrieveFaculty();
+    closeFacultyEditDialog();
+  } 
+  catch (error) 
+  {
+    facultyFormError.value =
       error.response?.data?.message ||
-      (isAddPlayerMode.value
-        ? "Failed to add player."
-        : "Failed to update player.");
+      ("Failed to update faculty.");
   } finally {
-    savingPlayer.value = false;
+    savingFaculty.value = false;
   }
 };
 
-const openRemovePlayerDialog = (player) => {
-  playerToRemove.value = player;
-  removePlayerDialogOpen.value = true;
+const openAddFacultyDialog = () => {
+  addModelOpen.value = true;
+  facultyForm.value = {facultyId: "", fName:"", lName:"", department:""};
+  facultyFormError.value = "";
+  addModelOpen.value = true;
 };
 
-const closeRemovePlayerDialog = () => {
-  removePlayerDialogOpen.value = false;
-  playerToRemove.value = null;
+const openEditFacultyDialog = (faculty) => {
+  editingFaculty.value = true;
+  editingFacultyId.value = faculty.facultyId;
+  facultyForm.value = faculty;
+  facultyFormError.value = "";
 };
 
-const confirmRemovePlayer = async () => {
-  if (!playerToRemove.value?.id || !team.value) {
+const closeFacultyEditDialog = () => {
+  editingFaculty.value = false;
+  facultyFormError.value = "";
+  editingFacultyId.value = null;
+};
+
+
+const openRemoveFacultyDialog = (faculty) => {
+  facultyToRemove.value = faculty;
+  removeFacultyDialogOpen.value = true;
+};
+
+const closeRemoveFacultyDialog = () => {
+  facultyToRemove.value = null;
+  removeFacultyDialogOpen.value = false;
+
+};
+
+const confirmRemoveFaculty = async () => {
+  if (facultyToRemove.value?.facultyId === undefined || Number.isNaN(facultyToRemove.value?.facultyId)) {
     return;
   }
 
-  removingPlayer.value = true;
+  removingFaculty.value = true;
 
   try {
-    await teamServices.deletePlayer(team.value.id, playerToRemove.value.id);
-    closeRemovePlayerDialog();
-    await retrieveTeam();
+    await facultyServices.deleteFaculty(facultyToRemove.value?.facultyId);
+    closeRemoveFacultyDialog();
+    await retrieveFaculty();
   } catch (error) {
-    playerFormError.value =
-      error.response?.data?.message || "Failed to remove player.";
+    facultyFormError.value =
+      error.response?.data?.message || "Failed to remove faculty.";
   } finally {
-    removingPlayer.value = false;
+    removingFaculty.value = false;
   }
 };
 
-onMounted(retrieveTeam);
-watch(() => route.params.teamId, retrieveTeam);
+onMounted(retrieveFaculty);
+// watch(() => route.params.teamId, retrieveFaculty);
 </script>
 
 <template>
   <v-container class="py-8">
     <v-card rounded="lg">
       <v-card-item>
-        <v-card-title>{{ team?.name || "Team" }}</v-card-title>
-        <v-card-subtitle v-if="team">
-          {{ team.league?.name }}
-          <template v-if="team.league?.sport">
-            · {{ team.league.sport }}
-          </template>
-          <template v-if="team.homeField">
-            · {{ team.homeField }}
-          </template>
-          <template v-if="team.manager">
-            · {{ team.manager.lastName }}, {{ team.manager.firstName }}
-          </template>
-        </v-card-subtitle>
-        <template #append>
+        <v-card-title class="text-center">{{ "Faculty" }}</v-card-title>
+        <v-card-item class="text-right">
           <v-btn
-            v-if="isAdmin"
-            color="primary"
-            variant="elevated"
-            class="oc-cta mr-2"
-            :disabled="!team"
-            @click="openEditDialog"
-          >
-            Edit team
-          </v-btn>
-          <v-btn
-            v-if="canManagePlayers"
-            color="primary"
-            variant="elevated"
-            class="oc-cta"
-            :disabled="!team"
-            @click="openAddPlayerDialog"
-          >
-            Add Players
-          </v-btn>
-        </template>
-      </v-card-item>
-
-      <v-card-text>
-        <v-progress-linear v-if="loading" indeterminate class="mb-4" />
-
-        <v-alert v-if="listError" type="error" density="compact" class="mb-4">
-          {{ listError }}
-        </v-alert>
-
-        <template v-if="!loading && team">
-          <p v-if="rosterPlayers.length === 0" class="text-body-1">
-            No players yet. Add the first player.
-          </p>
-
-          <v-table v-if="rosterPlayers.length > 0">
+          color="primary"
+          variant="elevated"
+          class="oc-cta mr-2"
+          @click="openAddFacultyDialog">Add Faculty</v-btn>
+        </v-card-item>
+        <v-card-text v-if="faculties">
+          <v-table>
             <thead>
               <tr>
-                <th class="text-left">Name</th>
-                <th class="text-left">Number</th>
-                <th class="text-left">Position</th>
-                <th class="text-left">Actions</th>
+                <th><b>Last</b></th>
+                <th><b>First</b></th>
+                <th><b>Department</b></th>
+                <th><b>Actions</b></th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="player in rosterPlayers" :key="player.id">
-                <td>{{ playerName(player) }}</td>
-                <td>{{ player.number }}</td>
-                <td>{{ player.position }}</td>
+              <tr v-for="faculty in faculties" :key="faculty.facultyId">
+                <td>{{ faculty.lName }}</td>
+                <td>{{ faculty.fName }}</td>
+                <td>{{ faculty.department }}</td>
                 <td>
                   <v-icon
-                    v-if="canManagePlayers"
-                    size="small"
-                    class="mx-4"
-                    aria-label="Edit player"
-                    @click="openEditPlayerDialog(player)"
-                  >
-                    mdi-pencil
+                    color="primary"
+                    variant="elevated"
+                    class="oc-cta mr-2"
+                    @click="openEditFacultyDialog(faculty)">
+                  mdi-pencil
                   </v-icon>
                   <v-icon
-                    v-if="canManagePlayers"
-                    size="small"
-                    class="mx-4"
-                    aria-label="Remove player"
-                    @click="openRemovePlayerDialog(player)"
+                    color="primary"
+                    variant="elevated"
+                    class="oc-cta mr-2"
+                    @click="openRemoveFacultyDialog(faculty)"
                   >
-                    mdi-trash-can
+                  mdi-delete
                   </v-icon>
                 </td>
               </tr>
             </tbody>
           </v-table>
-        </template>
-      </v-card-text>
+        </v-card-text>
+      </v-card-item>
     </v-card>
 
-    <v-dialog v-model="formDialogOpen" max-width="520">
+    <!-- Add New Faculty Dialog -->
+    <v-dialog v-model="addModelOpen" max-width="520">
       <v-card rounded="lg">
-        <v-card-title>Edit Team</v-card-title>
+        <v-card-title>Add Faculty</v-card-title>
         <v-card-text>
-          <!-- <TeamForm
-            ref="formRef"
-            v-model="form"
-            :leagues="leagues"
-            :people="people"
-            @submit="saveTeam"
-          /> This was the old team form, no longer needed for coureses -->
+
+          <FacultyForm 
+          ref="formRef"
+          v-model="form"
+          v-model:model-value="facultyForm"
+          @submit="addFaculty"/>
+
           <v-alert v-if="formError" type="error" density="compact" class="mt-2">
             {{ formError }}
           </v-alert>
@@ -352,64 +253,71 @@ watch(() => route.params.teamId, retrieveTeam);
             variant="elevated"
             class="oc-cta"
             :loading="saving"
-            @click="saveTeam"
+            @click="addFaculty"
           >
-            Save Team
+            Add Faculty
           </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <v-dialog v-model="playerDialogOpen" max-width="520">
+    
+    <!-- Edit Faculty Dialog -->
+    <v-dialog v-model="editingFaculty" max-width="520">
       <v-card rounded="lg">
-        <v-card-title>{{ playerFormTitle }}</v-card-title>
+        <v-card-title>Edit Faculty</v-card-title>
         <v-card-text>
-          <!-- <PlayerForm
-            ref="playerFormRef"
-            v-model="playerForm"
-            :people="people"
-            @submit="savePlayer"
-          /> This was the old player form, no longer needed for courses -->
+          <FacultyForm
+          ref="formRef"
+          v-model="form"
+          v-model:model-value="facultyForm"
+          @submit="updateFaculty"
+          />
           <v-alert
-            v-if="playerFormError"
+            v-if="facultyFormError"
             type="error"
             density="compact"
             class="mt-2"
           >
-            {{ playerFormError }}
+            {{ facultyFormError }}
           </v-alert>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="closePlayerDialog">Cancel</v-btn>
+          <v-btn 
+          variant="text" 
+          @click="closeFacultyEditDialog"
+          >
+            Cancel
+          </v-btn>
           <v-btn
             color="primary"
             variant="elevated"
             class="oc-cta"
-            :loading="savingPlayer"
-            @click="savePlayer"
+            :loading="savingFaculty"
+            @click="updateFaculty"
           >
-            {{ playerSaveLabel }}
+            Update Faculty
           </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="removePlayerDialogOpen" max-width="420">
+    <!-- Delete Faculty Dialog -->
+    <v-dialog v-model="removeFacultyDialogOpen" max-width="420">
       <v-card rounded="lg">
-        <v-card-title>Remove Player</v-card-title>
-        <v-card-text>Remove this player from the team?</v-card-text>
+        <v-card-title>Remove Faculty</v-card-title>
+        <v-card-text>Remove {{facultyToRemove?.fName}} {{facultyToRemove?.lName}}?</v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="closeRemovePlayerDialog">Cancel</v-btn>
+          <v-btn variant="text" @click="closeRemoveFacultyDialog">Cancel</v-btn>
           <v-btn
             color="primary"
             variant="elevated"
             class="oc-cta"
-            :loading="removingPlayer"
-            @click="confirmRemovePlayer"
+            :loading="removingFaculty"
+            @click="confirmRemoveFaculty"
           >
-            Remove Player
+            Remove Faculty
           </v-btn>
         </v-card-actions>
       </v-card>

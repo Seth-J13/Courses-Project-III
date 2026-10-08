@@ -134,10 +134,10 @@ describe("Feature 1 — User Authentication & Session Management", () => {
       expect(wrapper.findComponent(MenuBar).exists()).toBe(true);
       expect(wrapper.text()).not.toContain("Sign out");
       expect(wrapper.text()).not.toContain("Seasons");
-      expect(wrapper.text()).not.toContain("Leagues");
-      expect(wrapper.text()).not.toContain("People");
-      expect(wrapper.text()).not.toContain("Teams");
-      expect(wrapper.text()).not.toContain("Games");
+      expect(wrapper.text()).not.toContain("Semesters");
+      expect(wrapper.text()).not.toContain("Courses");
+      expect(wrapper.text()).not.toContain("Sections");
+      expect(wrapper.text()).not.toContain("Faculty");
     });
 
     it("Signed-in user sees Sign out in MenuBar", async () => {
@@ -162,19 +162,16 @@ describe("Feature 1 — User Authentication & Session Management", () => {
       expect(wrapper.text()).not.toContain("Games");
     });
 
-    it("Admin MenuBar in Feature 1 has Sign out but no catalog links yet", async () => {
+    it("Admin sees Semesters, Courses, Sections, and Faculty", async () => {
       Utils.setStore("user", adminUser);
       const mounted = await mountMenuBar("/");
       wrapper = mounted.wrapper;
-
+    
       expect(wrapper.text()).toContain("Sign out");
-      const catalogOrder = wrapper
-        .findAll("a, button")
-        .map((item) => item.text().trim())
-        .filter((label) =>
-          ["Leagues", "Teams", "Games", "People", "Seasons"].includes(label)
-        );
-      expect(catalogOrder).toEqual(["Leagues", "Teams", "Games", "People", "Seasons"]);
+      expect(wrapper.text()).toContain("Semesters");
+      expect(wrapper.text()).toContain("Courses");
+      expect(wrapper.text()).toContain("Sections");
+      expect(wrapper.text()).toContain("Faculty");
     });
   });
 });
@@ -199,11 +196,11 @@ describe("Feature 2 — Season Management", () => {
       wrapper = mounted.wrapper;
       router = mounted.router;
 
-      const seasonsBtn = wrapper.findAllComponents({ name: "VBtn" }).find((btn) =>
-        btn.text().includes("Seasons")
+      const semestersBtn = wrapper.findAllComponents({ name: "VBtn" }).find((btn) =>
+        btn.text().includes("Semesters")
       );
-      expect(seasonsBtn).toBeTruthy();
-      expect(seasonsBtn.props("to")).toBe("/seasons");
+      expect(semestersBtn).toBeTruthy();
+      expect(semestersBtn.props("to")).toEqual({ name: "Semester" });
 
       const link = seasonsBtn.find("a");
       if (link.exists()) {
@@ -214,18 +211,18 @@ describe("Feature 2 — Season Management", () => {
       await flushPromises();
 
       await vi.waitFor(() => {
-        expect(router.currentRoute.value.name).toBe("seasons");
+        expect(router.currentRoute.value.name).toBe("Semester");
       });
     });
   });
 
   describe("US-2.7 — Restrict season management to admins", () => {
-    it("Student does not see Seasons in the menu", async () => {
+    it("Student does not see Semesters in the menu", async () => {
       Utils.setStore("user", studentUser);
       const mounted = await mountMenuBar("/");
       wrapper = mounted.wrapper;
 
-      expect(wrapper.text()).not.toContain("Seasons");
+      expect(wrapper.text()).not.toContain("Semesters");
     });
   });
 });

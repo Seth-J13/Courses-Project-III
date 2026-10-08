@@ -108,12 +108,22 @@
 
 ## API Requirements
 
+<<<<<<< HEAD
 | Method   | Endpoint                      | Auth | Purpose                                   |
 | -------- | ----------------------------- | ---- | ----------------------------------------- |
 | `GET`    | `/courses/faculty`            | Yes  | Retrieve all faculty                      |
 | `POST`   | `/courses/faculty`            | Yes  | Create a new faculty                      |
 | `PUT`    | `/courses/faculty/:facultyId` | Yes  | Update a faculty with specified facultyId |
 | `DELETE` | `/courses/faculty/:facultyId` | Yes  | Delete a faculty with specified facultyId |
+=======
+| Method | Endpoint | Auth | Purpose |
+|--------|----------|------|---------|
+| `GET` | `/course-t3/faculty` | Yes | Retrieve all faculty |
+| `POST` | `/course-t3/faculty` | Yes | Create a new faculty |
+| `PUT` | `/course-t3/faculty/:facultyId` | Yes | Update a faculty with specified facultyId |
+| `DELETE` | `/course-t3/faculty/:facultyId` | Yes | Delete a faculty with specified facultyId |
+
+>>>>>>> 4b68fcd9c94a3ee78156b10b4f099350d7eb26a1
 
 **Create/Update faculty request body:**
 

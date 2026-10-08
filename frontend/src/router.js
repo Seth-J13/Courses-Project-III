@@ -6,6 +6,7 @@ import Semester from "./views/Semester.vue/";
 import CourseList from "./views/CourseList.vue";
 import SectionsList from "./views/SectionsList.vue"
 import EnrollmentList from "./views/EnrollmentList.vue";
+import Utils from "./config/utils.js";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -22,26 +23,57 @@ const router = createRouter({
     },
     {
       path: "/sections",
+      meta: {
+        requiresAuth: true,
+        role: Utils.ROLE_ADMIN,
+      },
       name: "Sections",
-      component: SectionsList
+      meta: {
+        component: SectionsList
+      },
+      component: SectionsList,
     },
     {
       path: "/course-list",
+      meta: {
+        requiresAuth: true,
+        role: Utils.ROLE_ADMIN,
+      },
       name: "CourseList",
+      meta: {
+        component: CourseList
+      },
       component: CourseList,
     },
     {
       path: "/faculty",
+      meta: {
+        requiresAuth: true,
+        role: Utils.ROLE_ADMIN,
+      },
       name: "Faculty",
+      meta: {
+        component: Faculty
+      },
       component: Faculty,
     },
     {
       path: "/semester",
+      meta: {
+        requiresAuth: true,
+        role: Utils.ROLE_ADMIN,
+      },
       name: "Semester",
+      meta: {
+        component: Semester
+      },
       component: Semester,
     },
     {
       path: "/enrollment-list",
+      meta: {
+        requiresAuth: true,
+      },
       name: "EnrollmentList",
       component: EnrollmentList,
       props: true
@@ -51,6 +83,25 @@ const router = createRouter({
       redirect: { name: "Login" },
     }
   ],
+});
+
+router.beforeEach((to) => {
+  const user = Utils.getStore("user");
+  const isPublic = to.name === "Login" || to.name === "Register";
+
+  if (!user?.token && !isPublic) {
+    return { name: "Login" };
+  }
+
+  if (user?.token && isPublic) {
+    return user.role === "admin"
+      ? { name: "Semester" }
+      : { name: "EnrollmentList" };
+  }
+
+  if (to.meta.requiresAdmin && user?.role !== "admin") {
+    return { name: "EnrollmentList" };
+  }
 });
 
 export default router;

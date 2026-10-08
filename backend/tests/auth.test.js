@@ -44,7 +44,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
 
     it("User submits registration with missing email", async () => {
       const response = await request(app)
-        .post("/courses/register")
+        .post("/course-t3/register")
         .send(validRegisterPayload({ email: "" }));
 
       expect(response.status).toBe(400);
@@ -53,7 +53,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
 
     it("User submits registration with password too short", async () => {
       const response = await request(app)
-        .post("/courses/register")
+        .post("/course-t3/register")
         .send(validRegisterPayload({ password: "short" }));
 
       expect(response.status).toBe(400);
@@ -66,7 +66,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
       await registerUser(app);
 
       const response = await request(app)
-        .post("/courses/register")
+        .post("/course-t3/register")
         .send(
           validRegisterPayload({
             email: "other@example.com",
@@ -82,7 +82,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
       await registerUser(app);
 
       const response = await request(app)
-        .post("/courses/register")
+        .post("/course-t3/register")
         .send(
           validRegisterPayload({
             email: "jane@example.com",
@@ -151,7 +151,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
       const { token, universityId } = registerResponse.body;
 
       const response = await request(app)
-        .post("/courses/logout")
+        .post("/course-t3/logout")
         .set(authHeader(token));
 
       expect(response.status).toBe(200);
@@ -160,7 +160,11 @@ describe("Feature 1 — User Authentication & Session Management", () => {
       expect(session.token).toBe("");
 
       const protectedResponse = await request(app)
+<<<<<<< HEAD
         .get(`/courses/users/${universityId}`)
+=======
+        .get(`/course-t3/users/${userId}`)
+>>>>>>> 4b68fcd9c94a3ee78156b10b4f099350d7eb26a1
         .set(authHeader(token));
 
       expect(protectedResponse.status).toBe(401);
@@ -182,7 +186,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
     it("User registers and links to a person with the same email", async () => {
       const { token } = await registerAdmin(app);
       await request(app)
-        .post("/courses/people")
+        .post("/course-t3/people")
         .set(authHeader(token))
         .send({
           firstName: "Jane",
@@ -217,7 +221,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
     it("User registers when the matching person is already linked", async () => {
       const { token, universityId } = await registerAdmin(app);
       const personResponse = await request(app)
-          .post("/courses/people")
+          .post("/course-t3/people")
         .set(authHeader(token))
         .send({
           firstName: "Jane",
