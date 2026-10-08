@@ -30,9 +30,6 @@ const formError = ref("");
 const facultyFormError = ref("");
 const facultyForm = ref(emptyFacultyForm());
 
-const debug = () => {
-  console.log(addModelOpen.value);
-}
 const retrieveFaculty = async () => {
   loading.value = true;
   listError.value = "";
@@ -88,38 +85,13 @@ const addFaculty = async () => {
     await retrieveFaculty();
   } catch (error) {
     formError.value =
-      error.response?.data?.message || "Failed to add faculty.";
+    error.response?.data?.message || "Failed to add faculty.";
   } finally {
     saving.value = false;
   }
 };
 
-const openAddFacultyDialog = () => {
-  addModelOpen.value = true;
-  facultyForm.value = {facultyId: "", fName:"", lName:"", department:""};
-  facultyFormError.value = "";
-  addModelOpen.value = true;
-};
-
-const openEditPlayerDialog = (player) => {
-  isAddPlayerMode.value = false;
-  editingFacultyId.value = player.id;
-  playerForm.value = {
-    personId: player.personId ?? null,
-    position: player.position ?? "",
-    number: player.number,
-  };
-  facultyFormError.value = "";
-  playerDialogOpen.value = true;
-};
-
-const closePlayerDialog = () => {
-  playerDialogOpen.value = false;
-  facultyFormError.value = "";
-  editingFacultyId.value = null;
-};
-
-const savePlayer = async () => {
+const updateFaculty = async () => {
   facultyFormError.value = "";
   const result = await playerFormRef.value?.validate();
 
@@ -146,7 +118,7 @@ const savePlayer = async () => {
       );
     }
 
-    closePlayerDialog();
+    closeFacultyEditDialog();
     await retrieveTeam();
   } catch (error) {
     facultyFormError.value =
@@ -159,37 +131,64 @@ const savePlayer = async () => {
   }
 };
 
-const openRemovePlayerDialog = (player) => {
-  facultyToRemove.value = player;
+const openAddFacultyDialog = () => {
+  addModelOpen.value = true;
+  facultyForm.value = {facultyId: "", fName:"", lName:"", department:""};
+  facultyFormError.value = "";
+  addModelOpen.value = true;
+};
+
+const openEditPlayerDialog = (player) => {
+  isAddPlayerMode.value = false;
+  editingFacultyId.value = player.id;
+  playerForm.value = {
+    personId: player.personId ?? null,
+    position: player.position ?? "",
+    number: player.number,
+  };
+  facultyFormError.value = "";
+  playerDialogOpen.value = true;
+};
+
+const closeFacultyEditDialog = () => {
+  playerDialogOpen.value = false;
+  facultyFormError.value = "";
+  editingFacultyId.value = null;
+};
+
+
+const openRemoveFacultyDialog = (faculty) => {
+  facultyToRemove.value = faculty;
   removeFacultyDialogOpen.value = true;
 };
 
-const closeRemovePlayerDialog = () => {
-  removeFacultyDialogOpen.value = false;
+const closeRemoveFacultyDialog = () => {
   facultyToRemove.value = null;
+  removeFacultyDialogOpen.value = false;
+
 };
 
-const confirmRemovePlayer = async () => {
-  if (!facultyToRemove.value?.id || !team.value) {
+const confirmRemoveFaculty = async () => {
+  if (facultyToRemove.value?.facultyId === undefined || Number.isNaN(facultyToRemove.value?.facultyId)) {
     return;
   }
 
-  removingPlayer.value = true;
+  removingFaculty.value = true;
 
   try {
-    await teamServices.deletePlayer(team.value.id, facultyToRemove.value.id);
-    closeRemovePlayerDialog();
-    await retrieveTeam();
+    await facultyServices.deleteFaculty(facultyToRemove.value?.facultyId);
+    closeRemoveFacultyDialog();
+    await retrieveFaculty();
   } catch (error) {
     facultyFormError.value =
-      error.response?.data?.message || "Failed to remove player.";
+      error.response?.data?.message || "Failed to remove faculty.";
   } finally {
-    removingPlayer.value = false;
+    removingFaculty.value = false;
   }
 };
 
 onMounted(retrieveFaculty);
-watch(() => route.params.teamId, retrieveFaculty);
+// watch(() => route.params.teamId, retrieveFaculty);
 </script>
 
 <template>
@@ -231,6 +230,7 @@ watch(() => route.params.teamId, retrieveFaculty);
                     color="primary"
                     variant="elevated"
                     class="oc-cta mr-2"
+                    @click="openRemoveFacultyDialog(faculty)"
                   >
                   mdi-delete
                   </v-icon>
@@ -242,7 +242,7 @@ watch(() => route.params.teamId, retrieveFaculty);
       </v-card-item>
     </v-card>
 
-
+    <!-- Add New Faculty Dialog -->
     <v-dialog v-model="addModelOpen" max-width="520">
       <v-card rounded="lg">
         <v-card-title>Add Faculty</v-card-title>
@@ -273,7 +273,8 @@ watch(() => route.params.teamId, retrieveFaculty);
         </v-card-actions>
       </v-card>
     </v-dialog>
-
+    
+    <!-- Edit Faculty Dialog -->
     <v-dialog v-model="playerDialogOpen" max-width="520">
       <v-card rounded="lg">
         <v-card-title>{{ playerFormTitle }}</v-card-title>
@@ -295,13 +296,13 @@ watch(() => route.params.teamId, retrieveFaculty);
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="closePlayerDialog">Cancel</v-btn>
+          <v-btn variant="text" @click="closeFacultyEditDialog">Cancel</v-btn>
           <v-btn
             color="primary"
             variant="elevated"
             class="oc-cta"
             :loading="savingFaculty"
-            @click="savePlayer"
+            @click="updateFaculty"
           >
             {{ playerSaveLabel }}
           </v-btn>
@@ -309,21 +310,22 @@ watch(() => route.params.teamId, retrieveFaculty);
       </v-card>
     </v-dialog>
 
+    <!-- Delete Faculty Dialog -->
     <v-dialog v-model="removeFacultyDialogOpen" max-width="420">
       <v-card rounded="lg">
-        <v-card-title>Remove Player</v-card-title>
-        <v-card-text>Remove this player from the team?</v-card-text>
+        <v-card-title>Remove Faculty</v-card-title>
+        <v-card-text>Remove {{facultyToRemove?.fName}} {{facultyToRemove?.lName}}?</v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="closeRemovePlayerDialog">Cancel</v-btn>
+          <v-btn variant="text" @click="closeRemoveFacultyDialog">Cancel</v-btn>
           <v-btn
             color="primary"
             variant="elevated"
             class="oc-cta"
-            :loading="removingPlayer"
-            @click="confirmRemovePlayer"
+            :loading="removingFaculty"
+            @click="confirmRemoveFaculty"
           >
-            Remove Player
+            Remove Faculty
           </v-btn>
         </v-card-actions>
       </v-card>

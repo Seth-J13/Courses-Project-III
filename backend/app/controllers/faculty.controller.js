@@ -23,7 +23,7 @@ exports.findAll = async (req, res) => {
 
 exports.findOne = async (req, res) => {
   try {
-    const facultyId = parseInt(req.params.facultyId, 10);
+    const facultyId = parseInt(req.params?.id, 10);
     if (Number.isNaN(userId)) {
       return res.status(400).send({ message: "Invalid faculty id." });
     }
@@ -42,7 +42,7 @@ exports.findOne = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    const facultyId = parseInt(req.params.facultyId, 10);
+    const facultyId = parseInt(req.params?.id, 10);
     if (Number.isNaN(facultyId)) {
       return res.status(400).send({ message: "Invalid faculty id." });
     }
@@ -81,7 +81,7 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
   try
   {
-    const faculty_id = parseInt(req.params.facultyId, 10);
+    const faculty_id = parseInt(req.params?.id, 10);
     if(Number.isNaN(faculty_id)){
       return res.status(400).send({message: "Invalid faculty id"});
     }
@@ -89,13 +89,13 @@ exports.delete = async (req, res) => {
     const existing = await db.faculty.unscoped().findByPk(faculty_id);
     if(!existing)
     {
-      return res.status(400).send({message: `Faculty (${faculty_id}) does not exist`});
+      return res.status(404).send({message: `Faculty (${faculty_id}) does not exist`});
     }
 
-    const {facultyId, fname, lname, department} = req.params;
+    const {facultyId, fname, lname, department} = existing;
     
-    await db.faculty.destroy({where: { id: faculty_id }});
-    return res.status(200).send({message: `Successfully deleted ${faculty_id}`});
+    await db.faculty.destroy({where: { facultyId: facultyId }});
+    return res.status(200).send({message: `Successfully deleted ${facultyId}`});
   } catch (err){
     logger.error(`Could not delete faculty: ${err.message}`);
     return res.status(500).send({message: "Failed to delete faculty."});
