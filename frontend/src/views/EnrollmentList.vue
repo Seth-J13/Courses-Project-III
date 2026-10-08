@@ -98,11 +98,11 @@ const retrieveEnrollments = async () => {
 
     let enrollmentResponse = {}
     if (semester !== 'null') {
-      enrollmentResponse = await enrollmentServices.getEnrollmentsBySemester(Utils.getStore('user').universityId, semester)
+      enrollmentResponse = await enrollmentServices.getEnrollmentsBySemester(Utils.getStore('user').id, semester)
       cardTitleSemester.value = semester
     }
     else {
-      enrollmentResponse = await enrollmentServices.getEnrollments(Utils.getStore('user').universityId)
+      enrollmentResponse = await enrollmentServices.getEnrollments(Utils.getStore('user').id)
       cardTitleSemester.value = "all"
       semester = calcCurrentSemester()
     }
@@ -162,7 +162,7 @@ const enroll = async () => {
   formError.value = "";
   try {
     await enrollmentServices.createEnrollment({
-      universityId: Utils.getStore("user").universityId,
+      universityId: Utils.getStore("user").d,
       semesterId: selectedSemester.value || getSearchParams().get('semester'),
       sectionId: form.value.section.substring(0,12),
     });
