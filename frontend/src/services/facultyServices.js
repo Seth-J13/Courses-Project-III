@@ -5,15 +5,15 @@ const facultyServices = {
     return apiClient.get("faculty");
   },
 
-  createPerson(faculty) {
+  createFaculty(faculty) {
     return apiClient.post("faculty", faculty);
   },
 
-  updatePerson(facultyId, faculty) {
+  updateFaculty(facultyId, faculty) {
     return apiClient.put(`faculty/${facultyId}`, faculty);
   },
 
-  deletePerson(facultyId) {
+  deleteFaculty(facultyId) {
     return apiClient.delete(`faculty/${facultyId}`);
   },
 };

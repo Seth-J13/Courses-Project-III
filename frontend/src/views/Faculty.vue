@@ -3,33 +3,36 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import Utils from "../config/utils.js";
 import facultyServices from "../services/facultyServices.js";
+import FacultyForm from "../components/FacultyForm.vue";
 
 const route = useRoute();
 
 const emptyFacultyForm = () => ({
-  facultyId: null,
-  fname: "",
-  lname: "",
+  facultyId: "",
+  fName: "",
+  lName: "",
   department: "",
 });
 
-const faculties = ref([]);
-const loading = ref(false);
-const listError = ref("");
+const faculty = ref(null)
 const formRef = ref(null);
-const formError = ref("");
-const saving = ref(false);
-const facultyDialogOpen = ref(false);
-const isAddFacultyMode = ref(true);
-const facultyForm = ref(emptyFacultyForm());
-const facultyFormError = ref("");
-const savingFaculty = ref(false);
-const editingFacultyId = ref(null);
-const removeFacultyDialogOpen = ref(false);
 const facultyToRemove = ref(null);
+const editingFacultyId = ref(null);
+const saving = ref(false);
+const loading = ref(false);
+const addModelOpen = ref(false);
+const savingFaculty = ref(false);
 const removingFaculty = ref(false);
+const removeFacultyDialogOpen = ref(false);
+const faculties = ref([]);
+const listError = ref("");
+const formError = ref("");
+const facultyFormError = ref("");
+const facultyForm = ref(emptyFacultyForm());
 
-
+const debug = () => {
+  console.log(addModelOpen.value);
+}
 const retrieveFaculty = async () => {
   loading.value = true;
   listError.value = "";
@@ -61,44 +64,41 @@ const openEditDialog = () => {
 };
 
 const closeFormDialog = () => {
-  formDialogOpen.value = false;
+  addModelOpen.value = false;
   formError.value = "";
 };
 
-const saveTeam = async () => {
+const addFaculty = async () => {
   formError.value = "";
   const result = await formRef.value?.validate();
 
-  if (!result?.valid || !team.value) {
+  if (!result?.valid) {
     return;
   }
 
   saving.value = true;
 
   try {
-    await teamServices.updateTeam(team.value.id, {
-      name: form.value.name.trim(),
-      leagueId: form.value.leagueId,
-      homeField: form.value.homeField.trim(),
-      managerId: form.value.managerId || null,
-      teamId: team.value.id,
+    await facultyServices.createFaculty({
+      fName: facultyForm.value.fName.trim(),
+      lName: facultyForm.value.lName.trim(),
+      department: facultyForm.value.department.trim()
     });
     closeFormDialog();
-    await retrieveTeam();
+    await retrieveFaculty();
   } catch (error) {
     formError.value =
-      error.response?.data?.message || "Failed to update team.";
+      error.response?.data?.message || "Failed to add faculty.";
   } finally {
     saving.value = false;
   }
 };
 
-const openAddPlayerDialog = () => {
-  isAddPlayerMode.value = true;
-  editingFacultyId.value = null;
-  playerForm.value = emptyPlayerForm();
+const openAddFacultyDialog = () => {
+  addModelOpen.value = true;
+  facultyForm.value = {facultyId: "", fName:"", lName:"", department:""};
   facultyFormError.value = "";
-  playerDialogOpen.value = true;
+  addModelOpen.value = true;
 };
 
 const openEditPlayerDialog = (player) => {
@@ -196,7 +196,14 @@ watch(() => route.params.teamId, retrieveFaculty);
   <v-container class="py-8">
     <v-card rounded="lg">
       <v-card-item>
-        <v-card-title>{{ "Faculty" }}</v-card-title>
+        <v-card-title class="text-center">{{ "Faculty" }}</v-card-title>
+        <v-card-item class="text-right">
+          <v-btn
+          color="primary"
+          variant="elevated"
+          class="oc-cta mr-2"
+          @click="openAddFacultyDialog">Add Faculty</v-btn>
+        </v-card-item>
         <v-card-text v-if="faculties">
           <v-table>
             <thead>
@@ -216,7 +223,8 @@ watch(() => route.params.teamId, retrieveFaculty);
                   <v-icon
                     color="primary"
                     variant="elevated"
-                    class="oc-cta mr-2">
+                    class="oc-cta mr-2"
+                    @click="debug">
                   mdi-pencil
                   </v-icon>
                   <v-icon
@@ -232,71 +240,20 @@ watch(() => route.params.teamId, retrieveFaculty);
           </v-table>
         </v-card-text>
       </v-card-item>
-
-      <v-card-text>
-        <v-progress-linear v-if="loading" indeterminate class="mb-4" />
-
-        <v-alert v-if="listError" type="error" density="compact" class="mb-4">
-          {{ listError }}
-        </v-alert>
-
-        <template v-if="!loading && team">
-          <p v-if="rosterPlayers.length === 0" class="text-body-1">
-            No players yet. Add the first player.
-          </p>
-
-          <v-table v-if="rosterPlayers.length > 0">
-            <thead>
-              <tr>
-                <th class="text-left">Name</th>
-                <th class="text-left">Number</th>
-                <th class="text-left">Position</th>
-                <th class="text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="player in rosterPlayers" :key="player.id">
-                <td>{{ playerName(player) }}</td>
-                <td>{{ player.number }}</td>
-                <td>{{ player.position }}</td>
-                <td>
-                  <v-icon
-                    v-if="canManagePlayers"
-                    size="small"
-                    class="mx-4"
-                    aria-label="Edit player"
-                    @click="openEditPlayerDialog(player)"
-                  >
-                    mdi-pencil
-                  </v-icon>
-                  <v-icon
-                    v-if="canManagePlayers"
-                    size="small"
-                    class="mx-4"
-                    aria-label="Remove player"
-                    @click="openRemovePlayerDialog(player)"
-                  >
-                    mdi-trash-can
-                  </v-icon>
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
-        </template>
-      </v-card-text>
     </v-card>
 
-    <v-dialog v-model="formDialogOpen" max-width="520">
+
+    <v-dialog v-model="addModelOpen" max-width="520">
       <v-card rounded="lg">
-        <v-card-title>Edit Team</v-card-title>
+        <v-card-title>Add Faculty</v-card-title>
         <v-card-text>
-          <!-- <TeamForm
-            ref="formRef"
-            v-model="form"
-            :leagues="leagues"
-            :people="people"
-            @submit="saveTeam"
-          /> This was the old team form, no longer needed for coureses -->
+
+          <FacultyForm 
+          ref="formRef"
+          v-model="form"
+          v-model:model-value="facultyForm"
+          @submit="addFaculty"/>
+
           <v-alert v-if="formError" type="error" density="compact" class="mt-2">
             {{ formError }}
           </v-alert>
@@ -309,9 +266,9 @@ watch(() => route.params.teamId, retrieveFaculty);
             variant="elevated"
             class="oc-cta"
             :loading="saving"
-            @click="saveTeam"
+            @click="addFaculty"
           >
-            Save Team
+            Add Faculty
           </v-btn>
         </v-card-actions>
       </v-card>

@@ -104,14 +104,8 @@ exports.delete = async (req, res) => {
 
 exports.create = async (req, res) => {
   try{
-    const facultyId = parseInt(req.params.facultyId);
-    
-    if(Number.isNaN(facultyId)){
-      return res.status(400).send({message: "Invalid faculty id"});
-    }
-
     const new_faculty = await db.faculty.create(req.body);
-    return res.status(201).send(await findOne(facultyId))
+    return res.status(201).send("Successfully created new faculty")
   }
   catch (err) {
     logger.error(`Could not create faculty`);
