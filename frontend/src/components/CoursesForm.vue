@@ -3,21 +3,29 @@ import { computed, ref } from "vue";
 
 const props = defineProps({
   modelValue: { type: Object, required: true },
-  leagues: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(["update:modelValue", "submit"]);
 
 const formRef = ref(null);
 
-const weekdayOptions = [
-  "sunday",
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
+const semesterOfferedOptions = [
+  "SP",
+  "SU",
+  "FA",
+  "WI",
+];
+
+const offeringFrequencyOptions = [
+  "none", 
+  "everyYear", 
+  "oddYears", 
+  "evenYears"
+];
+
+const descriptionRules = [
+  (value) => !!value?.trim() || "Required",
+  (value) => (value?.trim() || "").length <= 255 || "Description must be 255 characters or fewer.",
 ];
 
 const updateField = (field, value) => {
@@ -25,35 +33,26 @@ const updateField = (field, value) => {
 };
 
 const requiredRule = [(value) => !!value?.toString().trim() || "Required"];
+const idRules = [
+  (value) => !!value?.trim() || "Required",
+  (value) => (value?.trim() || "").length <= 9 || "ID must be 9 characters or fewer.",
+];
 const nameRules = [
   (value) => !!value?.trim() || "Required",
   (value) =>
-    (value?.trim() || "").length <= 30 ||
-    "Season name must be 30 characters or fewer.",
+    (value?.trim() || "").length <= 50 ||
+    "Course name must be 50 characters or fewer.",
 ];
-const leagueRules = [(value) => !!value || "Required"];
-const gameDaysRules = [
-  (value) => (Array.isArray(value) && value.length > 0) || "Required",
-];
-const minDaysRules = [
-  (value) =>
-    (value !== "" && value !== null && value !== undefined) || "Required",
-  (value) => {
-    const parsed = Number(value);
-    return (
-      (Number.isInteger(parsed) && parsed >= 0 && parsed <= 99) ||
-      "Minimum days between games must be between 0 and 99."
-    );
-  },
-];
-const endDateRules = computed(() => [
-  (value) => !!value || "Required",
-  (value) =>
-    !props.modelValue.startDate ||
-    value > props.modelValue.startDate ||
-    "End date must be after start date.",
-]);
 
+const semesterOfferedRules = [
+  (value) => !!value?.trim() || "Required",
+  (value) => (value?.trim() || "").length <= 2 || "Semester offered must be 2 characters or fewer.",
+];
+
+const offeringFrequencyRules = [
+  (value) => !!value?.trim() || "Required",
+  (value) => (value?.trim() || "").length <= 20 || "Offering frequency must be 20 characters or fewer.",
+];
 const validate = () => formRef.value.validate();
 
 defineExpose({ validate });
@@ -62,62 +61,41 @@ defineExpose({ validate });
 <template>
   <v-form ref="formRef" @submit.prevent="emit('submit')">
     <v-text-field
-      :model-value="modelValue.name"
-      label="Season Name"
+      :model-value="modelValue.courseId"
+      label="Course ID"
+      density="comfortable"
+      :rules="idRules"
+      @update:model-value="updateField('courseId', $event)"
+    />
+    <v-text-field
+      :model-value="modelValue.courseName"
+      label="Course Name"
       density="comfortable"
       :rules="nameRules"
-      @update:model-value="updateField('name', $event)"
+      @update:model-value="updateField('courseName', $event)"
     />
     <v-select
-      :model-value="modelValue.leagueId"
-      label="League"
-      :items="leagues"
-      item-title="name"
-      item-value="id"
+      :model-value="modelValue.semesterOffered"
+      label="Semester Offered"
+      :items="semesterOfferedOptions"
       density="comfortable"
-      :rules="leagueRules"
-      @update:model-value="updateField('leagueId', $event)"
-    />
-    <v-text-field
-      :model-value="modelValue.startDate"
-      label="Start Date"
-      type="date"
-      density="comfortable"
-      :rules="requiredRule"
-      @update:model-value="updateField('startDate', $event)"
-    />
-    <v-text-field
-      :model-value="modelValue.endDate"
-      label="End Date"
-      type="date"
-      density="comfortable"
-      :rules="endDateRules"
-      @update:model-value="updateField('endDate', $event)"
+      :rules="semesterOfferedRules"
+      @update:model-value="updateField('semesterOffered', $event)"
     />
     <v-select
-      :model-value="modelValue.gameDays"
-      label="Game Days"
-      :items="weekdayOptions"
-      multiple
+      :model-value="modelValue.offeringFrequency"
+      label="Offering Frequency"
+      :items="offeringFrequencyOptions"
       density="comfortable"
-      :rules="gameDaysRules"
-      @update:model-value="updateField('gameDays', $event)"
+      :rules="offeringFrequencyRules"
+      @update:model-value="updateField('offeringFrequency', $event)"
     />
     <v-text-field
-      :model-value="modelValue.gameTime"
-      label="Game Time"
-      type="time"
+      :model-value="modelValue.description"
+      label="Description"
       density="comfortable"
-      :rules="requiredRule"
-      @update:model-value="updateField('gameTime', $event)"
-    />
-    <v-text-field
-      :model-value="modelValue.minDaysBetweenGames"
-      label="Minimum days between games"
-      type="number"
-      density="comfortable"
-      :rules="minDaysRules"
-      @update:model-value="updateField('minDaysBetweenGames', $event)"
+      :rules="descriptionRules"
+      @update:model-value="updateField('description', $event)"
     />
   </v-form>
 </template>
