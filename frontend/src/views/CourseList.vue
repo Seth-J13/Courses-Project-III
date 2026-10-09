@@ -230,6 +230,31 @@ onMounted(retrieveCourses);
       </v-card>
     </v-dialog>
 
+    <v-dialog v-model="formDialogOpen" max-width="520">
+      <v-card rounded="lg">
+        <v-card-title>Update Course</v-card-title>
+        <v-card-text>
+          <CourseForm ref="formRef" v-model="form" @submit="saveCourse" />
+          <v-alert v-if="formError" type="error" density="compact" class="mt-2">
+            {{ formError }}
+          </v-alert>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="closeFormDialog">Cancel</v-btn>
+          <v-btn
+            color="primary"
+            variant="elevated"
+            class="oc-cta"
+            :loading="saving"
+            @click="saveCourse"
+          >
+            Update
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-dialog v-model="deleteDialogOpen" max-width="420">
       <v-card rounded="lg">
         <v-card-title>Delete Course</v-card-title>
