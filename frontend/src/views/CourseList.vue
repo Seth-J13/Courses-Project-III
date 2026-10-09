@@ -29,6 +29,8 @@ const courseToDelete = ref(null);
 const deleting = ref(false);
 const isAdmin = computed(() => Utils.getStore("user")?.role === "admin");
 
+const mode = ref("");
+
 const retrieveCourses = async () => {
   loading.value = true;
   listError.value = "";
@@ -50,14 +52,16 @@ const openAddDialog = () => {
   form.value = emptyForm();
   formError.value = "";
   formDialogOpen.value = true;
+  mode.value = "create"
 };
+
 
 const closeFormDialog = () => {
   formDialogOpen.value = false;
   formError.value = "";
 };
 
-const saveCourse = async () => {
+const saveCourse = async (mode) => {
   formError.value = "";
   const result = await formRef.value?.validate();
 
@@ -68,13 +72,24 @@ const saveCourse = async () => {
   saving.value = true;
 
   try {
-    await courseServices.createCourse({
-      courseId: form.value.courseId.trim(),
-      courseName: form.value.courseName.trim(),
-      semesterOffered: form.value.semesterOffered.trim(),
-      offeringFrequency: form.value.offeringFrequency.trim(),
-      description: form.value.description.trim(),
-    });
+    if (mode === "create"){
+      await courseServices.createCourse({
+        courseId: form.value.courseId.trim(),
+        courseName: form.value.courseName.trim(),
+        semesterOffered: form.value.semesterOffered.trim(),
+        offeringFrequency: form.value.offeringFrequency.trim(),
+        description: form.value.description.trim(),
+      });
+    }
+    else if (mode === "update"){
+      await courseServices.updateCourse(form.value.courseId, {
+        courseId: form.value.courseId.trim(),
+        courseName: form.value.courseName.trim(),
+        semesterOffered: form.value.semesterOffered.trim(),
+        offeringFrequency: form.value.offeringFrequency.trim(),
+        description: form.value.description.trim(),
+      })
+    }
     closeFormDialog();
     await retrieveCourses();
   } catch (error) {
@@ -86,6 +101,8 @@ const saveCourse = async () => {
 };
 
 const openCourse = (course) => {
+  mode.value = "update"
+
   form.value = {
     courseId: course.courseId,
     courseName: course.courseName,
@@ -207,9 +224,9 @@ onMounted(retrieveCourses);
 
     <v-dialog v-model="formDialogOpen" max-width="520">
       <v-card rounded="lg">
-        <v-card-title>Add Course</v-card-title>
+        <v-card-title>{{mode}} Course</v-card-title>
         <v-card-text>
-          <CourseForm ref="formRef" v-model="form" @submit="saveCourse" />
+          <CourseForm ref="formRef" v-model="form" @submit="saveCourse(mode)" />
           <v-alert v-if="formError" type="error" density="compact" class="mt-2">
             {{ formError }}
           </v-alert>
@@ -222,38 +239,15 @@ onMounted(retrieveCourses);
             variant="elevated"
             class="oc-cta"
             :loading="saving"
-            @click="saveCourse"
+            @click="saveCourse(mode)"
           >
-            Create
+            {{mode}}
           </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="formDialogOpen" max-width="520">
-      <v-card rounded="lg">
-        <v-card-title>Update Course</v-card-title>
-        <v-card-text>
-          <CourseForm ref="formRef" v-model="form" @submit="saveCourse" />
-          <v-alert v-if="formError" type="error" density="compact" class="mt-2">
-            {{ formError }}
-          </v-alert>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn variant="text" @click="closeFormDialog">Cancel</v-btn>
-          <v-btn
-            color="primary"
-            variant="elevated"
-            class="oc-cta"
-            :loading="saving"
-            @click="saveCourse"
-          >
-            Update
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+   
 
     <v-dialog v-model="deleteDialogOpen" max-width="420">
       <v-card rounded="lg">

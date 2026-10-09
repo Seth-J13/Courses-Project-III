@@ -79,6 +79,7 @@ exports.update = async (req, res) => {
     const offeringFrequency = requiredText(req.body.offeringFrequency);
     const description = requiredText(req.body.description);
 
+
     if (courseId === null) {
       return res.status(400).send({ message: "Invalid course id." });
     }
@@ -94,7 +95,7 @@ exports.update = async (req, res) => {
       return res.status(400).send({ message: "Required" });
     }
 
-    if (name.length > 50) {
+    if (courseName.length > 50) {
       return res.status(400).send({
         message: "Course name must be 50 characters or fewer.",
       });
@@ -109,7 +110,7 @@ exports.update = async (req, res) => {
     const duplicate = await db.course.findOne({
       where: { courseName },
     });
-    if (duplicate && duplicate.id !== courseId) {
+    if (duplicate && duplicate.courseId !== courseId) {
       return res.status(400).send({ message: "Course name is already taken." });
     }
 
@@ -121,7 +122,7 @@ exports.update = async (req, res) => {
         offeringFrequency,
         description,
       },
-      { where: { id: courseId } }
+      { where: { courseId: courseId } }
     );
 
     return res.status(200).send({ message: "course updated successfully." });
