@@ -40,6 +40,7 @@ const displayName = computed(() => {
   const parts = [user.value.fName, user.value.lName].filter(Boolean);
   return parts.length ? parts.join(" ") : (user.value.username ?? "");
 });
+const isAdmin = computed(() => user.value?.role === "admin");
 
 const refreshUser = () => {
   user.value = Utils.getStore("user");
@@ -158,39 +159,38 @@ const handleLogout = async () => {
 <template>
   <v-app-bar color="primary" density="comfortable">
     <v-app-bar-title>Enrollment Management System</v-app-bar-title>
-
-    <v-btn
-      v-if="user?.role === 'admin'"
-      variant="text"
-      color="white"
-      to="/sections"
-    >
-      Sections
-    </v-btn>
-    <v-btn
-      v-if="user?.role === 'admin'"
-      variant="text"
-      color="white"
-      to="/course-list"
-    >
-      Courses
-    </v-btn>
-    <v-btn
-      v-if="user?.role === 'admin'"
-      variant="text"
-      color="white"
-      to="/faculty"
-    >
-      Faculty
-    </v-btn>
-    <v-btn
-      v-if="user?.role === 'admin'"
-      variant="text"
-      color="white"
-      to="/semester"
-    >
-      Semester
-    </v-btn>
+<v-btn
+  v-if="isAdmin"
+  variant="text"
+  color="white"
+  :to="{ name: 'Semester' }"
+>
+  Semesters
+</v-btn>
+<v-btn
+  v-if="isAdmin"
+  variant="text"
+  color="white"
+  :to="{ name: 'CourseList' }"
+>
+  Courses
+</v-btn>
+<v-btn
+  v-if="isAdmin"
+  variant="text"
+  color="white"
+  :to="{ name: 'Sections' }"
+>
+  Sections
+</v-btn>
+<v-btn
+  v-if="isAdmin"
+  variant="text"
+  color="white"
+  :to="{ name: 'Faculty' }"
+>
+  Faculty
+</v-btn>
     <v-spacer />
 
     <v-menu
@@ -217,22 +217,6 @@ const handleLogout = async () => {
             </template>
           </v-list-item>
         </v-list>
-
-        <v-divider />
-
-        <v-card-actions class="px-4 py-2">
-          <v-btn
-            color="primary"
-            variant="elevated"
-            class="oc-cta"
-            block
-            @click="openEditDialog"
-          >
-            Edit Profile
-          </v-btn>
-        </v-card-actions>
-
-        <v-divider />
 
         <v-list density="compact">
           <v-list-item
