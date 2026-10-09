@@ -18,7 +18,7 @@ export default (sequelize, Sequelize) => {
       allowNull: false,
     },
     description: {
-      type: Sequelize.STRING(50),
+      type: Sequelize.STRING(255),
       allowNull: true,
     },
   });

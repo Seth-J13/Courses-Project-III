@@ -29,7 +29,19 @@ const courseToDelete = ref(null);
 const deleting = ref(false);
 const isAdmin = computed(() => Utils.getStore("user")?.role === "admin");
 
+const storedId = ref("");
 const mode = ref("");
+
+const search = ref("");
+const filteredCourses = computed(() => {
+  const query = search.value.trim().toLowerCase();
+  if (!query) {
+    return courses.value;
+  }
+  return courses.value.filter((course) =>
+    course.courseId.toLowerCase().includes(query)
+  );
+});
 
 const retrieveCourses = async () => {
   loading.value = true;
@@ -82,7 +94,7 @@ const saveCourse = async (mode) => {
       });
     }
     else if (mode === "update"){
-      await courseServices.updateCourse(form.value.courseId, {
+      await courseServices.updateCourse(storedId.value, {
         courseId: form.value.courseId.trim(),
         courseName: form.value.courseName.trim(),
         semesterOffered: form.value.semesterOffered.trim(),
@@ -102,7 +114,7 @@ const saveCourse = async (mode) => {
 
 const openCourse = (course) => {
   mode.value = "update"
-
+  storedId.value = course.courseId;
   form.value = {
     courseId: course.courseId,
     courseName: course.courseName,
@@ -149,6 +161,7 @@ onMounted(retrieveCourses);
 <template>
   <v-container class="py-8">
     <v-card rounded="lg">
+
       <v-card-item>
         <v-card-title>Courses</v-card-title>
         <template #append>
@@ -171,6 +184,14 @@ onMounted(retrieveCourses);
           {{ listError }}
         </v-alert>
 
+        <v-text-field
+          v-if="!loading && courses.length > 0"
+          v-model="search"
+          label="Find"
+          density="comfortable"
+          class="mb-4"
+        />
+
         <p v-if="!loading && courses.length === 0" class="text-body-1">
           {{
             isAdmin
@@ -191,7 +212,7 @@ onMounted(retrieveCourses);
             </tr>
           </thead>
           <tbody>
-            <tr v-for="course in courses" :key="course.courseId">
+            <tr v-for="course in filteredCourses" :key="course.courseId">
               <td>{{ course.courseId }}</td>
               <td>{{ course.courseName }}</td>
               <td>{{ course.semesterOffered }}</td>

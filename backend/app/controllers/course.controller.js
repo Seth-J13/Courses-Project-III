@@ -31,6 +31,12 @@ exports.create = async (req, res) => {
       return res.status(400).send({ message: "Required" });
     }
 
+    if (!courseId || !/^[A-Za-z]{4}-\d{4}$/.test(courseId)) {
+      return res.status(400).send({
+        message: "Course id must look like CMSC-5322.",
+      });
+    }
+
     if (courseName.length > 50) {
       return res.status(400).send({
         message: "League name must be 50 characters or fewer.",
@@ -72,8 +78,10 @@ exports.create = async (req, res) => {
 };
 
 exports.update = async (req, res) => {
+  console.log(req.body);
   try {
     const courseId = requiredText(req.params.courseId ?? req.body.courseId);
+    const newCourseId = requiredText(req.body.courseId);
     const courseName = requiredText(req.body.courseName);
     const semesterOffered = requiredText(req.body.semesterOffered);
     const offeringFrequency = requiredText(req.body.offeringFrequency);
@@ -82,6 +90,12 @@ exports.update = async (req, res) => {
 
     if (courseId === null) {
       return res.status(400).send({ message: "Invalid course id." });
+    }
+
+    if (!newCourseId || !/^[A-Za-z]{4}-\d{4}$/.test(newCourseId)) {
+      return res.status(400).send({
+        message: "Course id must look like CMSC-5322.",
+      });
     }
 
     const existing = await db.course.findByPk(courseId);
@@ -116,7 +130,7 @@ exports.update = async (req, res) => {
 
     await db.course.update(
       {
-        courseId,
+        courseId:newCourseId,
         courseName,
         semesterOffered,
         offeringFrequency,
