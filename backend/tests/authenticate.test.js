@@ -23,11 +23,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
       await stored.save();
 
       const response = await request(app)
-<<<<<<< HEAD
-        .get(`/courses/users/${registerResponse.body.universityId}`)
-=======
         .get(`/course-t3/users/${registerResponse.body.userId}`)
->>>>>>> 4b68fcd9c94a3ee78156b10b4f099350d7eb26a1
         .set(authHeader(registerResponse.body.token));
 
       expect(response.status).toBe(200);
@@ -51,11 +47,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
       );
 
       const response = await request(app)
-<<<<<<< HEAD
-        .get(`/courses/users/${registerResponse.body.universityId}`)
-=======
         .get(`/course-t3/users/${registerResponse.body.userId}`)
->>>>>>> 4b68fcd9c94a3ee78156b10b4f099350d7eb26a1
         .set(authHeader(registerResponse.body.token));
 
       expect(response.status).toBe(401);

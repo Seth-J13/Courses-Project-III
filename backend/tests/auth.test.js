@@ -160,11 +160,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
       expect(session.token).toBe("");
 
       const protectedResponse = await request(app)
-<<<<<<< HEAD
-        .get(`/courses/users/${universityId}`)
-=======
         .get(`/course-t3/users/${userId}`)
->>>>>>> 4b68fcd9c94a3ee78156b10b4f099350d7eb26a1
         .set(authHeader(token));
 
       expect(protectedResponse.status).toBe(401);

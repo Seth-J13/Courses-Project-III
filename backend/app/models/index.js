@@ -3,16 +3,10 @@ import sequelize from "../config/sequelizeInstance.js";
 import sessionModel from "./session.model.js";
 import userModel from "./user.model.js";
 import facultyModel from "./faculty.model.js";
-<<<<<<< HEAD
 import enrollmentModel from "./enrollment.model.js";
 import semesterModel from "./semester.model.js";
-
+import courseModel from "./course.model.js";
 import sectionModel from "./section.model.js";
-import courseModel from "./course.model.js";
-=======
-import courseModel from "./course.model.js";
-import sectionModel from "./league.model.js";
->>>>>>> f2060e460c1e09f46e800ba1d3b70e7b6b5443a7
 
 const db = {};
 db.Sequelize = Sequelize;
@@ -36,7 +30,7 @@ db.faculty = facultyModel(sequelize, Sequelize);
 
 // Associations
 db.user.hasMany(db.enrollment, { foreignKey: "universityId", sourceKey: "id" })
-db.session.belongsTo(db.user, { foreignKey: "universityId" });
+db.session.belongsTo(db.user, { foreignKey: "universityId", targetKey: "id" });
 
 db.enrollment.belongsTo(db.semester, {
     foreignKey: "semesterId",

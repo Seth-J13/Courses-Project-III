@@ -10,12 +10,12 @@ This package is the **SDD factory**: methodology, Cursor rules, empty Vue + Expr
 
 ## What this kit is for
 
-| Goal | Use this kit? |
-|------|----------------|
-| Start a **new** app with the same SDD process + stack | **Yes** |
-| Clone / continue the **Todo** example application | **No** — clone this repo’s `dev` branch instead |
+| Goal                                                                      | Use this kit?                                              |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Start a **new** app with the same SDD process + stack                     | **Yes**                                                    |
+| Clone / continue the **Todo** example application                         | **No** — clone this repo’s `dev` branch instead            |
 | Rebuild Todo locally from `features/feature-*.md` (strip answer-key code) | **No** — use `npm run reset:example -- --yes` in this repo |
-| Instructor answer key with full Todo implementation | **No** — use the full OC CS Speckit repo |
+| Instructor answer key with full Todo implementation                       | **No** — use the full OC CS Speckit repo                   |
 
 ---
 
@@ -23,28 +23,28 @@ This package is the **SDD factory**: methodology, Cursor rules, empty Vue + Expr
 
 ### Include (reusable)
 
-| Area | Contents |
-|------|----------|
-| **Methodology** | `features/framework.md`, empty catalog, student writing guides (requirements, design, living reference) |
-| **Cursor rules** | All `.cursor/rules/*.mdc` (constitution, **agent-behavior**, structure, API, auth, security, UI, testing, services) |
-| **ADRs** | `docs/adr/README.md` + template + [writing-adrs.md](../docs/adr/writing-adrs.md) (no todo-specific numbered ADRs) |
-| **NFRs** | `docs/nfr/` — quality-attributes stub + [writing-quality-attributes.md](../docs/nfr/writing-quality-attributes.md) |
+| Area                | Contents                                                                                                                                                 |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Methodology**     | `features/framework.md`, empty catalog, student writing guides (requirements, design, living reference)                                                  |
+| **Cursor rules**    | All `.cursor/rules/*.mdc` (constitution, **agent-behavior**, structure, API, auth, security, UI, testing, services)                                      |
+| **ADRs**            | `docs/adr/README.md` + template + [writing-adrs.md](../docs/adr/writing-adrs.md) (no todo-specific numbered ADRs)                                        |
+| **NFRs**            | `docs/nfr/` — quality-attributes stub + [writing-quality-attributes.md](../docs/nfr/writing-quality-attributes.md)                                       |
 | **Reference stubs** | Empty `features/reference/data-model.md`, `api.md`, and `behavior.md` + [writing-living-reference.md](../features/reference/writing-living-reference.md) |
-| **Tooling** | PDF export, Agility CSV/API scripts, deploy bundle scripts, CI workflows |
-| **Frontend shell** | Vue 3 + Vuetify 4 + Vite + axios client + `App.vue` + placeholder home + harness tests |
-| **Backend shell** | Express + Sequelize config + empty models/routes + harness tests |
-| **Env examples** | `backend/.env.example`, `.env.test.example`, `.env.agility.example` |
+| **Tooling**         | PDF export, Agility CSV/API scripts, deploy bundle scripts, CI workflows                                                                                 |
+| **Frontend shell**  | Vue 3 + Vuetify 4 + Vite + axios client + `App.vue` + placeholder home + harness tests                                                                   |
+| **Backend shell**   | Express + Sequelize config + empty models/routes + harness tests                                                                                         |
+| **Env examples**    | `backend/.env.example`, `.env.test.example`, `.env.agility.example`                                                                                      |
 
 ### Exclude (todo-specific — not in the zip)
 
-| Exclude | Why |
-|---------|-----|
-| `features/feature-1` … `feature-5-*.md` | Todo product requirements |
-| Populated `features/reference/api.md` / `data-model.md` / `behavior.md` | Todo integrated snapshot |
-| Feature models, routes, controllers, services, views | Built from *your* specs |
-| Feature tests (`auth.test.js`, `Dashboard.test.js`, …) | Written with each feature |
-| Generated PDFs / Agility CSVs | Regenerate after you have specs |
-| `node_modules/`, `.env*`, `dist/`, `backend/deploy/` | Local / build artifacts |
+| Exclude                                                                 | Why                             |
+| ----------------------------------------------------------------------- | ------------------------------- |
+| `features/feature-1` … `feature-5-*.md`                                 | Todo product requirements       |
+| Populated `features/reference/api.md` / `data-model.md` / `behavior.md` | Todo integrated snapshot        |
+| Feature models, routes, controllers, services, views                    | Built from _your_ specs         |
+| Feature tests (`auth.test.js`, `Dashboard.test.js`, …)                  | Written with each feature       |
+| Generated PDFs / Agility CSVs                                           | Regenerate after you have specs |
+| `node_modules/`, `.env*`, `dist/`, `backend/deploy/`                    | Local / build artifacts         |
 
 ---
 
@@ -78,12 +78,12 @@ The script:
 
 ### Platform notes
 
-| Task | macOS / Linux | Windows (PowerShell / cmd) |
-|------|---------------|----------------------------|
-| Create zip | `npm run starter:zip` | Same |
-| Copy env files | `cp backend/.env.example backend/.env` | `copy backend\.env.example backend\.env` |
-| PDF export | `npm run specs:pdf` / `npm run specs:pdf:app` | Same (uses Chrome/Edge if installed, else Puppeteer) |
-| Deploy bundles | `npm run bundle:all` | Same |
+| Task           | macOS / Linux                                 | Windows (PowerShell / cmd)                           |
+| -------------- | --------------------------------------------- | ---------------------------------------------------- |
+| Create zip     | `npm run starter:zip`                         | Same                                                 |
+| Copy env files | `cp backend/.env.example backend/.env`        | `copy backend\.env.example backend\.env`             |
+| PDF export     | `npm run specs:pdf` / `npm run specs:pdf:app` | Same (uses Chrome/Edge if installed, else Puppeteer) |
+| Deploy bundles | `npm run bundle:all`                          | Same                                                 |
 
 ---
 
@@ -104,26 +104,20 @@ git checkout -b dev
 
 **Start with the `package.json` `name` fields** (npm package identity for the monorepo):
 
-| File | Default `name` | Change to |
-|------|----------------|-----------|
-<<<<<<< HEAD
-| `package.json` (root) | `courses-projectIII` | e.g. `myapp-speckit` |
-| `frontend/package.json` | `courses-projectIII-frontend` | e.g. `myapp-frontend` |
-| `backend/package.json` | `courses-projectIII-backend` | e.g. `myapp-backend` |
-=======
-| `package.json` (root) | `speckit-app` | e.g. `myapp-speckit` |
+| File                    | Default `name`         | Change to             |
+| ----------------------- | ---------------------- | --------------------- |
+| `package.json` (root)   | `speckit-app`          | e.g. `myapp-speckit`  |
 | `frontend/package.json` | `speckit-app-frontend` | e.g. `myapp-frontend` |
-| `backend/package.json` | `speckit-app-backend` | e.g. `myapp-backend` |
->>>>>>> origin/dev
+| `backend/package.json`  | `speckit-app-backend`  | e.g. `myapp-backend`  |
 
 Then do a **project-wide search-and-replace** for these placeholder strings across the unzipped tree (IDE find-in-files or `rg`). You are not rewriting every file — only files that contain the string will change; most rules and framework docs will not.
 
-| Placeholder | Replace with | Typical hits |
-|-------------|--------------|--------------|
-| `Speckit App` | Your display name | `README.md`, `Home.vue`, `server.js` log line, Agility examples |
-| `speckit-db` | Your MySQL database name | `.env.example`, `.env.test.example`, `db.config.js` |
-| `/api/` | Your API mount path (if different) | `backend/server.js`, `frontend/src/services/services.js` |
-| Ports `8082` / `3200` | Only if you must change them | Vite config, Express `PORT`, CORS origin |
+| Placeholder           | Replace with                       | Typical hits                                                    |
+| --------------------- | ---------------------------------- | --------------------------------------------------------------- |
+| `Speckit App`         | Your display name                  | `README.md`, `Home.vue`, `server.js` log line, Agility examples |
+| `speckit-db`          | Your MySQL database name           | `.env.example`, `.env.test.example`, `db.config.js`             |
+| `/api/`               | Your API mount path (if different) | `backend/server.js`, `frontend/src/services/services.js`        |
+| Ports `8082` / `3200` | Only if you must change them       | Vite config, Express `PORT`, CORS origin                        |
 
 Also update when relevant:
 
@@ -155,11 +149,11 @@ cp .env.agility.example .env.agility
 # Edit AGILITY_BASE_URL, AGILITY_ACCESS_TOKEN, AGILITY_SCOPE
 ```
 
-| Example file | Copy to | When |
-|--------------|---------|------|
-| `backend/.env.example` | `backend/.env` | Always (dev server) |
-| `backend/.env.test.example` | `backend/.env.test` | Always (backend tests) |
-| `.env.agility.example` | `.env.agility` | Only for `agility:push` / `agility:verify` |
+| Example file                | Copy to             | When                                       |
+| --------------------------- | ------------------- | ------------------------------------------ |
+| `backend/.env.example`      | `backend/.env`      | Always (dev server)                        |
+| `backend/.env.test.example` | `backend/.env.test` | Always (backend tests)                     |
+| `.env.agility.example`      | `.env.agility`      | Only for `agility:push` / `agility:verify` |
 
 There is **no** frontend `.env.example` — the SPA uses Vite `import.meta.env.DEV` for the API base URL (see `frontend/src/services/services.js`).
 
