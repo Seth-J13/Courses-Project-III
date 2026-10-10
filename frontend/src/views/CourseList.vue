@@ -1,24 +1,23 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import teamServices from "../services/teamServices.js";
-import leagueServices from "../services/leagueServices.js";
-import peopleServices from "../services/peopleServices.js";
+import courseServices from "../services/courseServices.js";
 import Utils from "../config/utils.js";
+import CourseForm from "../components/CoursesForm.vue";
 
 const router = useRouter();
 
 const emptyForm = () => ({
-  name: "",
-  leagueId: null,
-  homeField: "",
-  managerId: null,
+  courseId: "",
+  courseName: "",
+  semesterOffered: "",
+  offeringFrequency: "",
+  description: "",
 });
 
-const teams = ref([]);
-const leagues = ref([]);
-const people = ref([]);
+const courses = ref([]);
 const loading = ref(false);
+const loadingCourses = ref(false);
 const listError = ref("");
 const formDialogOpen = ref(false);
 const form = ref(emptyForm());
@@ -26,26 +25,36 @@ const formRef = ref(null);
 const formError = ref("");
 const saving = ref(false);
 const deleteDialogOpen = ref(false);
-const teamToDelete = ref(null);
+const courseToDelete = ref(null);
 const deleting = ref(false);
 const isAdmin = computed(() => Utils.getStore("user")?.role === "admin");
 
-const retrieveTeams = async () => {
+const storedId = ref("");
+const mode = ref("");
+
+const search = ref("");
+const filteredCourses = computed(() => {
+  const query = search.value.trim().toLowerCase();
+  if (!query) {
+    return courses.value;
+  }
+  return courses.value.filter((course) =>
+    course.courseId.toLowerCase().includes(query)
+  );
+});
+
+const retrieveCourses = async () => {
   loading.value = true;
   listError.value = "";
 
   try {
-    const [teamsResponse, leaguesResponse, peopleResponse] = await Promise.all([
-      teamServices.getTeams(),
-      leagueServices.getLeagues(),
-      peopleServices.getPeople(),
+    const [coursesResponse] = await Promise.all([
+      courseServices.getCourses(),
     ]);
-    teams.value = teamsResponse.data;
-    leagues.value = leaguesResponse.data;
-    people.value = peopleResponse.data;
+    courses.value = coursesResponse.data;
   } catch (error) {
     listError.value =
-      error.response?.data?.message || "Failed to fetch teams.";
+      error.response?.data?.message || "Failed to fetch courses.";
   } finally {
     loading.value = false;
   }
@@ -55,14 +64,16 @@ const openAddDialog = () => {
   form.value = emptyForm();
   formError.value = "";
   formDialogOpen.value = true;
+  mode.value = "create"
 };
+
 
 const closeFormDialog = () => {
   formDialogOpen.value = false;
   formError.value = "";
 };
 
-const saveTeam = async () => {
+const saveCourse = async (mode) => {
   formError.value = "";
   const result = await formRef.value?.validate();
 
@@ -73,38 +84,59 @@ const saveTeam = async () => {
   saving.value = true;
 
   try {
-    await teamServices.createTeam({
-      name: form.value.name.trim(),
-      leagueId: form.value.leagueId,
-      homeField: form.value.homeField.trim(),
-      managerId: form.value.managerId || null,
-    });
+    if (mode === "create"){
+      await courseServices.createCourse({
+        courseId: form.value.courseId.trim(),
+        courseName: form.value.courseName.trim(),
+        semesterOffered: form.value.semesterOffered.trim(),
+        offeringFrequency: form.value.offeringFrequency.trim(),
+        description: form.value.description.trim(),
+      });
+    }
+    else if (mode === "update"){
+      await courseServices.updateCourse(storedId.value, {
+        courseId: form.value.courseId.trim(),
+        courseName: form.value.courseName.trim(),
+        semesterOffered: form.value.semesterOffered.trim(),
+        offeringFrequency: form.value.offeringFrequency.trim(),
+        description: form.value.description.trim(),
+      })
+    }
     closeFormDialog();
-    await retrieveTeams();
+    await retrieveCourses();
   } catch (error) {
     formError.value =
-      error.response?.data?.message || "Failed to create team.";
+      error.response?.data?.message || "Failed to create course.";
   } finally {
     saving.value = false;
   }
 };
 
-const openTeam = (team) => {
-  router.push({ name: "team", params: { teamId: team.id } });
+const openCourse = (course) => {
+  mode.value = "update"
+  storedId.value = course.courseId;
+  form.value = {
+    courseId: course.courseId,
+    courseName: course.courseName,
+    semesterOffered: course.semesterOffered,
+    offeringFrequency: course.offeringFrequency,
+    description: course.description,
+  };
+  formDialogOpen.value = true;
 };
 
-const openDeleteDialog = (team) => {
-  teamToDelete.value = team;
-  deleteDialogOpen.value = true;
+const openDeleteDialog = (course) => {
+  courseToDelete.value = course;
+  deleteDialogOpen.value = course;
 };
 
 const closeDeleteDialog = () => {
   deleteDialogOpen.value = false;
-  teamToDelete.value = null;
+  courseToDelete.value = null;
 };
 
-const confirmDeleteTeam = async () => {
-  if (!teamToDelete.value?.id) {
+const confirmDeleteCourse = async () => {
+  if (!courseToDelete.value?.courseId) {
     return;
   }
 
@@ -112,25 +144,26 @@ const confirmDeleteTeam = async () => {
   listError.value = "";
 
   try {
-    await teamServices.deleteTeam(teamToDelete.value.id);
+    await courseServices.deleteCourse(courseToDelete.value.courseId);
     closeDeleteDialog();
-    await retrieveTeams();
+    await retrieveCourses();
   } catch (error) {
     listError.value =
-      error.response?.data?.message || "Failed to delete team.";
+      error.response?.data?.message || "Failed to delete course.";
   } finally {
     deleting.value = false;
   }
 };
 
-onMounted(retrieveTeams);
+onMounted(retrieveCourses);
 </script>
 
 <template>
   <v-container class="py-8">
     <v-card rounded="lg">
+
       <v-card-item>
-        <v-card-title>Teams</v-card-title>
+        <v-card-title>Courses</v-card-title>
         <template #append>
           <v-btn
             v-if="isAdmin"
@@ -139,7 +172,7 @@ onMounted(retrieveTeams);
             class="oc-cta"
             @click="openAddDialog"
           >
-            + New team
+            + New course
           </v-btn>
         </template>
       </v-card-item>
@@ -151,40 +184,46 @@ onMounted(retrieveTeams);
           {{ listError }}
         </v-alert>
 
-        <p v-if="!loading && teams.length === 0" class="text-body-1">
+        <v-text-field
+          v-if="!loading && courses.length > 0"
+          v-model="search"
+          label="Find"
+          density="comfortable"
+          class="mb-4"
+        />
+
+        <p v-if="!loading && courses.length === 0" class="text-body-1">
           {{
             isAdmin
-              ? "No teams yet. Create your first team."
-              : "No teams assigned."
+              ? "No courses yet. Create your first course."
+              : "No courses assigned."
           }}
         </p>
 
-        <v-table v-if="!loading && teams.length > 0">
+        <v-table v-if="!loading && courses.length > 0">
           <thead>
             <tr>
-              <th class="text-left">Team name</th>
-              <th class="text-left">League</th>
-              <th class="text-left">Manager</th>
-              <th class="text-left">Players</th>
+              <th class="text-left">Course Id</th>
+              <th class="text-left">Course Name</th>
+              <th class="text-left">Semester Offered</th>
+              <th class="text-left">Offer Frequency</th>
+              <th class="text-left">Description</th>
               <th class="text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="team in teams" :key="team.id">
-              <td>{{ team.name }}</td>
-              <td>{{ team.league?.name }}</td>
-              <td>
-                <template v-if="team.manager">
-                  {{ team.manager.lastName }}, {{ team.manager.firstName }}
-                </template>
-              </td>
-              <td>{{ team.players?.length ?? 0 }}</td>
+            <tr v-for="course in filteredCourses" :key="course.courseId">
+              <td>{{ course.courseId }}</td>
+              <td>{{ course.courseName }}</td>
+              <td>{{ course.semesterOffered }}</td>
+              <td>{{ course.offeringFrequency }}</td>
+              <td>{{ course.description }}</td>
               <td>
                 <v-icon
                   size="small"
                   class="mx-4"
-                  aria-label="Open team"
-                  @click="openTeam(team)"
+                  aria-label="Open course"
+                  @click="openCourse(course)"
                 >
                   mdi-account-group
                 </v-icon>
@@ -192,8 +231,8 @@ onMounted(retrieveTeams);
                   v-if="isAdmin"
                   size="small"
                   class="mx-4"
-                  aria-label="Delete team"
-                  @click="openDeleteDialog(team)"
+                  aria-label="Delete course"
+                  @click="openDeleteDialog(course)"
                 >
                   mdi-trash-can
                 </v-icon>
@@ -206,15 +245,9 @@ onMounted(retrieveTeams);
 
     <v-dialog v-model="formDialogOpen" max-width="520">
       <v-card rounded="lg">
-        <v-card-title>Add Team</v-card-title>
+        <v-card-title>{{mode}} Course</v-card-title>
         <v-card-text>
-          <TeamForm
-            ref="formRef"
-            v-model="form"
-            :leagues="leagues"
-            :people="people"
-            @submit="saveTeam"
-          />
+          <CourseForm ref="formRef" v-model="form" @submit="saveCourse(mode)" />
           <v-alert v-if="formError" type="error" density="compact" class="mt-2">
             {{ formError }}
           </v-alert>
@@ -227,18 +260,20 @@ onMounted(retrieveTeams);
             variant="elevated"
             class="oc-cta"
             :loading="saving"
-            @click="saveTeam"
+            @click="saveCourse(mode)"
           >
-            Create
+            {{mode}}
           </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
+   
+
     <v-dialog v-model="deleteDialogOpen" max-width="420">
       <v-card rounded="lg">
-        <v-card-title>Delete Team</v-card-title>
-        <v-card-text>Delete this team?</v-card-text>
+        <v-card-title>Delete Course</v-card-title>
+        <v-card-text>Delete this course?</v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" @click="closeDeleteDialog">Cancel</v-btn>
@@ -247,9 +282,9 @@ onMounted(retrieveTeams);
             variant="elevated"
             class="oc-cta"
             :loading="deleting"
-            @click="confirmDeleteTeam"
+            @click="confirmDeleteCourse"
           >
-            Delete Team
+            Delete Course
           </v-btn>
         </v-card-actions>
       </v-card>
