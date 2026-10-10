@@ -2,11 +2,28 @@
 import { computed, onMounted, ref } from "vue";
 import Utils from "../config/utils.js";
 import sectionServices from "../services/sectionServices.js";
+import facultyServices from "../services/facultyServices.js";
+import courseServices from "../services/courseServices.js";
+
+const faculties = ref([]);
+const courses = ref([]);
+
+const loadFaculties = async () => {
+  const response = await facultyServices.getFaculty();
+  faculties.value = response.data;
+  faculties.value = faculties.value.map(faculty => faculty.fName + " " + faculty.lName + " (" + faculty.facultyId + ")");
+};
+
+const loadCourses = async () => {
+  const response = await courseServices.getCourses();
+  courses.value = response.data;
+};
 
 const isAdmin = computed(() => Utils.getStore("user")?.role === "admin");
 
 const emptyForm = () => ({
   courseId: "",
+  sectionId: "",
   facultyId: "",
   dayOfWeek: "",
   roomNum: "",
@@ -49,6 +66,9 @@ const openAdd = () => {
   form.value = emptyForm();
   formError.value = null;
   dialogOpen.value = true;
+
+  loadFaculties();
+  loadCourses();
 };
 
 const openEdit = (section) => {
@@ -68,6 +88,16 @@ const openEdit = (section) => {
 const saveSection = async () => {
   saving.value = true;
   formError.value = "";
+
+  form.value = {
+    courseId: form.value.courseId,
+    sectionId: form.value.sectionId,
+    facultyId: form.value.facultyId.substring(form.value.facultyId.indexOf("(")+1,form.value.facultyId.indexOf(")")),
+    dayOfWeek: form.value.dayOfWeek.join(''),
+    roomNum: form.value.roomNum,
+    timeStart: form.value.timeStart,
+    timeEnd: form.value.timeEnd,
+  };
   try {
     if (editingId.value) {
       await sectionServices.updateSection(editingId.value, form.value);
@@ -83,9 +113,9 @@ const saveSection = async () => {
   }
 };
 
-const deleteSection = async (section) => {
+const deleteSection = async (id) => {
   try {
-    await sectionServices.deleteSection(section.sectionId);
+    await sectionServices.deleteSection(id);
     await loadSections();
   } catch (error) {
     listError.value = error.message;
@@ -163,8 +193,8 @@ onMounted(() => {
                 <td>{{ section.timeEnd }}</td>
                 <td>{{ section.sectionId }}</td>
                 <td>
-                  <v-btn variant="text" aria-label="Edit section" @click="openEdit(section)">Edit</v-btn>
-                  <v-btn variant="text" aria-label="Delete section" @click="deleteSection(section)">Delete</v-btn>
+                  <v-icon variant="text" aria-label="Edit section" @click="openEdit(section)">mdi-pencil</v-icon>
+                  <v-icon variant="text" aria-label="Delete section" @click="deleteSection(section.sectionId)">mdi-delete</v-icon>
                 </td>
               </tr>
             </tbody>
@@ -177,9 +207,10 @@ onMounted(() => {
           <v-card-title>{{ editingId ? 'Edit Section' : 'Add Section' }}</v-card-title>
           <v-card-text>
             <p v-if="editingId">{{ editingId }}</p>
-              <v-text-field v-model="form.courseId" label="Course ID" density="comfortable" />
-              <v-text-field v-model="form.facultyId" label="Faculty ID" density="comfortable" />
-              <v-text-field v-model="form.dayOfWeek" label="Day of Week" density="comfortable" />
+              <v-text-field v-model="form.courseId" label="Course ID" density="comfortable" @update:model-value="form.sectionId = form.courseId + '-'" />
+              <v-text-field v-model="form.sectionId" label="Section ID" density="comfortable" />
+              <v-combobox v-model="form.facultyId" label="Faculty ID" density="comfortable" :items="faculties" item-title="facultyName" item-value="facultyId" />
+              <v-select v-model="form.dayOfWeek" label="Day of Week" density="comfortable" :items="['', 'M', 'T', 'W', 'TH', 'F']" multiple />
               <v-text-field v-model="form.roomNum" label="Room Number" density="comfortable" />
               <v-text-field v-model="form.timeStart" label="Start Time" density="comfortable" />
               <v-text-field v-model="form.timeEnd" label="End Time" density="comfortable" />

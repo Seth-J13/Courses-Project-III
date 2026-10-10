@@ -4,7 +4,7 @@ import sessionModel from "./session.model.js";
 import userModel from "./user.model.js";
 import facultyModel from "./faculty.model.js";
 import courseModel from "./course.model.js";
-import sectionModel from "./league.model.js";
+import sectionModel from "./section.model.js";
 
 const db = {};
 db.Sequelize = Sequelize;

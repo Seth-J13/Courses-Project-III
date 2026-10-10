@@ -4,7 +4,7 @@ import authRoutes from "./auth.routes.js";
 import userRoutes from "./user.routes.js";
 import enrollmentRoutes from "./enrollment.routes.js"
 import facultyRoutes from "./faculty.routes.js";
-import sectionRoutes from "./league.routes.js";
+import sectionRoutes from "./section.routes.js";
 const router = Router();
 
 router.get("/health", (_req, res) => {

@@ -1,9 +1,8 @@
 export default (sequelize, Sequelize) => {
   const League = sequelize.define("section", {
     sectionId: {
-      type: Sequelize.INTEGER,
+      type: Sequelize.STRING(12),
       primaryKey: true,
-      autoIncrement: true,
     },
     courseId: {
       type: Sequelize.STRING(50),
