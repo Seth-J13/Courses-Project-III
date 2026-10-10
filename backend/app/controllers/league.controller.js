@@ -69,7 +69,15 @@ const conflictMessage = (section, otherSections) => {
 
 exports.findAll = async (req, res) => {
   try {
-    const sections = await db.section.findAll();
+    const where = {};
+    const fields = ["courseId", "facultyId", "dayOfWeek", "roomNum", "timeStart", "timeEnd"];
+    for (const field of fields) {
+      const value = req.query[field];
+      if (value !== undefined && value !== null && value !== "") {
+        where[field] = field === "facultyId" ? parseId(value) : String(value).trim();
+                  }
+    }
+    const sections = await db.section.findAll({ where });
     return res.send(sections);
   } catch (err) {
     logger.error(`section findAll failed: ${err.message}`);

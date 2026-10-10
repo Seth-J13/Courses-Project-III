@@ -5,6 +5,7 @@ import Register from "./views/Register.vue";
 import Semester from "./views/Semester.vue/";
 import CourseList from "./views/CourseList.vue";
 import SectionsList from "./views/SectionsList.vue"
+import SectionManagement from "./views/SectionManagement.vue";
 import EnrollmentList from "./views/EnrollmentList.vue";
 import Utils from "./config/utils.js";
 
@@ -23,15 +24,12 @@ const router = createRouter({
     },
     {
       path: "/sections",
+      name: "Sections",
+      component: SectionsList,
       meta: {
         requiresAuth: true,
-        role: Utils.ROLE_ADMIN,
+        role: "admin",
       },
-      name: "Sections",
-      meta: {
-        component: SectionsList
-      },
-      component: SectionsList,
     },
     {
       path: "/course-list",

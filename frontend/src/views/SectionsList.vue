@@ -1,251 +1,196 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
-import leagueServices from "../services/leagueServices.js";
+import Utils from "../config/utils.js";
+import sectionServices from "../services/sectionServices.js";
+
+const isAdmin = computed(() => Utils.getStore("user")?.role === "admin");
 
 const emptyForm = () => ({
-  name: "",
-  sport: "",
+  courseId: "",
+  facultyId: "",
+  dayOfWeek: "",
+  roomNum: "",
+  timeStart: "",
+  timeEnd: "",
 });
 
-const leagues = ref([]);
-const loading = ref(false);
-const listError = ref("");
-const formDialogOpen = ref(false);
-const isAddMode = ref(true);
+const sections = ref([]);
+const filters = ref(emptyForm());
 const form = ref(emptyForm());
-const formRef = ref(null);
-const formError = ref("");
+const loading = ref(false);
 const saving = ref(false);
+const listError = ref(null);
+const formError = ref(null);
+const dialogOpen = ref(false);
 const editingId = ref(null);
-const deleteDialogOpen = ref(false);
-const leagueToDelete = ref(null);
-const deleting = ref(false);
 
-const formTitle = computed(() =>
-  isAddMode.value ? "Add League" : "Edit League",
-);
-const saveLabel = computed(() =>
-  isAddMode.value ? "Create" : "Save League",
-);
-
-const retrieveLeagues = async () => {
+const loadSections = async () => {
   loading.value = true;
   listError.value = "";
-
   try {
-    const response = await leagueServices.getLeagues();
-    leagues.value = response.data;
-  } catch (error) {
-    listError.value =
-      error.response?.data?.message || "Failed to fetch leagues.";
+    const response = await sectionServices.getSections({
+    courseId: filters.value.courseId|| undefined,
+    facultyId: filters.value.facultyId|| undefined,
+    dayOfWeek: filters.value.dayOfWeek|| undefined,
+    roomNum: filters.value.roomNum|| undefined,
+    timeStart: filters.value.timeStart|| undefined,
+    timeEnd: filters.value.timeEnd|| undefined,
+    });
+    sections.value = Array.isArray(response.data) ? response.data : [];
+      } catch (error) {
+    listError.value = error.response?.data?.message || "Failed to fetch sections.";
   } finally {
     loading.value = false;
   }
 };
 
-const openAddDialog = () => {
-  isAddMode.value = true;
+const openAdd = () => {
   editingId.value = null;
   form.value = emptyForm();
-  formError.value = "";
-  formDialogOpen.value = true;
+  formError.value = null;
+  dialogOpen.value = true;
 };
 
-const openEditDialog = (league) => {
-  isAddMode.value = false;
-  editingId.value = league.id;
+const openEdit = (section) => {
+  editingId.value = section.sectionId;
   form.value = {
-    name: league.name ?? "",
-    sport: league.sport ?? "",
+    courseId: section.courseId,
+    facultyId: section.facultyId,
+    dayOfWeek: section.dayOfWeek,
+    roomNum: section.roomNum,
+    timeStart: section.timeStart,
+    timeEnd: section.timeEnd,
   };
   formError.value = "";
-  formDialogOpen.value = true;
+  dialogOpen.value = true;
 };
 
-const closeFormDialog = () => {
-  formDialogOpen.value = false;
-  formError.value = "";
-  editingId.value = null;
-};
-
-const saveLeague = async () => {
-  formError.value = "";
-  const result = await formRef.value?.validate();
-
-  if (!result?.valid) {
-    return;
-  }
-
+const saveSection = async () => {
   saving.value = true;
-
-  const payload = {
-    name: form.value.name.trim(),
-    sport: form.value.sport,
-  };
-
+  formError.value = "";
   try {
-    if (isAddMode.value) {
-      await leagueServices.createLeague(payload);
+    if (editingId.value) {
+      await sectionServices.updateSection(editingId.value, form.value);
     } else {
-      await leagueServices.updateLeague(editingId.value, {
-        ...payload,
-        leagueId: editingId.value,
-      });
+      await sectionServices.createSection(form.value);
     }
-
-    closeFormDialog();
-    await retrieveLeagues();
+    dialogOpen.value = false;
+    await loadSections();
   } catch (error) {
-    formError.value =
-      error.response?.data?.message ||
-      (isAddMode.value
-        ? "Failed to create league."
-        : "Failed to update league.");
+    formError.value = error.response?.data?.message || "Failed to save section.";  
   } finally {
     saving.value = false;
   }
 };
 
-const openDeleteDialog = (league) => {
-  leagueToDelete.value = league;
-  deleteDialogOpen.value = true;
-};
-
-const closeDeleteDialog = () => {
-  deleteDialogOpen.value = false;
-  leagueToDelete.value = null;
-};
-
-const confirmDeleteLeague = async () => {
-  if (!leagueToDelete.value?.id) {
-    return;
-  }
-
-  deleting.value = true;
-  listError.value = "";
-
+const deleteSection = async (section) => {
   try {
-    await leagueServices.deleteLeague(leagueToDelete.value.id);
-    closeDeleteDialog();
-    await retrieveLeagues();
+    await sectionServices.deleteSection(section.sectionId);
+    await loadSections();
   } catch (error) {
-    listError.value =
-      error.response?.data?.message || "Failed to delete league.";
-  } finally {
-    deleting.value = false;
+    listError.value = error.message;
   }
 };
 
-onMounted(retrieveLeagues);
+onMounted(() => {
+  if (isAdmin.value) {
+    loadSections();
+  }
+});
+
 </script>
 
+
 <template>
-  <v-container class="py-8">
+  <V-alert v-if="!isAdmin" type="error">Access denied</V-alert>
+
+  <template v-else>
     <v-card rounded="lg">
       <v-card-item>
-        <v-card-title>Leagues</v-card-title>
-        <template #append>
-          <v-btn
-            color="primary"
-            variant="elevated"
-            class="oc-cta"
-            @click="openAddDialog"
-          >
-            + New league
-          </v-btn>
+        <v-card-title>Section Management</v-card-title>
+      <template #append>
+        <v-btn color="primary" @click="openAdd">Add Section</v-btn>
         </template>
       </v-card-item>
-
       <v-card-text>
-        <v-progress-linear v-if="loading" indeterminate class="mb-4" />
+        <v-row>
+          <v-col cols="12" md="6">
+            <v-text-field v-model="filters.courseId" label="Course ID" density="comfortable" />
+          </v-col>
+          <v-col cols="12" md="6">
+            <v-text-field v-model="filters.facultyId" label="Faculty ID" density="comfortable" />
+          </v-col>
+          <v-col cols="12" md="6">
+            <v-text-field v-model="filters.dayOfWeek" label="Day of Week" density="comfortable" />
+          </v-col>
+          <v-col cols="12" md="6">
+            <v-text-field v-model="filters.roomNum" label="Room Number" density="comfortable" />
+          </v-col>
+          <v-col cols="12" md="6">
+            <v-text-field v-model="filters.timeStart" label="Start Time" density="comfortable" />
+          </v-col>
+          <v-col cols="12" md="6">
+            <v-text-field v-model="filters.timeEnd" label="End Time" density="comfortable" />
+          </v-col>
+        </v-row>
+          <v-btn color="primary" @click="loadSections">Apply Filters</v-btn>
+          
+          <v-progress-linear v-if="loading" indeterminate color="primary" />
+          <v-alert v-if="listError" type="error" density="compact" class="mb-4">{{ listError }}</v-alert>
 
-        <v-alert v-if="listError" type="error" density="compact" class="mb-4">
-          {{ listError }}
-        </v-alert>
+          <p v-if="!loading && sections.length === 0">No sections match these filters.</p>
 
-        <p v-if="!loading && leagues.length === 0" class="text-body-1">
-          No leagues yet. Create your first league.
-        </p>
-
-        <v-table v-if="!loading && leagues.length > 0">
-          <thead>
-            <tr>
-              <th class="text-left">League name</th>
-              <th class="text-left">Sport</th>
-              <th class="text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="league in leagues" :key="league.id">
-              <td>{{ league.name }}</td>
-              <td>{{ league.sport }}</td>
-              <td>
-                <v-icon
-                  size="small"
-                  class="mx-4"
-                  aria-label="Edit league"
-                  @click="openEditDialog(league)"
-                >
-                  mdi-pencil
-                </v-icon>
-                <v-icon
-                  size="small"
-                  class="mx-4"
-                  aria-label="Delete league"
-                  @click="openDeleteDialog(league)"
-                >
-                  mdi-trash-can
-                </v-icon>
-              </td>
-            </tr>
-          </tbody>
-        </v-table>
-      </v-card-text>
-    </v-card>
-
-    <v-dialog v-model="formDialogOpen" max-width="520">
-      <v-card rounded="lg">
-        <v-card-title>{{ formTitle }}</v-card-title>
-        <v-card-text>
-          <!-- <LeagueForm ref="formRef" v-model="form" @submit="saveLeague" /> This was the old league form, no longer needed for courses -->
-          <v-alert v-if="formError" type="error" density="compact" class="mt-2">
-            {{ formError }}
-          </v-alert>
+          <v-table v-if="sections.length > 0">            
+            <thead>
+              <tr>
+                <th class="text-left">Courses</th>
+                <th class="text-left">Faculty</th>
+                <th class="text-left">Day</th>
+                <th class="text-left">Room</th>
+                <th class="text-left">Start Time</th>
+                <th class="text-left">End Time</th>
+                <th class="text-left">Section Code</th>
+                <th class="text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="section in sections" :key="section.sectionId">
+                <td>{{ section.courseId }}</td>
+                <td>{{ section.facultyId }}</td>
+                <td>{{ section.dayOfWeek }}</td>
+                <td>{{ section.roomNum }}</td>
+                <td>{{ section.timeStart }}</td>
+                <td>{{ section.timeEnd }}</td>
+                <td>{{ section.sectionId }}</td>
+                <td>
+                  <v-btn variant="text" aria-label="Edit section" @click="openEdit(section)">Edit</v-btn>
+                  <v-btn variant="text" aria-label="Delete section" @click="deleteSection(section)">Delete</v-btn>
+                </td>
+              </tr>
+            </tbody>
+          </v-table>
         </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn variant="text" @click="closeFormDialog">Cancel</v-btn>
-          <v-btn
-            color="primary"
-            variant="elevated"
-            class="oc-cta"
-            :loading="saving"
-            @click="saveLeague"
-          >
-            {{ saveLabel }}
-          </v-btn>
-        </v-card-actions>
       </v-card>
-    </v-dialog>
 
-    <v-dialog v-model="deleteDialogOpen" max-width="420">
-      <v-card rounded="lg">
-        <v-card-title>Delete League</v-card-title>
-        <v-card-text>Delete this league?</v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn variant="text" @click="closeDeleteDialog">Cancel</v-btn>
-          <v-btn
-            color="primary"
-            variant="elevated"
-            class="oc-cta"
-            :loading="deleting"
-            @click="confirmDeleteLeague"
-          >
-            Delete League
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </v-container>
+      <v-dialog v-model="dialogOpen" max-width="500">
+        <v-card rounded="lg">
+          <v-card-title>{{ editingId ? 'Edit Section' : 'Add Section' }}</v-card-title>
+          <v-card-text>
+            <p v-if="editingId">{{ editingId }}</p>
+              <v-text-field v-model="form.courseId" label="Course ID" density="comfortable" />
+              <v-text-field v-model="form.facultyId" label="Faculty ID" density="comfortable" />
+              <v-text-field v-model="form.dayOfWeek" label="Day of Week" density="comfortable" />
+              <v-text-field v-model="form.roomNum" label="Room Number" density="comfortable" />
+              <v-text-field v-model="form.timeStart" label="Start Time" density="comfortable" />
+              <v-text-field v-model="form.timeEnd" label="End Time" density="comfortable" />
+              <v-alert v-if="formError" type="error" density="compact" class="mb-4">{{ formError }}</v-alert>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer />
+            <v-btn variant="text" @click="dialogOpen = false">Cancel</v-btn>
+            <v-btn color="primary" variant="elevated" class="oc-cta" :loading="saving" @click="saveSection">Save</v-btn>
+          </v-card-actions>
+            </v-card>
+          </v-dialog>
+    </template>
 </template>

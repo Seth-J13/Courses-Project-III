@@ -2,10 +2,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import sectionServices from "../services/sectionServices.js";
-import gameServices from "../services/gameServices.js";
-import teamServices from "../services/teamServices.js";
-import GameForm from "../components/GameForm.vue";
-import { formatDate, toDateInputValue } from "../config/validation.js";
+// import { formatDate, toDateInputValue } from "../config/validation.js";
 
 const route = useRoute();
 

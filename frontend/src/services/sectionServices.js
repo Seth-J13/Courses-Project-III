@@ -1,11 +1,8 @@
 import apiClient from "./services.js";
 
 const sectionServices = {
-  getSections() {
-    return apiClient.get("/sections");
-  },
-  getSection(sectionId) {
-    return apiClient.get(`/sections/${sectionId}`);
+  getSections(filters) {
+    return apiClient.get("/sections", { params: filters });
   },
   createSection(section) {
     return apiClient.post("/sections", section);
