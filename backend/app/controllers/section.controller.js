@@ -89,6 +89,7 @@ exports.findAll = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
+    console.log(req.body);
     const validated = checkValidation(req.body);
     if (validated.error) {
       return res.status(400).send({ message: validated.error });

@@ -5,7 +5,7 @@ export default (sequelize, Sequelize) => {
       primaryKey: true,
     },
     courseId: {
-      type: Sequelize.STRING(50),
+      type: Sequelize.STRING(9),
       allowNull: false,
     },
     dayOfWeek: {

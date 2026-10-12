@@ -17,6 +17,7 @@ const loadFaculties = async () => {
 const loadCourses = async () => {
   const response = await courseServices.getCourses();
   courses.value = response.data;
+  courses.value = courses.value.map(course => course.courseId)
 };
 
 const isAdmin = computed(() => Utils.getStore("user")?.role === "admin");
@@ -63,7 +64,7 @@ const loadSections = async () => {
 
 const openAdd = () => {
   editingId.value = null;
-  form.value = emptyForm();
+  form.value = { ...emptyForm(), dayOfWeek: [] };
   formError.value = null;
   dialogOpen.value = true;
 
@@ -73,41 +74,75 @@ const openAdd = () => {
 
 const openEdit = (section) => {
   editingId.value = section.sectionId;
-  form.value = {
-    courseId: section.courseId,
-    facultyId: section.facultyId,
-    dayOfWeek: section.dayOfWeek,
-    roomNum: section.roomNum,
-    timeStart: section.timeStart,
-    timeEnd: section.timeEnd,
-  };
+  let days = []
+  if (section.dayOfWeek.includes("M")) days.push("M")
+  if (section.dayOfWeek.includes("T")) days.push("T")
+  if (section.dayOfWeek.includes("W")) days.push("W")
+  if (section.dayOfWeek.includes("TH")) days.push("TH")
+  if (section.dayOfWeek.includes("F")) days.push("F")
+
+  loadFaculties().then(() => {
+
+    const f = faculties.value.find((label) =>
+      label.includes(`(${section.facultyId})`)
+    );
+    
+    form.value = {
+      courseId: section.courseId,
+      sectionId: section.sectionId,
+      facultyId: f,
+      dayOfWeek: days,
+      roomNum: section.roomNum,
+      timeStart: section.timeStart,
+      timeEnd: section.timeEnd,
+    };
+  });
   formError.value = "";
   dialogOpen.value = true;
+};
+
+const sectionPayload = () => {
+  const facultyRaw = form.value.facultyId;
+  let facultyId = "";
+  if (typeof facultyRaw === "string") {
+    const open = facultyRaw.indexOf("(");
+    const close = facultyRaw.indexOf(")");
+    facultyId =
+      open !== -1 && close > open ? facultyRaw.slice(open + 1, close) : facultyRaw.trim();
+  }
+
+  const days = form.value.dayOfWeek;
+  const dayOfWeek = Array.isArray(days)
+    ? days.filter(Boolean).join("")
+    : typeof days === "string"
+      ? days.trim()
+      : "";
+
+  return {
+    courseId: form.value.courseId,
+    sectionId: form.value.sectionId,
+    facultyId,
+    dayOfWeek,
+    roomNum: form.value.roomNum,
+    timeStart: form.value.timeStart,
+    timeEnd: form.value.timeEnd,
+  };
 };
 
 const saveSection = async () => {
   saving.value = true;
   formError.value = "";
-
-  form.value = {
-    courseId: form.value.courseId,
-    sectionId: form.value.sectionId,
-    facultyId: form.value.facultyId.substring(form.value.facultyId.indexOf("(")+1,form.value.facultyId.indexOf(")")),
-    dayOfWeek: form.value.dayOfWeek.join(''),
-    roomNum: form.value.roomNum,
-    timeStart: form.value.timeStart,
-    timeEnd: form.value.timeEnd,
-  };
   try {
+    const payload = sectionPayload();
     if (editingId.value) {
-      await sectionServices.updateSection(editingId.value, form.value);
+      await sectionServices.updateSection(editingId.value, payload);
     } else {
-      await sectionServices.createSection(form.value);
+      await sectionServices.createSection(payload);
     }
     dialogOpen.value = false;
     await loadSections();
   } catch (error) {
-    formError.value = error.response?.data?.message || "Failed to save section.";  
+    formError.value = error.response?.data?.message || "Failed to save section.";
   } finally {
     saving.value = false;
   }
@@ -207,7 +242,7 @@ onMounted(() => {
           <v-card-title>{{ editingId ? 'Edit Section' : 'Add Section' }}</v-card-title>
           <v-card-text>
             <p v-if="editingId">{{ editingId }}</p>
-              <v-text-field v-model="form.courseId" label="Course ID" density="comfortable" @update:model-value="form.sectionId = form.courseId + '-'" />
+              <v-combobox v-model="form.courseId" label="Course ID" density="comfortable" :items="courses" item-title="courseId" item-value="courseId" @update:model-value="form.sectionId = form.courseId + '-'" />
               <v-text-field v-model="form.sectionId" label="Section ID" density="comfortable" />
               <v-combobox v-model="form.facultyId" label="Faculty ID" density="comfortable" :items="faculties" item-title="facultyName" item-value="facultyId" />
               <v-select v-model="form.dayOfWeek" label="Day of Week" density="comfortable" :items="['', 'M', 'T', 'W', 'TH', 'F']" multiple />

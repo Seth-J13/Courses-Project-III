@@ -5,7 +5,6 @@ import Register from "./views/Register.vue";
 import Semester from "./views/Semester.vue/";
 import CourseList from "./views/CourseList.vue";
 import SectionsList from "./views/SectionsList.vue"
-import SectionManagement from "./views/SectionManagement.vue";
 import EnrollmentList from "./views/EnrollmentList.vue";
 import Utils from "./config/utils.js";
 
@@ -74,11 +73,6 @@ const router = createRouter({
       },
       name: "EnrollmentList",
       component: EnrollmentList,
-    },
-    {
-      path: "/sections/:sectionId",
-      name: "section",
-      component: SectionManagement,
     },
     {
       path: "/:pathMatch(.*)*",
