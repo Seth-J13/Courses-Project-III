@@ -1,116 +1,133 @@
 import db from "../models/index.js";
 import logger from "../config/logger.js";
+import { requiredText } from "../helpers/fields.js";
 
 const exports = {};
 
 exports.findAll = async (req, res) => {
   try {
-    const semester = await db.semester.findAll({
-      attributes: ["semesterId", "startDate", "endDate"],
+    const semesters = await db.semester.findAll({
       order: [["semesterId", "ASC"]],
     });
 
-    return res.send(semester);
+    return res.send(semesters);
   } catch (err) {
-    logger.error(`Semester findAll failed: ${err.message}`);
-    return res.status(500).send({ message: "Failed to fetch semester." });
-  }
-};
-
-exports.findOne = async (req, res) => {
-  try {
-    const semesterId = parseInt(req.params.semesterId, 10);
-    if (Number.isNaN(universityId)) {
-      return res.status(400).send({ message: "Invalid semester id." });
-    }
-
-    const semester = await db.user.findByPk(semesterId);
-    if (!semester) {
-      return res.status(404).send({ message: `Semester with id=${semesterId} not found.` });
-    }
-
-    return res.send(semester);
-  } catch (err) {
-    logger.error(`User findOne failed: ${err.message}`);
-    return res.status(500).send({ message: "Failed to fetch semester." });
-  }
-};
-
-exports.update = async (req, res) => {
-  try {
-    const semesterId = parseInt(req.params.semesterId, 10);
-    if (Number.isNaN(semesterId)) {
-      return res.status(400).send({ message: "Invalid semester id." });
-    }
-
-    const semester = await db.semester.unscoped().findByPk(semesterId);
-    if (!semester) {
-      return res.status(404).send({ message: `User with id=${semesterId} not found.` });
-    }
-
-    const { fName, lName, department } = req.body;
-
-    if (!fName?.trim()) {
-      return res.status(400).send({ message: "First name is required." });
-    }
-    if (!lName?.trim()) {
-      return res.status(400).send({ message: "Last name is required." });
-    }
-    if (!department?.trim()) {
-      return res.status(400).send({ message: "Department is required." });
-    }
-
-    semester.fName = fName.trim();
-    semester.lName = lName.trim();
-    semester.department = department.trim();
-
-    await semester.save();
-
-    const updatedSemester = await db.semester.findByPk(semesterId);
-    return res.send(updatedSemester);
-  } catch (err) {
-    logger.error(`Semester update failed: ${err.message}`);
-    return res.status(500).send({ message: "Failed to update semester." });
-  }
-};
-
-exports.delete = async (req, res) => {
-  try
-  {
-    const semester_id = parseInt(req.params.semesterId, 10);
-    if(Number.isNaN(semester_id)){
-      return res.status(400).send({message: "Invalid semester id"});
-    }
-
-    const existing = await db.semester.unscoped().findByPk(semester_id);
-    if(!existing)
-    {
-      return res.status(400).send({message: `Semester (${semester_id}) does not exist`});
-    }
-
-    const {semesterId, fname, lname, department} = req.params;
-    
-    await db.semester.destroy({where: { id: semester_id }});
-    return res.status(200).send({message: `Successfully deleted ${semester_id}`});
-  } catch (err){
-    logger.error(`Could not delete semester: ${err.message}`);
-    return res.status(500).send({message: "Failed to delete semester."});
+    logger.error(`semester findAll failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to fetch semesters." });
   }
 };
 
 exports.create = async (req, res) => {
-  try{
-    const semesterId = parseInt(req.params.semesterId);
-    
-    if(Number.isNaN(semesterId)){
-      return res.status(400).send({message: "Invalid semester id"});
+  try {
+    const semesterId = req.body.semesterId; //requiredText()
+    const startDate = req.body.startDate;
+    const endDate = req.body.endDate;
+
+    if (!startDate || !semesterId || !endDate) {
+      return res.status(400).send({ message: "Required" });
     }
 
-    const new_semester = await db.semester.create(req.body);
-    return res.status(201).send(await findOne(semesterId))
-  }
-  catch (err) {
-    logger.error(`Could not create semester`);
+    if (!semesterId || !/[A-Z]{2}[0-9]{4}/.test(semesterId)) {
+      return res.status(400).send({
+        message: "Semester id must look like FA2026.",
+      });
+    }
+
+    if (startDate >= endDate) {
+      return res.status(400).send({
+        message: "Starting date must be before the ending date.",
+      });
+    }
+
+    const existing = await db.semester.findOne({
+      where: { semesterId },
+    });
+    if (existing) {
+      return res.status(400).send({ message: "Semester id is already taken." });
+    }
+
+    const semester = await db.semester.create({
+      semesterId,
+      startDate,
+      endDate,
+    });
+
+    return res.status(201).send(semester);
+  } catch (err) {
+    logger.error(`semester create failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to create semester." });
   }
 };
+
+exports.update = async (req, res) => {
+  console.log(req.body);
+  try {
+    const semesterId = requiredText(req.params.semesterId ?? req.body.semesterId);
+    const newSemesterId = requiredText(req.body.semesterId);
+    const startDate = requiredText(req.body.startDate);
+    const endDate = requiredText(req.body.endDate);
+
+    if (!semesterId || !startDate || !endDate) {
+      return res.status(400).send({ message: "Required" });
+    }
+
+    if (!newSemesterId || !/[A-Z]{2}[0-9]{4}/.test(newSemesterId)) {
+      return res.status(400).send({
+        message: "Semester id must look like CMSC-5322.",
+      });
+    }
+
+    const existing = await db.semester.findByPk(semesterId);
+    if (!existing) {
+      return res.status(404).send({
+        message: `Semester with id=${semesterId} not found.`,
+      });
+    }
+
+    if (semesterId.length > 6) {
+      return res.status(400).send({
+        message: "Semester ID must be exactly 6 characters.",
+      });
+    }
+
+    await db.semester.update(
+      {
+        semesterId:newSemesterId,
+        startDate, endDate
+      },
+      { where: { semesterId: semesterId } }
+    );
+
+    return res.status(200).send({ message: "semester updated successfully." });
+  } catch (err) {
+    logger.error(`semester update failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to update semester." });
+  }
+};
+
+exports.remove = async (req, res) => {
+  try {
+    const semesterId = requiredText(req.params.semesterId);
+    if (!semesterId || !/[A-Z]{2}[0-9]{4}/.test(semesterId)) {
+      return res.status(400).send({
+        message: "Semester id must look like FA2026.",
+      });
+    }
+
+    const existing = await db.semester.findByPk(semesterId);
+    if (!existing) {
+      return res.status(404).send({
+        message: `Semester with id=${semesterId} not found.`,
+      });
+    }
+
+    await db.semester.destroy({ where: { semesterId } });
+
+    return res.status(200).send({ message: "semester deleted successfully." });
+  } catch (err) {
+      logger.error(`semester delete failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to delete semester." });
+  }
+};
+
 export default exports;

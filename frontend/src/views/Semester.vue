@@ -1,151 +1,77 @@
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
-import { useRoute } from "vue-router";
-import seasonServices from "../services/seasonServices.js";
-import gameServices from "../services/gameServices.js";
-import teamServices from "../services/teamServices.js";
-import { formatDueDate, toDateInputValue } from "../config/validation.js";
+import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import semesterServices from "../services/semesterServices.js";
+import Utils from "../config/utils.js";
+import SemesterForm from "../components/SemesterForm.vue";
 
-const route = useRoute();
+const router = useRouter();
 
-const emptyGameForm = (seasonId) => ({
-  seasonId: seasonId ?? null,
-  gameDate: "",
-  startTime: "",
-  location: "",
-  homeTeamId: null,
-  visitingTeamId: null,
-  homeTeamScore: "",
-  visitingTeamScore: "",
+const emptyForm = () => ({
+  semesterId: "",
+  startDate: "",
+  endDate: "",
 });
 
-const season = ref(null);
-const games = ref([]);
-const seasons = ref([]);
-const teams = ref([]);
+const semesters = ref([]);
 const loading = ref(false);
+const loadingSemesters = ref(false);
 const listError = ref("");
 const formDialogOpen = ref(false);
-const isAddMode = ref(true);
-const form = ref(emptyGameForm());
+const form = ref(emptyForm());
 const formRef = ref(null);
 const formError = ref("");
 const saving = ref(false);
-const editingId = ref(null);
-const creatingGames = ref(false);
+const deleteDialogOpen = ref(false);
+const semesterToDelete = ref(null);
+const deleting = ref(false);
+const isAdmin = computed(() => Utils.getStore("user")?.role === "admin");
 
-const formTitle = computed(() => (isAddMode.value ? "Add Game" : "Edit Game"));
-const saveLabel = computed(() => (isAddMode.value ? "Create" : "Save Game"));
+const storedId = ref("");
+const mode = ref("");
 
-const seasonId = computed(() => parseInt(route.params.seasonId, 10));
-
-const seasonGames = computed(() =>
-  games.value.filter((game) => game.seasonId === seasonId.value)
-);
-
-const toTimeInputValue = (value) => {
-  if (!value) {
-    return "";
+const search = ref("");
+const filteredSemesters = computed(() => {
+  const query = search.value.trim().toLowerCase();
+  if (!query) {
+    return semesters.value;
   }
+  return semesters.value.filter((semester) =>
+    semester.semesterId.toLowerCase().includes(query)
+  );
+});
 
-  const match = String(value).match(/(\d{2}:\d{2})/);
-  return match ? match[1] : String(value);
-};
-
-const formatScore = (value) => {
-  if (value === null || value === undefined || value === "") {
-    return "";
-  }
-
-  return value;
-};
-
-const optionalScore = (value) => {
-  if (value === "" || value === null || value === undefined) {
-    return null;
-  }
-
-  return Number(value);
-};
-
-const retrieveSeason = async () => {
+const retrieveSemesters = async () => {
   loading.value = true;
   listError.value = "";
 
   try {
-    const [seasonsResponse, gamesResponse, teamsResponse] = await Promise.all([
-      seasonServices.getSeasons(),
-      gameServices.getGames(),
-      teamServices.getTeams(),
+    const [semestersResponse] = await Promise.all([
+      semesterServices.getSemesters(),
     ]);
-    seasons.value = seasonsResponse.data;
-    games.value = gamesResponse.data;
-    teams.value = teamsResponse.data;
-    season.value =
-      seasonsResponse.data.find((row) => row.id === seasonId.value) ?? null;
-
-    if (!season.value) {
-      listError.value = `Season with id=${seasonId.value} not found.`;
-    }
+    semesters.value = semestersResponse.data;
   } catch (error) {
     listError.value =
-      error.response?.data?.message || "Failed to fetch season.";
+      error.response?.data?.message || "Failed to fetch semesters.";
   } finally {
     loading.value = false;
   }
 };
 
-const createSeasonGames = async () => {
-  if (!season.value) {
-    return;
-  }
-
-  listError.value = "";
-  creatingGames.value = true;
-
-  try {
-    await seasonServices.createGames(seasonId.value);
-    await retrieveSeason();
-  } catch (error) {
-    listError.value =
-      error.response?.data?.message || "Failed to create games.";
-  } finally {
-    creatingGames.value = false;
-  }
-};
-
-const openAddGameDialog = () => {
-  isAddMode.value = true;
-  editingId.value = null;
-  form.value = emptyGameForm(seasonId.value);
+const openAddDialog = () => {
+  form.value = emptyForm();
   formError.value = "";
   formDialogOpen.value = true;
+  mode.value = "Create"
 };
 
-const openEditGameDialog = (game) => {
-  isAddMode.value = false;
-  editingId.value = game.id;
-  form.value = {
-    seasonId: game.seasonId ?? seasonId.value,
-    gameDate: toDateInputValue(game.gameDate),
-    startTime: toTimeInputValue(game.startTime),
-    location: game.location ?? "",
-    homeTeamId: game.homeTeamId ?? null,
-    visitingTeamId: game.visitingTeamId ?? null,
-    homeTeamScore: game.homeTeamScore ?? "",
-    visitingTeamScore: game.visitingTeamScore ?? "",
-  };
-  formError.value = "";
-  formDialogOpen.value = true;
-};
 
 const closeFormDialog = () => {
   formDialogOpen.value = false;
   formError.value = "";
-  editingId.value = null;
 };
 
-const saveGame = async () => {
+const saveSemester = async (mode) => {
   formError.value = "";
   const result = await formRef.value?.validate();
 
@@ -155,71 +81,93 @@ const saveGame = async () => {
 
   saving.value = true;
 
-  const payload = {
-    seasonId: form.value.seasonId,
-    gameDate: form.value.gameDate,
-    startTime: form.value.startTime,
-    location: isAddMode.value ? null : form.value.location.trim() || null,
-    homeTeamId: form.value.homeTeamId,
-    visitingTeamId: form.value.visitingTeamId,
-    homeTeamScore: optionalScore(form.value.homeTeamScore),
-    visitingTeamScore: optionalScore(form.value.visitingTeamScore),
-  };
-
   try {
-    if (isAddMode.value) {
-      await gameServices.createGame(payload);
-    } else {
-      await gameServices.updateGame(editingId.value, {
-        ...payload,
-        gameId: editingId.value,
+    if (mode.toLowerCase() === "create"){
+      await semesterServices.createSemester({
+        semesterId: form.value.semesterId.trim(),
+        startDate: new Date(form.value.startDate).toISOString(),
+        endDate: new Date(form.value.endDate).toISOString()
       });
     }
+    else if (mode.toLowerCase() === "update"){
+      await semesterServices.updateSemester(storedId.value, {
+        semesterId: form.value.semesterId.trim(),
+        startDate: new Date(form.value.startDate).toISOString(),
+        endDate: new Date(form.value.endDate).toISOString()
+      })
+    }
     closeFormDialog();
-    await retrieveSeason();
+    await retrieveSemesters();
   } catch (error) {
+    console.log(error)
     formError.value =
-      error.response?.data?.message ||
-      (isAddMode.value ? "Failed to create game." : "Failed to update game.");
+      error.response?.data?.message || "Failed to create semester.";
   } finally {
     saving.value = false;
   }
 };
 
-onMounted(retrieveSeason);
-watch(() => route.params.seasonId, retrieveSeason);
+const openSemester = (semester) => {
+  mode.value = "Update"
+  storedId.value = semester.semesterId;
+  form.value = {
+    semesterId: semester.semesterId.trim(),
+    startDate: semester.startDate.trim(),
+    endDate: semester.endDate.trim(),
+  };
+  formDialogOpen.value = true;
+};
+
+const openDeleteDialog = (semester) => {
+  semesterToDelete.value = semester;
+  deleteDialogOpen.value = true;
+};
+
+const closeDeleteDialog = () => {
+  deleteDialogOpen.value = false;
+  semesterToDelete.value = null;
+};
+
+const confirmDeleteSemester = async () => {
+  if (!semesterToDelete.value?.semesterId) {
+    return;
+  }
+
+  deleting.value = true;
+  listError.value = "";
+
+  try {
+    await semesterServices.deleteSemester(semesterToDelete.value.semesterId);
+    closeDeleteDialog();
+    await retrieveSemesters();
+  } catch (error) {
+    listError.value =
+      error.response?.data?.message || "Failed to delete semester.";
+  } finally {
+    deleting.value = false;
+  }
+};
+
+const parseDate = (date) => new Date(date).toDateString()
+
+onMounted(retrieveSemesters);
 </script>
 
 <template>
   <v-container class="py-8">
     <v-card rounded="lg">
+
       <v-card-item>
-        <v-card-title>{{ season?.name || "Season" }}</v-card-title>
-        <v-card-subtitle v-if="season">
-          {{ season.league?.name }}
-          <template v-if="season.startDate || season.endDate">
-            · {{ formatDueDate(season.startDate) }} – {{ formatDueDate(season.endDate) }}
-          </template>
-        </v-card-subtitle>
+        <v-card-title>Semesters</v-card-title>
         <template #append>
           <v-btn
-            color="primary"
-            variant="elevated"
-            class="oc-cta mr-2"
-            :disabled="!season"
-            :loading="creatingGames"
-            @click="createSeasonGames"
-          >
-            Create Games
-          </v-btn>
-          <v-btn
+            v-if="isAdmin"
             color="primary"
             variant="elevated"
             class="oc-cta"
-            :disabled="!season"
-            @click="openAddGameDialog"
+            @click="openAddDialog"
           >
-            Add Games
+            + New semester
           </v-btn>
         </template>
       </v-card-item>
@@ -231,62 +179,66 @@ watch(() => route.params.seasonId, retrieveSeason);
           {{ listError }}
         </v-alert>
 
-        <template v-if="!loading && season">
-          <p v-if="seasonGames.length === 0" class="text-body-1">
-            No games yet. Add the first game.
-          </p>
+        <v-text-field
+          v-if="!loading && semesters.length > 0"
+          v-model="search"
+          label="Find"
+          density="comfortable"
+          class="mb-4"
+        />
 
-          <v-table v-if="seasonGames.length > 0">
-            <thead>
-              <tr>
-                <th class="text-left">Date</th>
-                <th class="text-left">Start time</th>
-                <th class="text-left">Location</th>
-                <th class="text-left">Home team</th>
-                <th class="text-left">Visiting team</th>
-                <th class="text-left">Home score</th>
-                <th class="text-left">Visiting score</th>
-                <th class="text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="game in seasonGames" :key="game.id">
-                <td>{{ formatDueDate(game.gameDate) }}</td>
-                <td>{{ toTimeInputValue(game.startTime) }}</td>
-                <td>{{ game.location }}</td>
-                <td>{{ game.homeTeam?.name }}</td>
-                <td>{{ game.visitingTeam?.name }}</td>
-                <td>{{ formatScore(game.homeTeamScore) }}</td>
-                <td>{{ formatScore(game.visitingTeamScore) }}</td>
-                <td>
-                  <v-icon
-                    size="small"
-                    class="mx-4"
-                    aria-label="Edit game"
-                    @click="openEditGameDialog(game)"
-                  >
-                    mdi-pencil
-                  </v-icon>
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
-        </template>
+        <p v-if="!loading && semesters.length === 0" class="text-body-1">
+          {{
+            isAdmin
+              ? "No semesters yet. Create your first semester."
+              : "No semesters assigned."
+          }}
+        </p>
+
+        <v-table v-if="!loading && semesters.length > 0">
+          <thead>
+            <tr>
+              <th class="text-left">Semester Id</th>
+              <th class="text-left">Starting Date</th>
+              <th class="text-left">Ending Date</th>
+              <th class="text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="semester in filteredSemesters" :key="semester.semesterId">
+              <td>{{ semester.semesterId }}</td>
+              <td>{{ parseDate(semester.startDate) }}</td>
+              <td>{{ parseDate(semester.endDate) }}</td>
+              <td>
+                <v-icon
+                  size="small"
+                  class="mx-4"
+                  aria-label="Open semester"
+                  @click="openSemester(semester)"
+                >
+                  mdi-account-group
+                </v-icon>
+                <v-icon
+                  v-if="isAdmin"
+                  size="small"
+                  class="mx-4"
+                  aria-label="Delete semester"
+                  @click="openDeleteDialog(semester)"
+                >
+                  mdi-trash-can
+                </v-icon>
+              </td>
+            </tr>
+          </tbody>
+        </v-table>
       </v-card-text>
     </v-card>
 
-    <v-dialog v-model="formDialogOpen" max-width="560">
+    <v-dialog v-model="formDialogOpen" max-width="520">
       <v-card rounded="lg">
-        <v-card-title>{{ formTitle }}</v-card-title>
+        <v-card-title>{{mode}} Semester</v-card-title>
         <v-card-text>
-          <!-- <GameForm
-            ref="formRef"
-            v-model="form"
-            :seasons="seasons"
-            :teams="teams"
-            :show-location="!isAddMode"
-            @submit="saveGame"
-          /> This was the old form not needed for courses-->
+          <SemesterForm ref="formRef" v-model="form" @submit="saveSemester(mode)" />
           <v-alert v-if="formError" type="error" density="compact" class="mt-2">
             {{ formError }}
           </v-alert>
@@ -299,9 +251,31 @@ watch(() => route.params.seasonId, retrieveSeason);
             variant="elevated"
             class="oc-cta"
             :loading="saving"
-            @click="saveGame"
+            @click="saveSemester(mode)"
           >
-            {{ saveLabel }}
+            {{mode}}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+   
+
+    <v-dialog v-model="deleteDialogOpen" max-width="420">
+      <v-card rounded="lg">
+        <v-card-title>Delete Semester</v-card-title>
+        <v-card-text>Delete this semester?</v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="closeDeleteDialog">Cancel</v-btn>
+          <v-btn
+            color="primary"
+            variant="elevated"
+            class="oc-cta"
+            :loading="deleting"
+            @click="confirmDeleteSemester"
+          >
+            Delete
           </v-btn>
         </v-card-actions>
       </v-card>
