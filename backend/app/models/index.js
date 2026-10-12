@@ -2,9 +2,8 @@ import { Sequelize } from "sequelize";
 import sequelize from "../config/sequelizeInstance.js";
 import sessionModel from "./session.model.js";
 import userModel from "./user.model.js";
-import sessionModel from "./session.model.js";
 import facultyModel from "./faculty.model.js";
-
+import courseModel from "./course.model.js";
 import sectionModel from "./league.model.js";
 
 const db = {};
@@ -14,8 +13,11 @@ db.Sequelize = Sequelize;
 // import userModel from "./user.model.js";
 db.user = userModel(sequelize, Sequelize);
 db.session = sessionModel(sequelize, Sequelize);
-db.faculty = facultyModel(sequelize, Sequelize);
-db.session = sessionModel(sequelize, Sequelize);
 db.session.belongsTo(db.user, { foreignKey: "userId" });
+db.faculty = facultyModel(sequelize, Sequelize);
 db.section = sectionModel(sequelize, Sequelize);
+db.course = courseModel(sequelize, Sequelize);
+
+// VVV Must be last VVV
+db.sequelize = sequelize;
 export default db;

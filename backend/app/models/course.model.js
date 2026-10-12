@@ -1,9 +1,8 @@
 export default (sequelize, Sequelize) => {
-  const League = sequelize.define("league", {
+  const Course = sequelize.define("course", {
     courseId: {
-      type: Sequelize.STRING(50),
+      type: Sequelize.STRING(9),
       primaryKey: true,
-      autoIncrement: true,
     },
     courseName: {
       type: Sequelize.STRING(50),
@@ -19,10 +18,10 @@ export default (sequelize, Sequelize) => {
       allowNull: false,
     },
     description: {
-      type: Sequelize.STRING(50),
+      type: Sequelize.STRING(255),
       allowNull: true,
     },
   });
 
-  return League;
+  return Course;
 };

@@ -76,7 +76,7 @@
 - Feature 1 already authenticates users, stores a session token, and returns `role` (`admin` or `student`).
 - This feature checks that session. It does not implement login, logout, or registration.
 - Section management is only for admins. Students enroll through a later enrollment feature.
-- The app framework exists (`/courses` mount, Bearer token, Vue router).
+- The app framework exists (`/course-t3` mount, Bearer token, Vue router).
 
 ---
 
@@ -133,14 +133,14 @@ Feature 5 owns `sections`. It reads `courses` and `faculty` to validate foreign 
 
 ## API Requirements
 
-All routes mount under `/courses`. Auth is `Authorization: Bearer <token>` from Feature 1. Every route below requires an admin session.
+All routes mount under `/course-t3`. Auth is `Authorization: Bearer <token>` from Feature 1. Every route below requires an admin session.
 
 | Method   | Endpoint                       | Auth  | Purpose                         |
 | -------- | ------------------------------ | ----- | ------------------------------- |
-| `GET`    | `/courses/sections`            | Admin | List sections; optional filters |
-| `POST`   | `/courses/sections`            | Admin | Create a section                |
-| `PUT`    | `/courses/sections/:sectionId` | Admin | Update a section                |
-| `DELETE` | `/courses/sections/:sectionId` | Admin | Delete a section                |
+| `GET`    | `/course-t3/sections`            | Admin | List sections; optional filters |
+| `POST`   | `/course-t3/sections`            | Admin | Create a section                |
+| `PUT`    | `/course-t3/sections/:sectionId` | Admin | Update a section                |
+| `DELETE` | `/course-t3/sections/:sectionId` | Admin | Delete a section                |
 
 **List query (all optional):** `courseId`, `facultyId`, `dayOfWeek`, `roomNum`, `timeStart`, `timeEnd`.  
 Only sections that match every provided filter are returned. No filters returns every section.
@@ -326,7 +326,7 @@ This feature **owns** `sections`. It **reads** `courses`, `faculty`, and the Fea
 
 - **Given** I am signed in as an admin
 - **And** section `CMSC-1111-99` does not exist
-- **When** I send `PUT /courses/sections/CMSC-1111-99` with a valid body
+- **When** I send `PUT /course-t3/sections/CMSC-1111-99` with a valid body
 - **Then** the API returns `400` with the message "Section does not exist."
 
 ### US-5.3 — Remove Section
@@ -343,7 +343,7 @@ This feature **owns** `sections`. It **reads** `courses`, `faculty`, and the Fea
 
 - **Given** I am signed in as an admin
 - **And** section `CMSC-1111-99` does not exist
-- **When** I send `DELETE /courses/sections/CMSC-1111-99`
+- **When** I send `DELETE /course-t3/sections/CMSC-1111-99`
 - **Then** the API returns `400` with the message "Section does not exist."
 
 ### US-5.4 — List & Filter Sections
@@ -366,7 +366,7 @@ This feature **owns** `sections`. It **reads** `courses`, `faculty`, and the Fea
 #### Scenario: Student cannot access section management
 
 - **Given** I am signed in as a student
-- **When** I request `GET /courses/sections`
+- **When** I request `GET /course-t3/sections`
 - **Then** the API returns `403` with the message "Access denied."
 - **And** the Section Management page shows **Access denied.**
 
@@ -474,12 +474,12 @@ Follow layer order in @features/framework.md (models → routes → backend test
 Follow Test Traceability in this spec (file headers, nested describe blocks, exact Scenario it names).
 Map every Gherkin scenario in the Test Coverage Map; run `npm test` before finishing.
 Section routes require an existing Feature 1 admin session (`authenticate` + `requireAdmin`). Do not implement login, logout, registration, or password storage in this feature.
-If API routes, payloads, schema, or product rules changed per this spec, update @features/reference/courses.md, @features/reference/data-model.md, and/or @features/reference/behavior.md in the same PR to match shipped code.
+If API routes, payloads, schema, or product rules changed per this spec, update @features/reference/course-t3.md, @features/reference/data-model.md, and/or @features/reference/behavior.md in the same PR to match shipped code.
 Complete Definition of Done and the merge checklist in @features/framework.md.
 Do not implement behavior not in this spec.
 ```
 
-**Reference updates for this feature:** `features/reference/data-model.md`, `features/reference/courses.md`, `features/reference/behavior.md`
+**Reference updates for this feature:** `features/reference/data-model.md`, `features/reference/course-t3.md`, `features/reference/behavior.md`
 
 ---
 
@@ -491,7 +491,7 @@ Do not implement behavior not in this spec.
 - [ ] Test Coverage Map complete
 - [ ] Test traceability (file headers, nested `describe` / `it`, audit commands in this spec)
 - [ ] `features/reference/data-model.md` updated (if schema changed)
-- [ ] `features/reference/courses.md` updated (if API changed)
+- [ ] `features/reference/course-t3.md` updated (if API changed)
 - [ ] `features/reference/behavior.md` updated (if product rules changed)
 
 ---

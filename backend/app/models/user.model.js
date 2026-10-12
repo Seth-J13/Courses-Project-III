@@ -7,11 +7,11 @@ export default (sequelize, Sequelize) => {
         primaryKey: true,
         autoIncrement: true,
       },
-      firstName: {
+      fName: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      lastName: {
+      lName: {
         type: Sequelize.STRING,
         allowNull: false,
       },

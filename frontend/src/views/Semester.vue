@@ -4,7 +4,6 @@ import { useRoute } from "vue-router";
 import seasonServices from "../services/seasonServices.js";
 import gameServices from "../services/gameServices.js";
 import teamServices from "../services/teamServices.js";
-import GameForm from "../components/GameForm.vue";
 import { formatDueDate, toDateInputValue } from "../config/validation.js";
 
 const route = useRoute();
@@ -280,14 +279,14 @@ watch(() => route.params.seasonId, retrieveSeason);
       <v-card rounded="lg">
         <v-card-title>{{ formTitle }}</v-card-title>
         <v-card-text>
-          <GameForm
+          <!-- <GameForm
             ref="formRef"
             v-model="form"
             :seasons="seasons"
             :teams="teams"
             :show-location="!isAddMode"
             @submit="saveGame"
-          />
+          /> This was the old form not needed for courses-->
           <v-alert v-if="formError" type="error" density="compact" class="mt-2">
             {{ formError }}
           </v-alert>

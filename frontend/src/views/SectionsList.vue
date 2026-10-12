@@ -1,7 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import leagueServices from "../services/leagueServices.js";
-import LeagueForm from "../components/LeagueForm.vue";
 
 const emptyForm = () => ({
   name: "",
@@ -208,7 +207,7 @@ onMounted(retrieveLeagues);
       <v-card rounded="lg">
         <v-card-title>{{ formTitle }}</v-card-title>
         <v-card-text>
-          <LeagueForm ref="formRef" v-model="form" @submit="saveLeague" />
+          <!-- <LeagueForm ref="formRef" v-model="form" @submit="saveLeague" /> This was the old league form, no longer needed for courses -->
           <v-alert v-if="formError" type="error" density="compact" class="mt-2">
             {{ formError }}
           </v-alert>

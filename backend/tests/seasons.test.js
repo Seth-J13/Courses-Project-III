@@ -78,7 +78,7 @@ describe("Feature 2 — Season Management", () => {
       });
 
       const response = await request(app)
-        .get("/courses/seasons")
+        .get("/course-t3/seasons")
         .set(authHeader(token));
 
       expect(response.status).toBe(200);
@@ -96,7 +96,7 @@ describe("Feature 2 — Season Management", () => {
       const created = await createSeason(app, token);
 
       const response = await request(app)
-        .put(`/courses/seasons/${created.body.id}`)
+        .put(`/course-t3/seasons/${created.body.id}`)
         .set(authHeader(token))
         .send({
           seasonId: created.body.id,
@@ -122,7 +122,7 @@ describe("Feature 2 — Season Management", () => {
       const created = await createSeason(app, token);
 
       const response = await request(app)
-        .delete(`/courses/seasons/${created.body.id}`)
+        .delete(`/course-t3/seasons/${created.body.id}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(200);
@@ -143,7 +143,7 @@ describe("Feature 2 — Season Management", () => {
       });
 
       const response = await request(app)
-        .get("/courses/seasons")
+        .get("/course-t3/seasons")
         .set(authHeader(student.body.token));
 
       expect(response.status).toBe(200);
@@ -158,7 +158,7 @@ describe("Feature 2 — Season Management", () => {
       });
 
       const response = await request(app)
-        .post("/courses/seasons")
+        .post("/course-t3/seasons")
         .set(authHeader(student.body.token))
         .send(validSeason());
 
@@ -168,7 +168,7 @@ describe("Feature 2 — Season Management", () => {
     });
 
     it("Unauthenticated API request to seasons", async () => {
-      const response = await request(app).get("/courses/seasons");
+      const response = await request(app).get("/course-t3/seasons");
 
       expect(response.status).toBe(401);
       expect(response.body.message).toMatch(/Unauthorized/i);
@@ -179,7 +179,7 @@ describe("Feature 2 — Season Management", () => {
       const created = await createGame(app, token);
 
       const response = await request(app)
-        .delete(`/courses/seasons/${created.body.seasonId}`)
+        .delete(`/course-t3/seasons/${created.body.seasonId}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(400);
@@ -195,7 +195,7 @@ describe("Feature 2 — Season Management", () => {
       const created = await createSeason(app, token);
 
       const response = await request(app)
-        .delete(`/courses/leagues/${created.body.leagueId}`)
+        .delete(`/course-t3/leagues/${created.body.leagueId}`)
         .set(authHeader(token));
 
       expect(response.status).toBe(400);

@@ -74,9 +74,9 @@
 - **FR-004**: semesters **MUST** be listed in chronological order, first by year and then by season.
 - **FR-005**: This feature **MUST** deliver semester CRUD and a **single-view** semesters UI in `Semesters.vue` (dialog-based add/edit/delete). No sidebar/main split.
 - **FR-006**: typing in the on-screen semester search bar updates the semester list with only semesters containing the search bar's content as a substring.
-- **FR-007**: signed-out users **MUST NOT** have access to any `/courses/semesters` routes
-- **FR-008**: signed-in students **MUST NOT** have access to any non-`GET` `/courses/semesters` routes (`POST`/`PUT`/`DELETE` → `403`)
-- **FR-009**: signed-in students **MUST** be allowed to call `GET /courses/semesters` and `GET /courses/semesters/:semesterId` (valid session required)
+- **FR-007**: signed-out users **MUST NOT** have access to any `/course-t3/semesters` routes
+- **FR-008**: signed-in students **MUST NOT** have access to any non-`GET` `/course-t3/semesters` routes (`POST`/`PUT`/`DELETE` → `403`)
+- **FR-009**: signed-in students **MUST** be allowed to call `GET /course-t3/semesters` and `GET /course-t3/semesters/:semesterId` (valid session required)
 - **FR-010**: signed-in students **MUST NOT** access the admin management UI `Semesters.vue` (route guard redirects them away; API `GET` remains allowed)
 
 ---
@@ -91,9 +91,9 @@
 - Empty or whitespace-only semester name → client block and/or `400`.
 - semester name longer than 6 characters → `400`.
 - Invalid `semesterId` → `404`.
-- Unauthenticated semester view or `GET /courses/semesters` → redirect or `401`.
+- Unauthenticated semester view or `GET /course-t3/semesters` → redirect or `401`.
 - Student `POST`/`PUT`/`DELETE` → `403`.
-- Student `GET /courses/semesters` or `GET /courses/semesters/:semesterId` → `200` (when authorized and resource exists).
+- Student `GET /course-t3/semesters` or `GET /course-t3/semesters/:semesterId` → `200` (when authorized and resource exists).
 - Student navigates to `Semesters.vue` → redirected away from the management view (not treated as logged out).
 
 ## Success Criteria
@@ -111,11 +111,11 @@ Semesters are not owned by anybody. Any authenticated user (admin or student) ma
 
 | Rule                 | Requirement                                                                                                                                  |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Read scope**       | `GET /courses/semesters` and `GET /courses/semesters/:semesterId` return the shared catalog for any authenticated user (admin or student).   |
+| **Read scope**       | `GET /course-t3/semesters` and `GET /course-t3/semesters/:semesterId` return the shared catalog for any authenticated user (admin or student).   |
 | **Write scope**      | `POST`/`PUT`/`DELETE` apply only when the signed-in user is authenticated as an admin.                                                       |
 | **Create scope**     | New semesters owned by nobody.                                                                                                               |
 | **Non-admin access** | Student (or other non-admin) `POST`/`PUT`/`DELETE` → `403`. Student `GET` is allowed.                                                        |
-| **UI scope**         | `Semesters.vue` is **admin-only**. It shows semesters from `GET /courses/semesters`. Students must not reach this view (router/role guard).  |
+| **UI scope**         | `Semesters.vue` is **admin-only**. It shows semesters from `GET /course-t3/semesters`. Students must not reach this view (router/role guard).  |
 | **Implementation**   | `authenticate` on all semester routes; **admin** role guard on `POST`/`PUT`/`DELETE` and on the `Semesters.vue` route; load by `semesterId`. |
 
 ---
@@ -124,11 +124,11 @@ Semesters are not owned by anybody. Any authenticated user (admin or student) ma
 
 | Method   | Endpoint                         | Auth                | Purpose               |
 | -------- | -------------------------------- | ------------------- | --------------------- |
-| `GET`    | `/courses/semesters`             | Yes (admin/student) | Fetch all semesters   |
-| `GET`    | `/courses/semesters/:semesterId` | Yes (admin/student) | Show semester details |
-| `POST`   | `/courses/semesters`             | Yes, admin          | Create a new semester |
-| `PUT`    | `/courses/semesters/:semesterId` | Yes, admin          | Update a semester     |
-| `DELETE` | `/courses/semesters/:semesterId` | Yes, admin          | Delete a semester     |
+| `GET`    | `/course-t3/semesters`             | Yes (admin/student) | Fetch all semesters   |
+| `GET`    | `/course-t3/semesters/:semesterId` | Yes (admin/student) | Show semester details |
+| `POST`   | `/course-t3/semesters`             | Yes, admin          | Create a new semester |
+| `PUT`    | `/course-t3/semesters/:semesterId` | Yes, admin          | Update a semester     |
+| `DELETE` | `/course-t3/semesters/:semesterId` | Yes, admin          | Delete a semester     |
 
 Non-admin user access to `POST`/`PUT`/`DELETE` returns `403`. Authenticated students may `GET`. Unauthenticated requests return `401`.
 
@@ -340,14 +340,14 @@ Non-admin user access to `POST`/`PUT`/`DELETE` returns `403`. Authenticated stud
 
 - **Given** I am a signed-in student user
 - **And** the semesters `SP2026` and `FA2027` exist
-- **When** I request `GET /courses/semesters`
+- **When** I request `GET /course-t3/semesters`
 - **Then** the API returns `200` with both semesters in the response
 
 #### Scenario: Student can GET a semester by id
 
 - **Given** I am a signed-in student user
 - **And** the semester `SP2026` exists
-- **When** I request `GET /courses/semesters/SP2026`
+- **When** I request `GET /course-t3/semesters/SP2026`
 - **Then** the API returns `200` with the semester object for `SP2026`
 
 #### Scenario: Student user accesses the semester view
@@ -360,7 +360,7 @@ Non-admin user access to `POST`/`PUT`/`DELETE` returns `403`. Authenticated stud
 #### Scenario: Unauthenticated API request to semesters
 
 - **Given** I have no valid session token
-- **When** I request `GET /courses/semesters`
+- **When** I request `GET /course-t3/semesters`
 - **Then** the API returns `401` with `{ "message": "Unauthorized" }`
 
 #### Scenario: Unauthenticated user accesses the semester view
@@ -519,7 +519,7 @@ Do not implement behavior not in this spec.
 ## Out of Scope
 
 - Drag-and-drop semester reordering
-- `POST`/`GET`/`PUT`/`DELETE` anywhere that's not `/courses/semesters` or `/courses/semesters/:semesterId`
+- `POST`/`GET`/`PUT`/`DELETE` anywhere that's not `/course-t3/semesters` or `/course-t3/semesters/:semesterId`
 
 ---
 

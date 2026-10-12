@@ -39,18 +39,31 @@ describe("Feature 1 — User Authentication & Session Management", () => {
   });
 });
 
-describe("Feature 2 — Season Management", () => {
+describe("Admin route guards", () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  describe("US-2.7 — Restrict season management to admins", () => {
-    it("Unauthenticated user navigates to seasons", async () => {
-      await router.push("/login");
-      await router.push("/seasons");
-
-      expect(router.currentRoute.value.name).toBe("login");
+  it("Student is redirected away from admin screens", async () => {
+    Utils.setStore("user", {
+      userId: 1,
+      role: "student",
+      token: "student-token",
     });
+
+    await router.push({ name: "Semester" });
+    expect(router.currentRoute.value.name).toBe("EnrollmentList");
+  });
+
+  it("Admin can open Semesters", async () => {
+    Utils.setStore("user", {
+      userId: 2,
+      role: "admin",
+      token: "admin-token",
+    });
+
+    await router.push({ name: "Semester" });
+    expect(router.currentRoute.value.name).toBe("Semester");
   });
 });
 

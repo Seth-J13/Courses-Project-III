@@ -1,13 +1,12 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Home from "./views/Home.vue";
 import Login from "./views/Login.vue";
+import Faculty from "./views/Faculty.vue";
 import Register from "./views/Register.vue";
-import Games from "./views/Games.vue";
-import TeamList from "./views/TeamList.vue";
-import Teams from "./views/Team.vue";
-import PeopleList from "./views/PeopleList.vue";
-import Season from "./views/Season.vue";
-import SeasonList from "./views/SeasonList.vue";
+import Semester from "./views/Semester.vue/";
+import CourseList from "./views/CourseList.vue";
+import SectionsList from "./views/SectionsList.vue"
+import EnrollmentList from "./views/EnrollmentList.vue";
+import Utils from "./config/utils.js";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -23,45 +22,85 @@ const router = createRouter({
       component: Register,
     },
     {
-      path: "/home",
-      name: "Home",
-      component: Home,
+      path: "/sections",
+      meta: {
+        requiresAuth: true,
+        role: Utils.ROLE_ADMIN,
+      },
+      name: "Sections",
+      meta: {
+        component: SectionsList
+      },
+      component: SectionsList,
     },
     {
-      path: "/games",
-      name: "Games",
-      component: Games,
+      path: "/course-list",
+      meta: {
+        requiresAuth: true,
+        role: Utils.ROLE_ADMIN,
+      },
+      name: "CourseList",
+      meta: {
+        component: CourseList
+      },
+      component: CourseList,
     },
     {
-      path: "/team-list",
-      name: "TeamList",
-      component: TeamList,
+      path: "/faculty",
+      meta: {
+        requiresAuth: true,
+        role: Utils.ROLE_ADMIN,
+      },
+      name: "Faculty",
+      meta: {
+        component: Faculty
+      },
+      component: Faculty,
     },
     {
-      path: "/teams",
-      name: "Teams",
-      component: Teams,
+      path: "/semester",
+      meta: {
+        requiresAuth: true,
+        role: Utils.ROLE_ADMIN,
+      },
+      name: "Semester",
+      meta: {
+        component: Semester
+      },
+      component: Semester,
     },
     {
-      path: "/people-list",
-      name: "PeopleList",
-      component: PeopleList,  
-    },
-    {
-      path: "/season",
-      name: "Season",
-      component: Season,
-    },
-    {
-      path: "/season-list",
-      name: "SeasonList",
-      component: SeasonList,
+      path: "/enrollment-list",
+      meta: {
+        requiresAuth: true,
+      },
+      name: "EnrollmentList",
+      component: EnrollmentList,
     },
     {
       path: "/:pathMatch(.*)*",
       redirect: { name: "Login" },
     }
   ],
+});
+
+router.beforeEach((to) => {
+  const user = Utils.getStore("user");
+  const isPublic = to.name === "Login" || to.name === "Register";
+
+  if (!user?.token && !isPublic) {
+    return { name: "Login" };
+  }
+
+  if (user?.token && isPublic) {
+    return user.role === "admin"
+      ? { name: "Semester" }
+      : { name: "EnrollmentList" };
+  }
+
+  if (to.meta.requiresAdmin && user?.role !== "admin") {
+    return { name: "EnrollmentList" };
+  }
 });
 
 export default router;
