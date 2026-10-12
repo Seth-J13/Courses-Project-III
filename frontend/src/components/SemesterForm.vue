@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 const props = defineProps({
   modelValue: { type: Object, required: true },
@@ -9,25 +9,14 @@ const emit = defineEmits(["update:modelValue", "submit"]);
 
 const formRef = ref(null);
 
-const sportOptions = ["soccer", "baseball", "volleyball", "football"];
-
 const updateField = (field, value) => {
   emit("update:modelValue", { ...props.modelValue, [field]: value });
 };
 
-const nameRules = [
+const idRules = [
   (value) => !!value?.trim() || "Required",
-  (value) =>
-    (value?.trim().length ?? 0) <= 50 ||
-    "League name must be 50 characters or fewer.",
+  (value) => (value?.trim() || "").length <= 6 || "ID must be 6 characters or fewer.",
 ];
-const sportRules = [
-  (value) => !!value || "Required",
-  (value) =>
-    sportOptions.includes(value) ||
-    "Sport must be soccer, baseball, volleyball, or football.",
-];
-
 const validate = () => formRef.value.validate();
 
 defineExpose({ validate });
@@ -36,19 +25,23 @@ defineExpose({ validate });
 <template>
   <v-form ref="formRef" @submit.prevent="emit('submit')">
     <v-text-field
-      :model-value="modelValue.name"
-      label="League Name"
+      :model-value="modelValue.semesterId"
+      label="Semester ID"
       density="comfortable"
-      :rules="nameRules"
-      @update:model-value="updateField('name', $event)"
+      :rules="idRules"
+      @update:model-value="updateField('semesterId', $event)"
     />
-    <v-select
-      :model-value="modelValue.sport"
-      label="Sport"
-      :items="sportOptions"
+    <v-date-picker
+      :model-value="modelValue.startDate"
+      label="startDate"
       density="comfortable"
-      :rules="sportRules"
-      @update:model-value="updateField('sport', $event)"
-    />
+      @update:model-value="updateField('startDate', $event)"
+    >Starting Date</v-date-picker>
+    <v-date-picker
+      :model-value="modelValue.endDate"
+      label="endDate"
+      density="comfortable"
+      @update:model-value="updateField('endDate', $event)"
+    >Ending Date</v-date-picker>
   </v-form>
 </template>

@@ -5,6 +5,7 @@ import userModel from "./user.model.js";
 import facultyModel from "./faculty.model.js";
 import courseModel from "./course.model.js";
 import sectionModel from "./league.model.js";
+import semesterModel from "./semester.model.js"
 
 const db = {};
 db.Sequelize = Sequelize;
@@ -17,6 +18,7 @@ db.session.belongsTo(db.user, { foreignKey: "userId" });
 db.faculty = facultyModel(sequelize, Sequelize);
 db.section = sectionModel(sequelize, Sequelize);
 db.course = courseModel(sequelize, Sequelize);
+db.semester = semesterModel(sequelize, Sequelize);
 
 // VVV Must be last VVV
 db.sequelize = sequelize;
