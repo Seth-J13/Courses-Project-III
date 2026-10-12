@@ -32,10 +32,6 @@ const showSectionBox = ref(false)
 const showSectionDetails = ref(false)
 const sectionDetails = ref("")
 
-const faculty = ref([])
-const sectionFaculty = ref([])
-const facultyName = ref("")
-
 const saving = ref(false);
 const deleteDialogOpen = ref(false);
 const enrollmentToDelete = ref(null);
@@ -106,18 +102,6 @@ const retrieveEnrollments = async () => {
       semester = calcCurrentSemester()
     }
     enrollments.value = enrollmentResponse.data;
-
-    console.log(enrollments.value)
-
-    // enrollments.value.map((enrollment) => {
-    //   console.log(enrollment)
-    //   return {
-    //     universityId: enrollment.universityId,
-    //     semesterId: enrollment.semesterId,
-    //     sectionId: enrollment.sectionId,
-    //     faculty: 
-    //   }
-    // })
 
     // update storage and title values
     Utils.setStore('lastSemChecked', semester)
@@ -279,6 +263,7 @@ onMounted(loadAllSemesterIds);
     <v-card rounded="lg">
       <v-card-item>
         <v-card-title>Enrollments - {{ cardTitleSemester }}</v-card-title>
+        <div v-if="!loading && enrollments.length > 0">
           <v-combobox
             v-model="selectedSemester"
             label="Find Semester"
@@ -315,6 +300,7 @@ onMounted(loadAllSemesterIds);
             >
               Next
             </v-btn>
+          </div>
         </div>
 
         <template #append>
