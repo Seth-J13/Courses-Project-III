@@ -32,10 +32,6 @@ const showSectionBox = ref(false)
 const showSectionDetails = ref(false)
 const sectionDetails = ref("")
 
-const faculty = ref([])
-const sectionFaculty = ref([])
-const facultyName = ref("")
-
 const saving = ref(false);
 const deleteDialogOpen = ref(false);
 const enrollmentToDelete = ref(null);
@@ -106,18 +102,6 @@ const retrieveEnrollments = async () => {
       semester = calcCurrentSemester()
     }
     enrollments.value = enrollmentResponse.data;
-
-    console.log(enrollments.value)
-
-    // enrollments.value.map((enrollment) => {
-    //   console.log(enrollment)
-    //   return {
-    //     universityId: enrollment.universityId,
-    //     semesterId: enrollment.semesterId,
-    //     sectionId: enrollment.sectionId,
-    //     faculty: 
-    //   }
-    // })
 
     // update storage and title values
     Utils.setStore('lastSemChecked', semester)
@@ -279,42 +263,43 @@ onMounted(loadAllSemesterIds);
     <v-card rounded="lg">
       <v-card-item>
         <v-card-title>Enrollments - {{ cardTitleSemester }}</v-card-title>
-          <v-combobox
-            v-model="selectedSemester"
-            label="Find Semester"
+        
+        <v-combobox v-if="!loading && enrollments.length > 0"
+          v-model="selectedSemester"
+          label="Find Semester"
+          class="oc-cta"
+          placeholder="e.g. FA2026"
+          persistent-placeholder:true
+          style="max-width: 250px; margin-top: 5px"
+          @update:model-value="nav('jump')"
+          :items=semesterIds
+        ></v-combobox>
+        <div class="d-flex justify-space-between align-center mt-2" style="width: 40px; padding: 0 0 3px 3px">
+          <v-btn 
+            variant="elevated"
             class="oc-cta"
-            placeholder="e.g. FA2026"
-            persistent-placeholder:true
-            style="max-width: 250px; margin-top: 5px"
-            @update:model-value="nav('jump')"
-            :items=semesterIds
-          ></v-combobox>
-          <div class="d-flex justify-space-between align-center mt-2" style="width: 40px; margin: -10px 0 0 0; padding: 0 0 3px 3px">
-            <v-btn 
-              variant="elevated"
-              class="oc-cta"
-              @click="nav('prev')"
-              style="margin: 0 25px 0 0"
-            >
-              Prev
-            </v-btn>
+            @click="nav('prev')"
+            style="margin: 0 25px 0 0"
+          >
+            Prev
+          </v-btn>
 
-            <v-btn 
-              variant="elevated"
-              class="oc-cta"
-              @click="nav('clear')"
-              style="margin: 0 25px 0 0"
-            >
-              Clear
-            </v-btn>
-            
-            <v-btn 
-              variant="elevated"
-              class="oc-cta"
-              @click="nav('next')"
-            >
-              Next
-            </v-btn>
+          <v-btn v-if="!loading && enrollments.length > 0"
+            variant="elevated"
+            class="oc-cta"
+            @click="nav('clear')"
+            style="margin: 0 25px 0 0"
+          >
+            Clear
+          </v-btn>
+          
+          <v-btn 
+            variant="elevated"
+            class="oc-cta"
+            @click="nav('next')"
+          >
+            Next
+          </v-btn>
         </div>
 
         <template #append>

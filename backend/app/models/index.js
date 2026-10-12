@@ -7,7 +7,6 @@ import enrollmentModel from "./enrollment.model.js";
 import semesterModel from "./semester.model.js";
 import courseModel from "./course.model.js";
 import sectionModel from "./section.model.js";
-import semesterModel from "./semester.model.js"
 
 const db = {};
 db.Sequelize = Sequelize;
