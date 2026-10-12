@@ -87,9 +87,35 @@ exports.findAll = async (req, res) => {
   }
 };
 
+exports.findForCourse = async (req, res) => {
+  const { courseId } = req.params
+  try {
+    const sections = await db.section.findAll({
+      where: {courseId},
+      order: [["sectionId", "ASC"]],
+    });
+    return res.send(sections);
+  } catch (err) {
+    logger.error(`section findForCourse failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to fetch sections." });
+  }
+};
+
+exports.findOne = async (req, res) => {
+  const { sectionId } = req.params
+  try {
+    const section = await db.section.findOne({
+      where: {sectionId}
+    });
+    return res.send(section);
+  } catch (err) {
+    logger.error(`section findOne failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to fetch section." });
+  }
+};
+
 exports.create = async (req, res) => {
   try {
-    console.log(req.body);
     const validated = checkValidation(req.body);
     if (validated.error) {
       return res.status(400).send({ message: validated.error });
@@ -145,8 +171,6 @@ exports.remove = async (req, res) => {
     if (!existing) {
       return res.status(400).send({ message: "Section does not exist." });
     }
-
-    console.log(sectionId)
 
     await db.section.destroy({ where: { sectionId } });
     return res.send({ message: "Section deleted." });

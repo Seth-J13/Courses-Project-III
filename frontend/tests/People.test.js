@@ -34,7 +34,7 @@ const janeDoe = {
   email: "jane.doe@example.com",
   birthDate: "1990-05-15",
   gender: "female",
-  userId: null,
+  universityId: null,
 };
 
 const jdoeUser = {
@@ -50,7 +50,7 @@ const validPersonForm = (overrides = {}) => ({
   email: "jane.doe@example.com",
   birthDate: "1990-05-15",
   gender: "female",
-  userId: null,
+  universityId: null,
   ...overrides,
 });
 
@@ -132,14 +132,14 @@ describe("Feature 4 — People Management", () => {
         email: "jane.doe@example.com",
         birthDate: "1990-05-15",
         gender: "female",
-        userId: null,
+        universityId: null,
       });
       expect(wrapper.find(".v-dialog-stub").exists()).toBe(false);
       expect(wrapper.text()).toContain("Doe");
     });
 
     it("User creates a new person with a linked user", async () => {
-      const linked = { ...janeDoe, userId: 2, user: jdoeUser };
+      const linked = { ...janeDoe, universityId: 2, user: jdoeUser };
       peopleServices.getPeople
         .mockResolvedValueOnce({ data: [] })
         .mockResolvedValue({ data: [linked] });
@@ -149,7 +149,7 @@ describe("Feature 4 — People Management", () => {
       wrapper = mounted.wrapper;
 
       await clickButton(wrapper, "+ New person");
-      await fillPersonForm(wrapper, { userId: 2 });
+      await fillPersonForm(wrapper, { universityId: 2 });
       await clickButton(wrapper, "Create");
 
       expect(peopleServices.createPerson).toHaveBeenCalledWith({
@@ -158,7 +158,7 @@ describe("Feature 4 — People Management", () => {
         email: "jane.doe@example.com",
         birthDate: "1990-05-15",
         gender: "female",
-        userId: 2,
+        universityId: 2,
       });
       expect(wrapper.text()).toContain("jdoe");
       expect(wrapper.find(".v-dialog-stub").exists()).toBe(false);
@@ -274,7 +274,7 @@ describe("Feature 4 — People Management", () => {
       wrapper = mounted.wrapper;
 
       await clickButton(wrapper, "+ New person");
-      await fillPersonForm(wrapper, { userId: 2 });
+      await fillPersonForm(wrapper, { universityId: 2 });
       await clickButton(wrapper, "Create");
 
       expect(peopleServices.createPerson).toHaveBeenCalled();
@@ -294,7 +294,7 @@ describe("Feature 4 — People Management", () => {
             email: "robert.smith@example.com",
             birthDate: "1988-03-02",
             gender: "male",
-            userId: null,
+            universityId: null,
           },
         ],
       });

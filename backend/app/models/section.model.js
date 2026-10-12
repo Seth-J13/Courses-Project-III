@@ -1,5 +1,5 @@
 export default (sequelize, Sequelize) => {
-  const League = sequelize.define("section", {
+  const Section = sequelize.define("section", {
     sectionId: {
       type: Sequelize.STRING(12),
       primaryKey: true,
@@ -30,5 +30,5 @@ export default (sequelize, Sequelize) => {
     },
   });
 
-  return League;
+  return Section;
 };

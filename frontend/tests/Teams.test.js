@@ -15,14 +15,14 @@ import Utils from "../src/config/utils.js";
 import { createTestRouter, mountWithPlugins } from "./testUtils.js";
 
 const adminUser = {
-  userId: 1,
+  universityId: 1,
   username: "adminuser",
   role: "admin",
   token: "admin-token",
 };
 
 const managerUser = {
-  userId: 2,
+  universityId: 2,
   username: "janedoe",
   role: "manager",
   token: "manager-token",
@@ -66,7 +66,7 @@ const janeDoe = {
   email: "jane.doe@example.com",
   birthDate: "1990-05-15",
   gender: "female",
-  userId: null,
+  universityId: null,
 };
 
 const janePlayer = {

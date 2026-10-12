@@ -7,17 +7,29 @@ const enrollmentInclude = [
   {
     model: db.semester,
     as: "semester",
-    attributes: ["semesterId", "semesterName", "startDate", "endDate"]
+    attributes: ["semesterId", "startDate", "endDate"]
   },
   {
     model: db.user,
     as: "user",
-    attributes: ["universityId", "name"]
+    attributes: ["id", "fname", "lname"]
   },
   {
     model: db.section,
     as: "section",
-    attributes: ["courseId", "sectionId", "dayOfWeek", "roomNumber", "startTime", "endTime", "facultyId"]
+    attributes: ["sectionId", "courseId", "dayOfWeek", "roomNum", "timeStart", "timeEnd", "facultyId"],
+    include: [
+      {
+        model: db.course,
+        as: "course",
+        attributes: ["courseId", "courseName"]
+      },
+      {
+        model: db.faculty,
+        as: "faculty",
+        attributes: ["facultyId", "fName", "lName"]
+      }
+    ]
   },
 ];
 
@@ -33,6 +45,7 @@ exports.findAll = async (req, res) => {
 
     const enrollments = await db.enrollment.findAll({
       where: {universityId},
+      include: enrollmentInclude,
       order: [["semesterId", "ASC"]],
     });
 
@@ -55,6 +68,7 @@ exports.findBySemester = async (req, res) => {
 
     const enrollments = await db.enrollment.findAll({
       where: {universityId, semesterId},
+      include: enrollmentInclude,
       order: [["semesterId", "ASC"]],
     });
 
@@ -88,9 +102,19 @@ exports.findOne = async (req, res) => {
   }
 }
 
+exports.update = async (req, res) => {
+  try {
+    return res.status(405).send({ message: "enrollments are dropped, not edited" })
+  } catch (err) {
+    logger.error(`Server error: ${err.message}`);
+    return res.status(500).send({ message: "Server error." });
+  }
+
+}
+
 exports.create = async (req, res) => {
   try {
-    const { semesterId, universityId, sectionId } = req.body;
+    const { universityId, semesterId, sectionId } = req.body;
 
     if (Number.isNaN(universityId)) {
       return res.status(400).send({ message: "Invalid enrollment id." });
@@ -114,7 +138,7 @@ exports.create = async (req, res) => {
 
 exports.delete = async (req, res) => {
   try {
-    const { semesterId, universityId, sectionId } = req.body;
+    const { universityId, semesterId, sectionId } = req.params;
 
     if (Number.isNaN(universityId)) {
       return res.status(400).send({ message: "Invalid enrollment id." });
@@ -123,7 +147,7 @@ exports.delete = async (req, res) => {
       return res.status(404).send({ message: `no enrollments for user=${universityId} found` });
 
     const existing = await db.enrollment.findOne({
-      where: {semesterId, universityId, sectionId}
+      where: {universityId, semesterId, sectionId}
     });
     if (!existing) {
       return res.status(404).send({
@@ -133,7 +157,7 @@ exports.delete = async (req, res) => {
 
     await db.enrollment.destroy({ where: { semesterId: semesterId, universityId: universityId, sectionId: sectionId } });
 
-    return res.status(204);
+    return res.status(204).send({ message: "Successfully deleted enrollment"});
   } catch (err) {
     logger.error(`enrollment delete failed: ${err.message}`);
     return res.status(500).send({ message: "Failed to delete enrollment." });

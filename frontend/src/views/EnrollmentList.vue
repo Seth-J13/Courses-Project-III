@@ -1,178 +1,322 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
-import seasonServices from "../services/seasonServices.js";
-import leagueServices from "../services/leagueServices.js";
-import { toDateInputValue, formatDueDate } from "../config/validation.js";
-
-const router = useRouter();
+import { onMounted, ref } from "vue";
+import enrollmentServices from "../services/enrollmentServices.js";
+import EnrollmentForm from "../components/EnrollmentForm.vue";
+import semesterServices from "../services/semesterServices_temp.js";
+import courseServices from "../services/courseServices_temp.js";
+import sectionServices from "../services/sectionServices_temp.js";
+import Utils from "../config/utils.js";
 
 const emptyForm = () => ({
-  name: "",
-  startDate: "",
-  endDate: "",
-  leagueId: null,
-  gameDays: [],
-  gameTime: "",
-  minDaysBetweenGames: "",
+  course: "",
+  section: ""
 });
 
-const seasons = ref([]);
-const leagues = ref([]);
+const enrollments = ref([]);
+const cardTitleSemester = ref("");
 const loading = ref(false);
+const semesterIds = ref([]);
 const listError = ref("");
+const selectedSemester = ref("");
 const formDialogOpen = ref(false);
-const isAddMode = ref(true);
 const form = ref(emptyForm());
-const formRef = ref(null);
 const formError = ref("");
+
+const courses = ref([])
+const selectedCourse = ref("")
+const showCourseDetails = ref(false)
+const courseDetails = ref("")
+
+const sections = ref([])
+const showSectionBox = ref(false)
+const showSectionDetails = ref(false)
+const sectionDetails = ref("")
+
+const faculty = ref([])
+const sectionFaculty = ref([])
+const facultyName = ref("")
+
 const saving = ref(false);
-const editingId = ref(null);
 const deleteDialogOpen = ref(false);
-const seasonToDelete = ref(null);
+const enrollmentToDelete = ref(null);
 const deleting = ref(false);
 
-const formTitle = computed(() =>
-  isAddMode.value ? "Add Season" : "Edit Season"
-);
-const saveLabel = computed(() =>
-  isAddMode.value ? "Create" : "Save Season"
-);
+const seasonList = ['SP', 'SU', 'FA', 'WI']
 
-const retrieveSeasons = async () => {
+const loadAllSemesterIds = async () => {
+  let semesters = []
+  
+  await semesterServices.getSemesters()
+  .then((response) => {
+    response.data.forEach(element => {
+      semesters.push(element.semesterId)
+    });
+  }).catch((error) => {
+    console.log(error.response?.data?.message || error.message)
+  })
+
+  semesterIds.value = semesters
+}
+
+const calcCurrentSemester = () => {
+  let season = ''
+  season = seasonList[Math.floor(new Date().getMonth()/4)]
+
+  return season + `${new Date().getFullYear()}`
+}
+
+const formatTime = (time) => {
+  let hour = time.substring(0,2)
+  let minute = time.substring(3,5)
+  let suffix = `AM`
+  
+  if (parseInt(hour) >= 12)
+    suffix = `PM`
+  if (parseInt(hour) > 12)
+    hour = hour - 12
+
+return hour + `:` + minute + suffix
+}
+
+const getSearchParams = () => new URLSearchParams(window.location.search)
+
+const retrieveEnrollments = async () => {
   loading.value = true;
   listError.value = "";
 
   try {
-    const [seasonsResponse, leaguesResponse] = await Promise.all([
-      seasonServices.getSeasons(),
-      leagueServices.getLeagues(),
-    ]);
-    seasons.value = seasonsResponse.data;
-    leagues.value = leaguesResponse.data;
+    // get the semester argument from the search bar if it exists,
+    // otherwise get the most recently-visited one if it exists,
+    // otherwise calculate it based on the current date
+    let sem = getSearchParams().get('semester')
+    let semester = sem || Utils.getStore('lastSemChecked') || calcCurrentSemester()
+    
+    // if there weren't any parameters, update the search bar to include parameters
+    if (!sem)
+      window.history.replaceState({}, '', window.location.href + `?semester=${semester}`)
+
+    let enrollmentResponse = {}
+    if (semester !== 'null') {
+      enrollmentResponse = await enrollmentServices.getEnrollmentsBySemester(Utils.getStore('user').id, semester)
+      cardTitleSemester.value = semester
+    }
+    else {
+      enrollmentResponse = await enrollmentServices.getEnrollments(Utils.getStore('user').id)
+      cardTitleSemester.value = "all"
+      semester = calcCurrentSemester()
+    }
+    enrollments.value = enrollmentResponse.data;
+
+    console.log(enrollments.value)
+
+    // enrollments.value.map((enrollment) => {
+    //   console.log(enrollment)
+    //   return {
+    //     universityId: enrollment.universityId,
+    //     semesterId: enrollment.semesterId,
+    //     sectionId: enrollment.sectionId,
+    //     faculty: 
+    //   }
+    // })
+
+    // update storage and title values
+    Utils.setStore('lastSemChecked', semester)
   } catch (error) {
     listError.value =
-      error.response?.data?.message || "Failed to fetch seasons.";
+      error.response?.data?.message || "Failed to fetch enrollments.";
   } finally {
     loading.value = false;
   }
 };
 
-const openAddDialog = () => {
-  isAddMode.value = true;
-  editingId.value = null;
+const openAddDialog = async () => {
+  
   form.value = emptyForm();
   formError.value = "";
   formDialogOpen.value = true;
+
+  courses.value = (await courseServices.getCourses()).data;
+  
+  if (cardTitleSemester === 'all')
+    courses.value = courses.value.filter((course) => course.semesterOffered.includes(cardTitleSemester.value.substring(0,2)))
+  courses.value = courses.value.map((course) => course.courseName.substring(0,50) + ((course.courseName.length > 50) ? `...` : '') + ` (${course.courseId})`)
 };
 
-const openEditDialog = (season) => {
-  isAddMode.value = false;
-  editingId.value = season.id;
-  form.value = {
-    name: season.name ?? "",
-    startDate: toDateInputValue(season.startDate),
-    endDate: toDateInputValue(season.endDate),
-    leagueId: season.leagueId ?? null,
-    gameDays: Array.isArray(season.gameDays) ? [...season.gameDays] : [],
-    gameTime: String(season.gameTime ?? "").slice(0, 5),
-    minDaysBetweenGames: season.minDaysBetweenGames ?? "",
-  };
-  formError.value = "";
-  formDialogOpen.value = true;
-};
+const loadSections = async () => {
+  try {
+    selectedCourse.value = form.value.course
+    let code = selectedCourse.value.substring( selectedCourse.value.indexOf("(") + 1, selectedCourse.value.search(/[0-9]/) + 4 )
+    let course = (code) ? (await courseServices.getCourse(code)).data : null;
+
+    sections.value = (await sectionServices.getSections(code)).data;
+    sections.value = sections.value.map((section) => section.sectionId + `: ` + formatTime(section.timeStart) + '-' + formatTime(section.timeEnd))
+    showSectionBox.value = Boolean(course);
+    
+    courseDetails.value = `Description: ${course.description}`
+    showCourseDetails.value = true;
+
+    let section = (code) ? (await sectionServices.getSectionDetails(form.value.section.substring(0,12))).data : null;
+    sectionDetails.value = `Meeting Times: ${section.dayOfWeek} ${formatTime(section.timeStart)} - ${formatTime(section.timeEnd)}
+Room: ${section.roomNum} 
+Instructor: ${section.facultyId}`
+    showSectionDetails.value = true
+  } catch (err) {
+
+  }
+}
 
 const closeFormDialog = () => {
   formDialogOpen.value = false;
   formError.value = "";
-  editingId.value = null;
 };
 
-const saveSeason = async () => {
-  formError.value = "";
-  const { valid } = await formRef.value.validate();
-
-  if (!valid) {
-    return;
-  }
-
+const enroll = async () => {
   saving.value = true;
-
-  const payload = {
-    name: form.value.name.trim(),
-    startDate: form.value.startDate,
-    endDate: form.value.endDate,
-    leagueId: form.value.leagueId,
-    gameDays: form.value.gameDays,
-    gameTime: form.value.gameTime,
-    minDaysBetweenGames: Number(form.value.minDaysBetweenGames),
-  };
-
+  formError.value = "";
   try {
-    if (isAddMode.value) {
-      await seasonServices.createSeason(payload);
-    } else {
-      await seasonServices.updateSeason(editingId.value, {
-        ...payload,
-        seasonId: editingId.value,
-      });
-    }
-
+    await enrollmentServices.createEnrollment({
+      universityId: Utils.getStore("user").id,
+      semesterId: selectedSemester.value || getSearchParams().get('semester'),
+      sectionId: form.value.section.substring(0,12),
+    });
     closeFormDialog();
-    await retrieveSeasons();
-  } catch (error) {
-    formError.value =
-      error.response?.data?.message ||
-      (isAddMode.value
-        ? "Failed to create season."
-        : "Failed to update season.");
+    await retrieveEnrollments();
+  } catch (e) {
+    formError.value = e.response?.data?.message || "Failed to enroll.";
   } finally {
     saving.value = false;
   }
 };
 
-const openSeason = (season) => {
-  router.push({ name: "season", params: { seasonId: season.id } });
-};
-
-const openDeleteDialog = (season) => {
-  seasonToDelete.value = season;
+const openDeleteDialog = (enrollment) => {
+  enrollmentToDelete.value = enrollment;
   deleteDialogOpen.value = true;
 };
 
 const closeDeleteDialog = () => {
   deleteDialogOpen.value = false;
-  seasonToDelete.value = null;
+  enrollmentToDelete.value = null;
 };
 
-const confirmDeleteSeason = async () => {
-  if (!seasonToDelete.value?.id) {
+const confirmDeleteEnrollment = async () => {
+  if (!enrollmentToDelete.value) {
     return;
   }
 
   deleting.value = true;
   listError.value = "";
-
+  
   try {
-    await seasonServices.deleteSeason(seasonToDelete.value.id);
+    await enrollmentServices.deleteEnrollment(enrollmentToDelete.value.universityId, enrollmentToDelete.value.semesterId, enrollmentToDelete.value.sectionId);
     closeDeleteDialog();
-    await retrieveSeasons();
+    await retrieveEnrollments();
   } catch (error) {
     listError.value =
-      error.response?.data?.message || "Failed to delete season.";
+      error.response?.data?.message || "Failed to delete enrollment.";
   } finally {
     deleting.value = false;
   }
+  closeDeleteDialog()
 };
 
-onMounted(retrieveSeasons);
+const nav = async (mode) => {
+  try {
+    // get the semester argument from the search bar if it exists, otherwise get the most recently-visited one
+    let semester = getSearchParams().get('semester')
+    let season = ''
+    let year = ''
+
+    if (semester === 'null') {
+      season = Utils.getStore('lastSemChecked').substr(0,2)
+      year = Utils.getStore('lastSemChecked').substr(2,6)
+    }
+    else {
+      season = semester.substring(0,2)
+      year = semester.substring(2,6)
+    }
+    
+    let index = seasonList.indexOf(season)
+    if (mode === 'next') {
+      year = (index === 3) ? (parseInt(year)+1).toString() : year
+      season = (index === 3) ? seasonList[0] : seasonList[index+1]
+    }
+    else if (mode === 'clear') {
+      window.history.replaceState({}, '', window.location.origin + window.location.pathname + `?semester=null`)
+      year = 'null'
+      season = ''
+      selectedSemester.value = ''
+    }
+    else if (mode === 'prev') {
+      year = (index === 0) ? (parseInt(year)-1).toString() : year
+      season = (index === 0) ? seasonList[3] : seasonList[index-1]
+    }
+
+    semester = (mode === 'jump') ? selectedSemester.value : season + year
+
+    //console.log(semesterServices.getSemesters()
+    if (mode !== 'clear') window.history.replaceState({}, '', window.location.origin + window.location.pathname + `?semester=${semester}`)
+
+    retrieveEnrollments()
+  } catch (error) {
+    listError.value =
+      error.response?.data?.message || "Failed to navigate semesters.";
+  } finally {
+    loading.value = false;
+  }
+}
+
+const onFormUpdate = async (next) => {
+  form.value = next;
+  await loadSections();
+};
+
+onMounted(retrieveEnrollments);
+onMounted(loadAllSemesterIds);
 </script>
 
 <template>
   <v-container class="py-8">
     <v-card rounded="lg">
       <v-card-item>
-        <v-card-title>Seasons</v-card-title>
+        <v-card-title>Enrollments - {{ cardTitleSemester }}</v-card-title>
+          <v-combobox
+            v-model="selectedSemester"
+            label="Find Semester"
+            class="oc-cta"
+            placeholder="e.g. FA2026"
+            persistent-placeholder:true
+            style="max-width: 250px; margin-top: 5px"
+            @update:model-value="nav('jump')"
+            :items=semesterIds
+          ></v-combobox>
+          <div class="d-flex justify-space-between align-center mt-2" style="width: 40px; margin: -10px 0 0 0; padding: 0 0 3px 3px">
+            <v-btn 
+              variant="elevated"
+              class="oc-cta"
+              @click="nav('prev')"
+              style="margin: 0 25px 0 0"
+            >
+              Prev
+            </v-btn>
+
+            <v-btn 
+              variant="elevated"
+              class="oc-cta"
+              @click="nav('clear')"
+              style="margin: 0 25px 0 0"
+            >
+              Clear
+            </v-btn>
+            
+            <v-btn 
+              variant="elevated"
+              class="oc-cta"
+              @click="nav('next')"
+            >
+              Next
+            </v-btn>
+        </div>
+
         <template #append>
           <v-btn
             color="primary"
@@ -180,7 +324,7 @@ onMounted(retrieveSeasons);
             class="oc-cta"
             @click="openAddDialog"
           >
-            + New season
+            + New enrollment
           </v-btn>
         </template>
       </v-card-item>
@@ -197,48 +341,35 @@ onMounted(retrieveSeasons);
           {{ listError }}
         </v-alert>
 
-        <p v-if="!loading && seasons.length === 0" class="text-body-1">
-          No seasons yet. Create your first season.
+        <p v-if="!loading && enrollments.length === 0" class="text-body-1">
+          No enrollments yet. Create your first enrollment.
         </p>
 
-        <v-table v-if="!loading && seasons.length > 0">
+        <v-table v-if="!loading && enrollments.length > 0">
           <thead>
             <tr>
-              <th class="text-left">Season name</th>
-              <th class="text-left">League</th>
-              <th class="text-left">Start date</th>
-              <th class="text-left">End date</th>
-              <th class="text-left">Actions</th>
+              <th class="text-left">SectionId</th>
+              <th class="text-left">Name</th>
+              <th class="text-left">Days</th>
+              <th class="text-left">Time</th>
+              <th class="text-left">Room</th>
+              <th class="text-left">Instructor</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="season in seasons" :key="season.id">
-              <td>{{ season.name }}</td>
-              <td>{{ season.league?.name }}</td>
-              <td>{{ formatDueDate(season.startDate) }}</td>
-              <td>{{ formatDueDate(season.endDate) }}</td>
+            <tr v-for="enrollment in enrollments" :key="enrollment.sectionId">
+              <td>{{ enrollment.section.sectionId }}</td>
+              <td>{{ enrollment.section.course.courseName }}</td>
+              <td>{{ enrollment.section.dayOfWeek }}</td>
+              <td>{{ formatTime(enrollment.section.timeStart) }} - {{ formatTime(enrollment.section.timeEnd) }}</td>
+              <td>{{ enrollment.section.roomNum }}</td>
+              <td>{{ enrollment.section.faculty.fName + ' ' + enrollment.section.faculty.lName}}</td>
               <td>
                 <v-icon
                   size="small"
                   class="mx-4"
-                  aria-label="Open season"
-                  @click="openSeason(season)"
-                >
-                  mdi-calendar
-                </v-icon>
-                <v-icon
-                  size="small"
-                  class="mx-4"
-                  aria-label="Edit season"
-                  @click="openEditDialog(season)"
-                >
-                  mdi-pencil
-                </v-icon>
-                <v-icon
-                  size="small"
-                  class="mx-4"
-                  aria-label="Delete season"
-                  @click="openDeleteDialog(season)"
+                  aria-label="Delete enrollment"
+                  @click="openDeleteDialog(enrollment)"
                 >
                   mdi-trash-can
                 </v-icon>
@@ -251,14 +382,22 @@ onMounted(retrieveSeasons);
 
     <v-dialog v-model="formDialogOpen" max-width="560">
       <v-card rounded="lg">
-        <v-card-title>{{ formTitle }}</v-card-title>
+        <v-card-title>Add Enrollment</v-card-title>
         <v-card-text>
-          <!-- <SeasonForm
-            ref="formRef"
-            v-model="form"
-            :leagues="leagues"
-            @submit="saveSeason"
-          /> This was the old season form, not needed for courses-->
+          <EnrollmentForm
+          ref="formRef"
+          label="addEnrollment"
+          :model-value="form"
+          :courses="courses"
+          :course-details="courseDetails"
+          :sections="sections"
+          :section-details="sectionDetails"
+          :show_course="showCourseDetails"
+          :show_section_box="showSectionBox"
+          :show_section="showSectionDetails"
+          @update:model-value="onFormUpdate"
+          @submit=""
+          />
           <v-alert
             v-if="formError"
             type="error"
@@ -276,9 +415,9 @@ onMounted(retrieveSeasons);
             variant="elevated"
             class="oc-cta"
             :loading="saving"
-            @click="saveSeason"
+            @click="enroll"
           >
-            {{ saveLabel }}
+            Enroll
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -286,8 +425,8 @@ onMounted(retrieveSeasons);
 
     <v-dialog v-model="deleteDialogOpen" max-width="420">
       <v-card rounded="lg">
-        <v-card-title>Delete Season</v-card-title>
-        <v-card-text>Delete this season?</v-card-text>
+        <v-card-title>Drop this class?</v-card-title>
+        <v-card-text>Hitting 'Drop' will remove you from this section</v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" @click="closeDeleteDialog">Cancel</v-btn>
@@ -296,9 +435,9 @@ onMounted(retrieveSeasons);
             variant="elevated"
             class="oc-cta"
             :loading="deleting"
-            @click="confirmDeleteSeason"
+            @click="confirmDeleteEnrollment"
           >
-            Delete Season
+            Drop
           </v-btn>
         </v-card-actions>
       </v-card>

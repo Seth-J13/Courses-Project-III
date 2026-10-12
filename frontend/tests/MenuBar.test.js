@@ -27,7 +27,7 @@ vi.mock("../src/services/userServices.js", () => ({
 }));
 
 const studentUser = {
-  userId: 1,
+  universityId: 1,
   username: "jdoe",
   email: "jdoe@example.com",
   fName: "Jane",
@@ -38,7 +38,7 @@ const studentUser = {
 
 const adminUser = {
   ...studentUser,
-  userId: 2,
+  universityId: 2,
   username: "admin",
   email: "admin@example.com",
   fName: "Alex",

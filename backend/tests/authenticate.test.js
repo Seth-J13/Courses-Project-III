@@ -18,7 +18,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
         username: "adminuser",
         email: "admin@example.com",
       });
-      const stored = await db.user.findByPk(registerResponse.body.userId);
+      const stored = await db.user.findByPk(registerResponse.body.universityId);
       stored.role = "admin";
       await stored.save();
 
@@ -37,7 +37,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
         username: "adminuser",
         email: "admin@example.com",
       });
-      const stored = await db.user.findByPk(registerResponse.body.userId);
+      const stored = await db.user.findByPk(registerResponse.body.universityId);
       stored.role = "admin";
       await stored.save();
 

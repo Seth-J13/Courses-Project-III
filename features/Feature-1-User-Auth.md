@@ -56,11 +56,7 @@
 
 ---
 
-
-
 ## Requirements
-
-
 
 ### Functional Requirements
 
@@ -74,16 +70,12 @@
 
 ---
 
-
-
 ## Assumptions
 
 - The courses app shell (Vue 3 frontend, Express API mounted at `/coursesapi`, MySQL) already exists in this repo.
 - Login identifier is **email**, matching the running courses UI and `users.email`.
 
 ---
-
-
 
 ## Edge Cases
 
@@ -94,8 +86,6 @@
 
 ---
 
-
-
 ## Success Criteria
 
 - **SC-001**: Every Gherkin scenario has at least one automated test before merge.
@@ -105,12 +95,9 @@
 
 ---
 
-
-
 ## Data Ownership & Isolation
 
 Feature 1 starts and ends the caller’s own session. It does not return another user’s profile or token.
-
 
 | Rule                  | Requirement                                                                                         |
 | --------------------- | --------------------------------------------------------------------------------------------------- |
@@ -121,10 +108,7 @@ Feature 1 starts and ends the caller’s own session. It does not return another
 | **UI scope**          | MenuBar shows the signed-in user’s initials, name, and email from `localStorage` `user`.            |
 | **Later features**    | Course APIs must never expose another user’s private courses. Cross-user → `404` (not `403`).       |
 
-
 ---
-
-
 
 ## Key Entities
 
@@ -153,20 +137,14 @@ Feature 1 starts and ends the caller’s own session. It does not return another
 
 Quoted messages that tests must match:
 
-
 | Situation      | Status | `message`           |
 | -------------- | ------ | ------------------- |
 | Unknown email  | 401    | `User not found!`   |
 | Wrong password | 401    | `Invalid password!` |
 
-
 ---
 
-
-
 ## Screen Requirements
-
-
 
 ### [View: Login] — route name `login` (`/`)
 
@@ -177,8 +155,6 @@ Quoted messages that tests must match:
 - **Error:** shows the API `message` (including **"User not found!"** and **"Invalid password!"**)
 - **Success:** store payload in `localStorage` `user`, snackbar **"Login successful!"**, navigate to route `courses`
 
-
-
 ### App chrome — `MenuBar`
 
 - **Courses** button (stays signed in; navigates to `courses`)
@@ -187,14 +163,11 @@ Quoted messages that tests must match:
 
 ---
 
-
-
 ## Data Model Requirements
 
 This feature **uses** `users` (Feature 1) and **owns** `sessions`.
 
 ### `users` table (read for login; not created here)
-
 
 | Field       | Type       | Rules                                              |
 | ----------- | ---------- | -------------------------------------------------- |
@@ -205,19 +178,14 @@ This feature **uses** `users` (Feature 1) and **owns** `sessions`.
 | `password`  | BLOB       | Required; salted hash only — never store plaintext |
 | `salt`      | BLOB       | Required; used to hash the password                |
 
-
-
-
 ### `sessions` table
-
 
 | Field            | Type       | Rules                           |
 | ---------------- | ---------- | ------------------------------- |
 | `id`             | INTEGER PK | Auto-increment                  |
 | `email`          | STRING     | Required                        |
 | `expirationDate` | DATE       | Required; 24 hours from login   |
-| `userId`         | INTEGER FK | Required; references `users.id` |
-
+| `universityId`   | INTEGER FK | Required; references `users.id` |
 
 The client `token` is the encrypted session `id`. It is not stored as a separate column.
 
@@ -228,15 +196,9 @@ The client `token` is the encrypted session `id`. It is not stored as a separate
 
 ---
 
-
-
 ## Acceptance Criteria (Gherkin)
 
-
-
 ### US-1.1 — Sign in
-
-
 
 #### Scenario: Admin signs in
 
@@ -254,8 +216,6 @@ Scenario: Student signs in
 - Then I am signed in
 - And I land on the Enrollments page (`/enrollments`)
 
-
-
 #### Scenario: Bad email
 
 - **Given** I am on the Login page
@@ -264,8 +224,6 @@ Scenario: Student signs in
 - **Then** I see the message **"User not found!"**
 - **And** I remain on Login
 - **And** I am not signed in
-
-
 
 #### Scenario: Bad password
 
@@ -276,11 +234,7 @@ Scenario: Student signs in
 - **And** I remain on Login
 - **And** I am not signed in
 
-
-
 ### US-1.2 — Stay signed in across page loads
-
-
 
 #### Scenario: Changing pages
 
@@ -289,8 +243,6 @@ Scenario: Student signs in
 - **Then** I remain logged in
 - **And** I am on the Semesters page
 
-
-
 #### Scenario: Refresh pages
 
 - **Given** I have a valid session
@@ -298,11 +250,7 @@ Scenario: Student signs in
 - **Then** I remain logged in
 - **And** I do not have to sign in again
 
-
-
 ### US-1.3 — Sign out
-
-
 
 #### Scenario: Logging out
 
@@ -312,11 +260,7 @@ Scenario: Student signs in
 - **Then** I am logged out of the user session
 - **And** I am redirected to the Login page
 
-
-
 ### US-1.4 — Create account
-
-
 
 #### Scenario: Creating new account
 
@@ -329,12 +273,9 @@ Scenario: Student signs in
 
 ---
 
-
-
 ## Test Coverage Map
 
 Each scenario above must map to at least one automated test.
-
 
 | Story  | Scenario             | Test file                      | Test name                    |
 | ------ | -------------------- | ------------------------------ | ---------------------------- |
@@ -344,9 +285,6 @@ Each scenario above must map to at least one automated test.
 | US-1.1 | Bad password         | `backend/tests/auth.test.js`   | `it("Bad password")`         |
 | US-1.2 | Refresh pages        | `frontend/tests/Login.test.js` | `it("Refresh pages")`        |
 | US-1.4 | Creating new account | `frontend/tests/Login.test.js` | `it("Creating new account")` |
-
-
-
 
 ## Definition of Done
 
@@ -361,9 +299,6 @@ Each scenario above must map to at least one automated test.
 
 ---
 
-
-
 ## Out of Scope
 
 - Create / edit / delete and per-user and admin ownership
-

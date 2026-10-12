@@ -11,13 +11,13 @@ A student guide for deciding **when** to write an ADR, **how to name and structu
 
 An **Architecture Decision Record** is a short, durable document that records a **cross-cutting choice** and the **reasons** behind it: context, decision, consequences, and alternatives you rejected.
 
-| Artifact | Question it answers |
-|----------|---------------------|
-| **Feature spec** (`features/feature-N-*.md`) | *What* must the product do in this slice? |
-| **Cursor rule** (`.cursor/rules/*.mdc`) | *How* must we implement day to day? |
-| **ADR** (`docs/adr/NNNN-….md`) | *Why* did we choose this approach for the whole app (or a major subsystem)? |
-| **NFR table** (`docs/nfr/`) | What quality bars apply app-wide? |
-| **Living reference** | What API/schema/rules exist on `dev` *now*? |
+| Artifact                                     | Question it answers                                                         |
+| -------------------------------------------- | --------------------------------------------------------------------------- |
+| **Feature spec** (`features/feature-N-*.md`) | _What_ must the product do in this slice?                                   |
+| **Cursor rule** (`.cursor/rules/*.mdc`)      | _How_ must we implement day to day?                                         |
+| **ADR** (`docs/adr/NNNN-….md`)               | _Why_ did we choose this approach for the whole app (or a major subsystem)? |
+| **NFR table** (`docs/nfr/`)                  | What quality bars apply app-wide?                                           |
+| **Living reference**                         | What API/schema/rules exist on `dev` _now_?                                 |
 
 ADRs outlive a single feature. Later features should rely on Accepted ADRs (e.g. “server is source of truth”, ownership rules) without re-arguing them in every spec.
 
@@ -25,15 +25,15 @@ ADRs outlive a single feature. Later features should rely on Accepted ADRs (e.g.
 
 ## When to write an ADR (vs a feature or a rule)
 
-| Situation | Write… |
-|-----------|--------|
-| New user-facing behavior for one feature | **Feature spec** (stories, FRs, AC) |
-| Ongoing coding pattern (API shape, Vue style, test layout) | **Cursor rule** |
-| Significant stack or architecture choice | **ADR** |
-| Security or data-isolation model | **ADR** |
-| Database engine / persistence approach | **ADR** |
-| Deviation from an existing rule or ADR | **ADR** — then update the rule/spec |
-| Button label or empty-state copy on one screen | **Screen Requirements** in the feature (not an ADR) |
+| Situation                                                  | Write…                                              |
+| ---------------------------------------------------------- | --------------------------------------------------- |
+| New user-facing behavior for one feature                   | **Feature spec** (stories, FRs, AC)                 |
+| Ongoing coding pattern (API shape, Vue style, test layout) | **Cursor rule**                                     |
+| Significant stack or architecture choice                   | **ADR**                                             |
+| Security or data-isolation model                           | **ADR**                                             |
+| Database engine / persistence approach                     | **ADR**                                             |
+| Deviation from an existing rule or ADR                     | **ADR** — then update the rule/spec                 |
+| Button label or empty-state copy on one screen             | **Screen Requirements** in the feature (not an ADR) |
 
 **Rule of thumb:** if the choice will still matter after three features, and teammates might otherwise re-decide it, write an ADR.
 
@@ -52,12 +52,12 @@ docs/adr/
   NNNN-short-kebab-title.md      ← one decision per file
 ```
 
-| Part | Principle | Example |
-|------|-----------|---------|
-| **Number** | Four digits, sequential; never reuse | `0001`, `0002`, `0003` |
-| **File slug** | kebab-case, specific capability | `0001-client-server-multi-user.md` |
-| **Title** (`# ADR-NNNN: …`) | Short decision name, not a novel | `Client–server multi-user architecture` |
-| **Status** | `Proposed` → `Accepted` (or `Deprecated` / `Superseded by ADR-XXXX`) | See header |
+| Part                        | Principle                                                            | Example                                 |
+| --------------------------- | -------------------------------------------------------------------- | --------------------------------------- |
+| **Number**                  | Four digits, sequential; never reuse                                 | `0001`, `0002`, `0003`                  |
+| **File slug**               | kebab-case, specific capability                                      | `0001-client-server-multi-user.md`      |
+| **Title** (`# ADR-NNNN: …`) | Short decision name, not a novel                                     | `Client–server multi-user architecture` |
+| **Status**                  | `Proposed` → `Accepted` (or `Deprecated` / `Superseded by ADR-XXXX`) | See header                              |
 
 ### Naming principles
 
@@ -81,11 +81,17 @@ Copy from [README.md](./README.md#template) or use this filled outline:
 **Deciders:** your team / course
 
 ## Context
+
 ## Decision
+
 ## Consequences
+
 ### Positive
+
 ### Negative / tradeoffs
+
 ## Alternatives considered
+
 ## Related artifacts
 ```
 
@@ -107,7 +113,7 @@ Copy from [README.md](./README.md#template) or use this filled outline:
 
 - **Positive:** what you gain.
 - **Negative / tradeoffs:** what you give up. Honesty makes the ADR useful later.
-- Call out follow-on work for every feature (e.g. “filter by `userId`”).
+- Call out follow-on work for every feature (e.g. “filter by `universityId`”).
 
 ### Alternatives considered — principles
 
@@ -154,13 +160,13 @@ Copy from [README.md](./README.md#template) or use this filled outline:
 
 ## Anti-patterns
 
-| Avoid | Do instead |
-|-------|------------|
-| ADR that only restates one feature’s stories | Keep behavior in the feature spec; ADR for shared *why* |
-| ADR with no alternatives | Always record what you rejected and why |
-| Coding tutorial inside the ADR | Point at rules + short invariants |
-| Changing an Accepted ADR silently after ship | New ADR or **Superseded by ADR-XXXX** |
-| One giant “Architecture.md” | Numbered ADRs so decisions can be superseded one at a time |
+| Avoid                                        | Do instead                                                 |
+| -------------------------------------------- | ---------------------------------------------------------- |
+| ADR that only restates one feature’s stories | Keep behavior in the feature spec; ADR for shared _why_    |
+| ADR with no alternatives                     | Always record what you rejected and why                    |
+| Coding tutorial inside the ADR               | Point at rules + short invariants                          |
+| Changing an Accepted ADR silently after ship | New ADR or **Superseded by ADR-XXXX**                      |
+| One giant “Architecture.md”                  | Numbered ADRs so decisions can be superseded one at a time |
 
 ---
 

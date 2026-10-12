@@ -17,6 +17,7 @@ router.get("/health", (_req, res) => {
 // router.use("/", authRoutes);
 router.use("/", authRoutes);
 router.use("/courses", courseRoutes);
+router.use("/sections", sectionRoutes)
 router.use("/users", userRoutes);
 router.use("/enrollments", enrollmentRoutes);
 router.use("/faculty", facultyRoutes);

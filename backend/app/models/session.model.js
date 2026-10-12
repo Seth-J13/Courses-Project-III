@@ -13,7 +13,7 @@ export default (sequelize, Sequelize) => {
       type: Sequelize.DATE,
       allowNull: false,
     },
-    userId: {
+    universityId: {
       type: Sequelize.INTEGER,
       allowNull: false,
     },

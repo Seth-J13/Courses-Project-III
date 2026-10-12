@@ -11,8 +11,23 @@ exports.findAll = async (req, res) => {
     const courses = await db.course.findAll({
       order: [["courseId", "ASC"]],
     });
+    if (!courses) return res.status(404).send({ message: `found no courses`})
 
     return res.send(courses);
+  } catch (err) {
+    logger.error(`course findAll failed: ${err.message}`);
+    return res.status(500).send({ message: "Failed to fetch courses." });
+  }
+};
+exports.findOne = async (req, res) => {
+  try {
+    const { courseId } = req.params
+    const course = await db.course.findOne({
+      where: { courseId }
+    });
+    if (!course) return res.send({ message: `found no course for courseId:${courseId}`})
+
+    return res.send(course);
   } catch (err) {
     logger.error(`course findAll failed: ${err.message}`);
     return res.status(500).send({ message: "Failed to fetch courses." });

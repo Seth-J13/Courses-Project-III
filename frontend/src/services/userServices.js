@@ -5,12 +5,12 @@ const userServices = {
     return apiClient.get("users");
   },
 
-  getUser(userId) {
-    return apiClient.get(`users/${userId}`);
+  getUser(universityId) {
+    return apiClient.get(`users/${universityId}`);
   },
 
-  updateUser(userId, payload) {
-    return apiClient.put(`users/${userId}`, payload);
+  updateUser(universityId, payload) {
+    return apiClient.put(`users/${universityId}`, payload);
   },
 };
 

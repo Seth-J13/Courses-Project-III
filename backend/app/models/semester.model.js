@@ -1,16 +1,15 @@
 export default (sequelize, Sequelize) => {
-  const Semester = sequelize.define("semester", {
+  const Semester = sequelize.define("semesters", {
     semesterId: {
-      type: Sequelize.STRING(9),
+      type: Sequelize.STRING(6),
       primaryKey: true,
     },
-    endDate: {
-      type: Sequelize.DATE,
-      allowNull: false,
-      unique: true,
-    },
     startDate: {
-      type: Sequelize.DATE,
+      type: Sequelize.DATEONLY,
+      allowNull: false,
+    },
+    endDate: {
+      type: Sequelize.DATEONLY,
       allowNull: false,
     }
   });

@@ -33,7 +33,7 @@ describe("Feature 4 — People Management", () => {
         lastName: "Doe",
         email: "jane.doe@example.com",
         gender: "female",
-        userId: null,
+        universityId: null,
       });
       expect(response.body.id).toEqual(expect.any(Number));
       expect(String(response.body.birthDate).slice(0, 10)).toBe("1990-05-15");
@@ -42,7 +42,7 @@ describe("Feature 4 — People Management", () => {
         where: { email: "jane.doe@example.com" },
       });
       expect(stored).not.toBeNull();
-      expect(stored.userId).toBeNull();
+      expect(stored.universityId).toBeNull();
     });
 
     it("User creates a new person with a linked user", async () => {
@@ -53,11 +53,11 @@ describe("Feature 4 — People Management", () => {
       });
 
       const response = await createPerson(app, token, {
-        userId: linkedUser.body.userId,
+        universityId: linkedUser.body.universityId,
       });
 
       expect(response.status).toBe(201);
-      expect(response.body.userId).toBe(linkedUser.body.userId);
+      expect(response.body.universityId).toBe(linkedUser.body.universityId);
     });
 
     it("User creates a person with a duplicate email", async () => {
@@ -81,14 +81,14 @@ describe("Feature 4 — People Management", () => {
         username: "jdoe",
         email: "jane.doe@example.com",
       });
-      await createPerson(app, token, { userId: linkedUser.body.userId });
+      await createPerson(app, token, { universityId: linkedUser.body.universityId });
 
       const response = await createPerson(app, token, {
         firstName: "Robert",
         lastName: "Smith",
         email: "robert.smith@example.com",
         gender: "male",
-        userId: linkedUser.body.userId,
+        universityId: linkedUser.body.universityId,
       });
 
       expect(response.status).toBe(400);
@@ -165,7 +165,7 @@ describe("Feature 4 — People Management", () => {
         email: "jane.doe@example.com",
       });
       const created = await createPerson(app, token, {
-        userId: linkedUser.body.userId,
+        universityId: linkedUser.body.universityId,
       });
 
       const response = await request(app)
@@ -174,7 +174,7 @@ describe("Feature 4 — People Management", () => {
 
       expect(response.status).toBe(200);
       expect(await db.person.findByPk(created.body.id)).toBeNull();
-      expect(await db.user.findByPk(linkedUser.body.userId)).not.toBeNull();
+      expect(await db.user.findByPk(linkedUser.body.universityId)).not.toBeNull();
     });
   });
 
@@ -267,7 +267,7 @@ describe("Feature 4 — People Management", () => {
       });
 
       const response = await createPerson(app, token, {
-        userId: linkedUser.body.userId,
+        universityId: linkedUser.body.universityId,
       });
 
       expect(response.status).toBe(400);

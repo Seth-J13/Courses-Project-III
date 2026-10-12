@@ -4,19 +4,16 @@ export default (sequelize, Sequelize) => {
     {
       semesterId: {
         type: Sequelize.CHAR(6),
-        allowNull: false,
+        primaryKey: true,
       },
       universityId: {
         type: Sequelize.INTEGER(7),
-        allowNull: false,
+        primaryKey: true,
       },
       sectionId: {
         type: Sequelize.CHAR(12),
-        allowNull: false,
+        primaryKey: true,
       },
-    },
-    {
-      indexes: [{ unique: true, fields: ["semesterId", "universityId", "sectionId"] }],
     }
   );
 

@@ -5,12 +5,12 @@ export default (sequelize, Sequelize) => {
       primaryKey: true,
     },
     courseName: {
-      type: Sequelize.STRING(50),
+      type: Sequelize.STRING(255),
       allowNull: false,
       unique: true,
     },
     semesterOffered: {
-      type: Sequelize.ENUM("FA", "WI", "SP", "SU"),
+      type: Sequelize.STRING(50), // format: FA,SP or FA,WI,SP,SU etc
       allowNull: false,
     },
     offeringFrequency: {

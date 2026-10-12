@@ -123,7 +123,7 @@ describe("Feature 1 — User Authentication & Session Management", () => {
       const router = await createTestRouter("/register");
       authServices.registerUser.mockResolvedValue({
         data: {
-          userId: 1,
+          universityId: 1,
           username: "jdoe",
           email: "jane@example.com",
           fName: "Jane",
