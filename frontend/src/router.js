@@ -23,15 +23,12 @@ const router = createRouter({
     },
     {
       path: "/sections",
+      name: "Sections",
+      component: SectionsList,
       meta: {
         requiresAuth: true,
-        role: Utils.ROLE_ADMIN,
+        role: "admin",
       },
-      name: "Sections",
-      meta: {
-        component: SectionsList
-      },
-      component: SectionsList,
     },
     {
       path: "/course-list",

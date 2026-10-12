@@ -5,6 +5,7 @@ import { parseId, requiredText } from "../helpers/fields.js";
 const exports = {};
 
 const checkValidation = (body) => {
+  const sectionId = requiredText(body.sectionId);
   const courseId = requiredText(body.courseId);
   const dayOfWeek = requiredText(body.dayOfWeek);
   const roomNum = requiredText(body.roomNum);
@@ -12,6 +13,7 @@ const checkValidation = (body) => {
   const timeEnd = requiredText(body.timeEnd);
   const facultyId = parseId(body.facultyId);
 
+  if (!sectionId) return { error: "sectionId is required." };
   if (!courseId) return { error: "courseId is required." };
   if (!dayOfWeek) return { error: "dayOfWeek is required." };
   if (!roomNum) return { error: "roomNum is required." };
@@ -22,7 +24,7 @@ const checkValidation = (body) => {
     return { error: "Time start must be less than time end." };
   }
 
-  return { courseId, dayOfWeek, roomNum, timeStart, timeEnd, facultyId };
+  return { sectionId, courseId, dayOfWeek, roomNum, timeStart, timeEnd, facultyId };
 };
 
 const timeOverlaps = (timeStart, timeEnd, otherTimeStart, otherTimeEnd) => {
@@ -69,7 +71,15 @@ const conflictMessage = (section, otherSections) => {
 
 exports.findAll = async (req, res) => {
   try {
-    const sections = await db.section.findAll();
+    const where = {};
+    const fields = ["sectionId", "courseId", "facultyId", "dayOfWeek", "roomNum", "timeStart", "timeEnd"];
+    for (const field of fields) {
+      const value = req.query[field];
+      if (value !== undefined && value !== null && value !== "") {
+        where[field] = field === "facultyId" ? parseId(value) : String(value).trim();
+                  }
+    }
+    const sections = await db.section.findAll({ where });
     return res.send(sections);
   } catch (err) {
     logger.error(`section findAll failed: ${err.message}`);
@@ -79,6 +89,7 @@ exports.findAll = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
+    console.log(req.body);
     const validated = checkValidation(req.body);
     if (validated.error) {
       return res.status(400).send({ message: validated.error });
@@ -100,7 +111,7 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    const sectionId = parseId(req.params.sectionId);
+    const sectionId = req.params.sectionId;
     const existing = sectionId === null ? null : await db.section.findByPk(sectionId);
     if (!existing) {
       return res.status(400).send({ message: "Section does not exist." });
@@ -129,11 +140,13 @@ exports.update = async (req, res) => {
 
 exports.remove = async (req, res) => {
   try {
-    const sectionId = parseId(req.params.sectionId);
+    const sectionId = req.params.sectionId;
     const existing = sectionId === null ? null : await db.section.findByPk(sectionId);
     if (!existing) {
       return res.status(400).send({ message: "Section does not exist." });
     }
+
+    console.log(sectionId)
 
     await db.section.destroy({ where: { sectionId } });
     return res.send({ message: "Section deleted." });

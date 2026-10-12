@@ -89,6 +89,8 @@ exports.register = async (req, res) => {
       role: "student",
     });
 
+    
+
     const token = await createOrReuseSession(user);
 
     return res.status(201).send(buildAuthResponse(user, token));
