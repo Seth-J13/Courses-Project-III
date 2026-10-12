@@ -34,7 +34,9 @@ exports.create = async (req, res) => {
     }
 
     if (startDate >= endDate) {
-      return { error: "Starting date must be before than ending date." };
+      return res.status(400).send({
+        message: "Starting date must be before the ending date.",
+      });
     }
 
     const existing = await db.semester.findOne({

@@ -31,12 +31,14 @@ defineExpose({ validate });
       :rules="idRules"
       @update:model-value="updateField('semesterId', $event)"
     />
+    <span>Starting Date</span>
     <v-date-picker
       :model-value="modelValue.startDate"
       label="startDate"
       density="comfortable"
       @update:model-value="updateField('startDate', $event)"
     >Starting Date</v-date-picker>
+    <span>Ending Date</span>
     <v-date-picker
       :model-value="modelValue.endDate"
       label="endDate"

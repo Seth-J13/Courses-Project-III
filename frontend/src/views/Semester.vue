@@ -85,15 +85,15 @@ const saveSemester = async (mode) => {
     if (mode.toLowerCase() === "create"){
       await semesterServices.createSemester({
         semesterId: form.value.semesterId.trim(),
-        startDate: form.value.startDate.toString(),
-        endDate: form.value.endDate.toString(),
+        startDate: new Date(form.value.startDate).toISOString(),
+        endDate: new Date(form.value.endDate).toISOString()
       });
     }
     else if (mode.toLowerCase() === "update"){
       await semesterServices.updateSemester(storedId.value, {
         semesterId: form.value.semesterId.trim(),
-        startDate: form.value.startDate.toString(),
-        endDate: form.value.endDate.toString(),
+        startDate: new Date(form.value.startDate).toISOString(),
+        endDate: new Date(form.value.endDate).toISOString()
       })
     }
     closeFormDialog();
