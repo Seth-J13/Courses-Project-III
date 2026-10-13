@@ -120,8 +120,9 @@ exports.create = async (req, res) => {
     if (validated.error) {
       return res.status(400).send({ message: validated.error });
     }
-
+    
     const others = await db.section.findAll();
+    console.log(others);
     const message = conflictMessage(validated, others);
     if (message) {
       return res.status(400).send({ message });

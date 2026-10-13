@@ -14,20 +14,12 @@ db.Sequelize = Sequelize;
 // Register models and associations here as features define them, e.g.:
 // import userModel from "./user.model.js";
 db.user = userModel(sequelize, Sequelize);
-
-db.session = sessionModel(sequelize, Sequelize);
-
-db.semester = semesterModel(sequelize, Sequelize);
-
-db.enrollment = enrollmentModel(sequelize, Sequelize);
-
 db.course = courseModel(sequelize, Sequelize);
-
 db.section = sectionModel(sequelize, Sequelize);
-db.course = courseModel(sequelize, Sequelize);
-db.semester = semesterModel(sequelize, Sequelize);
-
+db.session = sessionModel(sequelize, Sequelize);
 db.faculty = facultyModel(sequelize, Sequelize);
+db.semester = semesterModel(sequelize, Sequelize);
+db.enrollment = enrollmentModel(sequelize, Sequelize);
 
 // Associations
 db.user.hasMany(db.enrollment, { foreignKey: "universityId", sourceKey: "id" })
