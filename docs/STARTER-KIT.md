@@ -104,11 +104,11 @@ git checkout -b dev
 
 **Start with the `package.json` `name` fields** (npm package identity for the monorepo):
 
-| File                    | Default `name`         | Change to             |
-| ----------------------- | ---------------------- | --------------------- |
-| `package.json` (root)   | `speckit-app`          | e.g. `myapp-speckit`  |
-| `frontend/package.json` | `speckit-app-frontend` | e.g. `myapp-frontend` |
-| `backend/package.json`  | `speckit-app-backend`  | e.g. `myapp-backend`  |
+| File | Default `name` | Change to |
+|------|----------------|-----------|
+| `package.json` (root) | `courses-t3` | e.g. `myapp-speckit` |
+| `frontend/package.json` | `courses-t3-frontend` | e.g. `myapp-frontend` |
+| `backend/package.json` | `courses-t3-backend` | e.g. `myapp-backend` |
 
 Then do a **project-wide search-and-replace** for these placeholder strings across the unzipped tree (IDE find-in-files or `rg`). You are not rewriting every file — only files that contain the string will change; most rules and framework docs will not.
 
