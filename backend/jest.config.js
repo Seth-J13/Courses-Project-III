@@ -7,4 +7,5 @@ export default {
   modulePathIgnorePatterns: ["<rootDir>/deploy/"],
   maxWorkers: 1,
   verbose: true,
+  forceExit: true,
 };
