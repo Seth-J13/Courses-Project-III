@@ -6,7 +6,7 @@ A student guide for drafting the **design / plan** half of a feature specificati
 **Full process:** [framework.md](./framework.md).  
 **Canonical example:** [feature-2-todo-list-management.md](./feature-2-todo-list-management.md) (rich API + Screen) · [feature-1-user-auth.md](./feature-1-user-auth.md) (Test Coverage Map + DoD).
 
-This portion answers: *How do we structure ownership, contracts, UI, and verification so implementers (and Cursor) can build without guessing?*
+This portion answers: _How do we structure ownership, contracts, UI, and verification so implementers (and Cursor) can build without guessing?_
 
 **When to write it:** after stories, FRs, Key Entities / initial Data Model, and Gherkin exist. Refine the data model here if APIs/screens force clearer fields. Set `Status: Ready` only when **both** requirements and design sections are complete and consistent.
 
@@ -14,28 +14,28 @@ This portion answers: *How do we structure ownership, contracts, UI, and verific
 
 ## What “design” means in this kit
 
-| Requirements portion | Design portion (this guide) |
-|----------------------|-----------------------------|
-| Who / what / why / proof examples | How the slice is shaped for build |
-| Stories, FRs, SC, Edge Cases, Gherkin | Ownership, API, Screens, test map, DoD |
-| Initial Key Entities + table sketch | Refined Data Model + associations |
-| Product language | Still product language — plus concrete routes, payloads, views |
+| Requirements portion                  | Design portion (this guide)                                    |
+| ------------------------------------- | -------------------------------------------------------------- |
+| Who / what / why / proof examples     | How the slice is shaped for build                              |
+| Stories, FRs, SC, Edge Cases, Gherkin | Ownership, API, Screens, test map, DoD                         |
+| Initial Key Entities + table sketch   | Refined Data Model + associations                              |
+| Product language                      | Still product language — plus concrete routes, payloads, views |
 
 Design here is **not** a separate Figma-only doc and **not** a code dump. Optional UI exports go in `docs/ui/feature-N/` and link from Screen Requirements; the markdown remains the source of truth.
 
 ### Sections this guide covers (typical order)
 
-| Section | Purpose |
-|---------|---------|
-| **Data Ownership & Isolation** | Multi-user read/write boundaries |
-| **API Requirements** | Endpoints, auth, payloads, status codes |
-| **Screen Requirements** | Routes, views, labels, dialogs, empty/error states |
-| **Key Entities / Data Model** (refine) | Tables, fields, associations aligned to API/UI |
-| **Test Coverage Map** | Every Gherkin scenario → test file / `it` name |
-| **Agent implementation request** | Copy-paste Cursor prompt |
-| **Definition of Done** | Merge checklist for this feature |
-| **Out of Scope** | Explicit deferrals (with links) |
-| **Delivered to Feature X** (optional) | Handoff notes for a later feature |
+| Section                                | Purpose                                            |
+| -------------------------------------- | -------------------------------------------------- |
+| **Data Ownership & Isolation**         | Multi-user read/write boundaries                   |
+| **API Requirements**                   | Endpoints, auth, payloads, status codes            |
+| **Screen Requirements**                | Routes, views, labels, dialogs, empty/error states |
+| **Key Entities / Data Model** (refine) | Tables, fields, associations aligned to API/UI     |
+| **Test Coverage Map**                  | Every Gherkin scenario → test file / `it` name     |
+| **Agent implementation request**       | Copy-paste Cursor prompt                           |
+| **Definition of Done**                 | Merge checklist for this feature                   |
+| **Out of Scope**                       | Explicit deferrals (with links)                    |
+| **Delivered to Feature X** (optional)  | Handoff notes for a later feature                  |
 
 Gherkin AC usually already exists from the requirements pass — keep it in sync when you change API or screen labels.
 
@@ -46,10 +46,10 @@ Gherkin AC usually already exists from the requirements pass — keep it in sync
 1. **Trace every design choice to a story, FR, or AC.** If nothing authorizes it, cut it or update requirements first.
 2. **Be concrete enough to implement; stay out of file-level code.** Name routes, fields, button labels — not Sequelize method bodies.
 3. **Contracts before chrome.** Lock API + ownership before polishing Screen Requirements (UI must match the API).
-4. **One feature’s delta only.** Document what *this* feature adds or changes; point at `features/reference/` for already-shipped baseline.
+4. **One feature’s delta only.** Document what _this_ feature adds or changes; point at `features/reference/` for already-shipped baseline.
 5. **Match Gherkin strings.** Button labels, error messages, and status codes in Screens/API must match AC quotes.
 6. **Design for tests.** The Test Coverage Map should be fillable from your AC without inventing new scenarios.
-7. **Say what is *not* included.** Out of Scope prevents scope creep into the next feature.
+7. **Say what is _not_ included.** Out of Scope prevents scope creep into the next feature.
 8. **Follow stack rules by reference.** Point at `.cursor/rules/` (e.g. `ui-style-system.mdc`, `security.mdc`) instead of re-teaching the whole stack in every feature.
 
 **Suggested draft order:** Ownership → API → Screens → refine Data Model → Test Coverage Map → Agent request → DoD → Out of Scope.
@@ -71,23 +71,23 @@ Rules for **who can read or write which rows**. Prevents “it works for me” b
 
 Each user owns their <resources> exclusively. …
 
-| Rule | Requirement |
-|------|-------------|
-| **Read scope** | … only rows where `userId = req.user.id` |
-| **Write scope** | … only when row matches `id` and `req.user.id` |
-| **Create scope** | New rows owned by the authenticated user |
-| **Cross-user access** | Another user’s resource → `404` (not `403`) |
-| **UI scope** | UI shows only data returned for the signed-in user |
-| **Implementation** | Shared helper in `app/authorization/` — do not duplicate scope in every controller |
+| Rule                  | Requirement                                                                        |
+| --------------------- | ---------------------------------------------------------------------------------- |
+| **Read scope**        | … only rows where `universityId = req.user.id`                                     |
+| **Write scope**       | … only when row matches `id` and `req.user.id`                                     |
+| **Create scope**      | New rows owned by the authenticated user                                           |
+| **Cross-user access** | Another user’s resource → `404` (not `403`)                                        |
+| **UI scope**          | UI shows only data returned for the signed-in user                                 |
+| **Implementation**    | Shared helper in `app/authorization/` — do not duplicate scope in every controller |
 ```
 
 ### Principles
 
-| Do | Don’t |
-|----|--------|
-| State read, write, create, and cross-user behavior | “Users can only see their own stuff” with no HTTP rule |
-| Align with ADR-0002 / security rules | Invent `403` for “not owned” when the kit standard is `404` |
-| Mention UI scope (what the SPA may show) | Assume the frontend will “just filter” unsafe API data |
+| Do                                                 | Don’t                                                       |
+| -------------------------------------------------- | ----------------------------------------------------------- |
+| State read, write, create, and cross-user behavior | “Users can only see their own stuff” with no HTTP rule      |
+| Align with ADR-0002 / security rules               | Invent `403` for “not owned” when the kit standard is `404` |
+| Mention UI scope (what the SPA may show)           | Assume the frontend will “just filter” unsafe API data      |
 
 **Example (Feature 2):** lists are private; `GET /todo/lists` returns only the caller’s rows; wrong-owner `PUT`/`DELETE` → `404`.
 
@@ -101,27 +101,31 @@ The HTTP contract for this feature: methods, paths, auth, bodies, success/error 
 
 ### Template
 
-```markdown
+````markdown
 ## API Requirements
 
-| Method | Endpoint | Auth | Purpose |
-|--------|----------|------|---------|
-| `GET` | `/todo/…` | Yes | … |
-| `POST` | `/todo/…` | Yes | … |
+| Method | Endpoint  | Auth | Purpose |
+| ------ | --------- | ---- | ------- |
+| `GET`  | `/todo/…` | Yes  | …       |
+| `POST` | `/todo/…` | Yes  | …       |
 
 **Create request body:**
+
 ```json
 { "name": "Groceries" }
 ```
+````
 
 **Success response** (`200` / `201`):
+
 ```json
-{ "id": 1, "name": "Groceries", "userId": 42 }
+{ "id": 1, "name": "Groceries", "universityId": 42 }
 ```
 
 **Error response:** `{ "message": "Human-readable explanation." }`  
 **Not found / not owned:** `404` (do not use `403`).
-```
+
+````
 
 ### Principles
 
@@ -157,7 +161,7 @@ What the user sees and clicks: routes, views, primary actions, dialogs, empty/lo
 
 **App chrome** (if this feature adds or changes it)
 *   e.g. `MenuBar` contents; which routes hide it
-```
+````
 
 ### Principles
 
@@ -166,7 +170,7 @@ What the user sees and clicks: routes, views, primary actions, dialogs, empty/lo
 3. **Specify empty, loading, and error states** — not only the happy layout.
 4. **Follow [ui-style-system.mdc](../.cursor/rules/ui-style-system.mdc)** — e.g. `oc-cta` on primary labeled CTAs; no labeled buttons stuffed in `v-card-title`.
 5. **Icon-only actions need accessible names** (`aria-label`: **Edit list**, **Delete list**).
-6. **Call out deferred UI** in parentheses or Out of Scope (*Feature 3 adds Items icon — not in Feature 2*).
+6. **Call out deferred UI** in parentheses or Out of Scope (_Feature 3 adds Items icon — not in Feature 2_).
 7. **Optional:** link Figma/export frames under `docs/ui/feature-N/` — images guide; markdown decides.
 
 **Example (Feature 2):** single `Dashboard.vue` / `home`; **My Lists**; **+ New List** dialog; edit/delete dialogs; empty **"No lists yet. Create your first list."**; introduce `MenuBar`.
@@ -184,10 +188,10 @@ You should already have an initial model from the requirements guide. In the des
 
 ### Principles
 
-| Do | Don’t |
-|----|--------|
-| Keep Field / Type / Rules tables | Paste Sequelize model source code |
-| Align JSON property names with column intent | Silent rename between API and DB without saying so |
+| Do                                            | Don’t                                                      |
+| --------------------------------------------- | ---------------------------------------------------------- |
+| Keep Field / Type / Rules tables              | Paste Sequelize model source code                          |
+| Align JSON property names with column intent  | Silent rename between API and DB without saying so         |
 | Note timestamp fields if the API returns them | Invent indexes/performance tuning unless an FR requires it |
 
 ---
@@ -205,9 +209,9 @@ The index from **every Gherkin scenario** to at least one automated test. Fillin
 
 Each scenario above must map to at least one automated test.
 
-| Story | Scenario | Test file | Test name |
-|-------|----------|-----------|-----------|
-| US-N.1 | User creates a new list | `backend/tests/lists.test.js` | `User creates a new list` |
+| Story  | Scenario                               | Test file                          | Test name                                |
+| ------ | -------------------------------------- | ---------------------------------- | ---------------------------------------- |
+| US-N.1 | User creates a new list                | `backend/tests/lists.test.js`      | `User creates a new list`                |
 | US-N.1 | User creates a list with an empty name | `frontend/tests/Dashboard.test.js` | `User creates a list with an empty name` |
 ```
 
@@ -231,7 +235,7 @@ Place it **after** Test Coverage Map, **before** Definition of Done.
 
 ### Template
 
-```markdown
+````markdown
 ## Agent implementation request
 
 Copy when asking Cursor to implement this feature (`@` this file):
@@ -245,9 +249,11 @@ If API routes, payloads, schema, or product rules changed per this spec, update 
 Complete Definition of Done and the merge checklist in @features/framework.md.
 Do not implement behavior not in this spec.
 ```
+````
 
 **Reference updates for this feature:** `features/reference/…` (list only files this feature will change)
-```
+
+````
 
 ### Principles
 
@@ -275,7 +281,7 @@ The feature-local merge checklist. If a box is unchecked, the feature is not rea
 *   [ ] `features/reference/data-model.md` updated (if schema changed)
 *   [ ] `features/reference/api.md` updated (if API changed)
 *   [ ] `features/reference/behavior.md` updated (if product rules changed)
-```
+````
 
 ### Principles
 
@@ -296,18 +302,18 @@ Explicit **non-goals** for this feature so readers do not assume missing pieces 
 ```markdown
 ## Out of Scope
 
-*   Password reset
-*   Full todo dashboard ([Feature 2](./feature-2-todo-list-management.md))
-*   Todo items inside lists ([Feature 3](./feature-3-todo-list-item-management.md))
+- Password reset
+- Full todo dashboard ([Feature 2](./feature-2-todo-list-management.md))
+- Todo items inside lists ([Feature 3](./feature-3-todo-list-item-management.md))
 ```
 
 ### Principles
 
-| Do | Don’t |
-|----|--------|
-| Name deferred capabilities clearly | Leave silent gaps that look like incomplete AC |
-| Link to later feature files when they exist | Hide in-scope P1 work in Out of Scope |
-| Keep the list short and honest | Dump the entire product roadmap |
+| Do                                          | Don’t                                          |
+| ------------------------------------------- | ---------------------------------------------- |
+| Name deferred capabilities clearly          | Leave silent gaps that look like incomplete AC |
+| Link to later feature files when they exist | Hide in-scope P1 work in Out of Scope          |
+| Keep the list short and honest              | Dump the entire product roadmap                |
 
 ---
 
@@ -318,7 +324,7 @@ Use when this feature leaves a temporary placeholder another feature will replac
 ```markdown
 ## Delivered to Feature 2
 
-*   Home page is a placeholder only; Feature 2 replaces it with the lists dashboard and MenuBar.
+- Home page is a placeholder only; Feature 2 replaces it with the lists dashboard and MenuBar.
 ```
 
 ---

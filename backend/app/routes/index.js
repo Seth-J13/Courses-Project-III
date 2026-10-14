@@ -1,5 +1,11 @@
 import { Router } from "express";
-
+import courseRoutes from "./course.routes.js"
+import authRoutes from "./auth.routes.js";
+import userRoutes from "./user.routes.js";
+import enrollmentRoutes from "./enrollment.routes.js"
+import facultyRoutes from "./faculty.routes.js";
+import sectionRoutes from "./section.routes.js";
+import semesterRoutes from "./semester.routes.js"
 const router = Router();
 
 router.get("/health", (_req, res) => {
@@ -9,5 +15,13 @@ router.get("/health", (_req, res) => {
 // Register feature routers here as you implement them, e.g.:
 // import authRoutes from "./auth.routes.js";
 // router.use("/", authRoutes);
+router.use("/", authRoutes);
+router.use("/courses", courseRoutes);
+router.use("/sections", sectionRoutes)
+router.use("/users", userRoutes);
+router.use("/enrollments", enrollmentRoutes);
+router.use("/faculty", facultyRoutes);
+router.use("/sections", sectionRoutes);
+router.use("/semesters",semesterRoutes);
 
 export default router;

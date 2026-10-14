@@ -71,8 +71,8 @@ jobs:
         run: |
           touch .env
           echo DB_HOST="$DB_HOST" >> .env
-          echo DB_PW="$DB_PW" >> .env
           echo DB_USER="$DB_USER" >> .env
+          echo DB_PW="$DB_PW" >> .env
           echo DB_NAME="$DB_NAME" >> .env
           echo AUTH_SECRET="$AUTH_SECRET" >> .env
           echo PORT="$PORT" >> .env
@@ -101,7 +101,7 @@ jobs:
           command: |
             cd ${{ secrets.BACKEND_DEPLOY_TARGET }}
             npm install --omit=dev
-            sudo systemctl stop todo-speckit-backend
-            sudo cp todo-speckit-backend.service /lib/systemd/system/todo-speckit-backend.service
+            sudo systemctl stop course-t3-backend
+            sudo cp course-t3-backend.service /lib/systemd/system/course-t3-backend.service
             sudo systemctl daemon-reload
-            sudo systemctl start todo-speckit-backend
+            sudo systemctl start course-t3-backend

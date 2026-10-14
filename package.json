@@ -1,5 +1,5 @@
 {
-  "name": "courses-projectIII",
+  "name": "course-t3-app",
   "private": true,
   "description": "Spec-driven app — monorepo root (deploy scripts orchestrate frontend/ and backend/)",
   "scripts": {
@@ -24,5 +24,9 @@
   },
   "devDependencies": {
     "md-mermaid-pdf": "^0.1.7"
+  },
+  "dependencies": {
+    "vue-router": "^4.6.4",
+    "vuetify": "^4.2.4"
   }
 }
