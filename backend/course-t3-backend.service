@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=simple
 User=ubuntu
-WorkingDirectory=/home/ubuntu/nodeapps/2026/project3/t3
-ExecStart=/usr/bin/npm run start
+WorkingDirectory=/home/ubuntu/nodeapps/2026/project3/t3/
+ExecStart=npm run start
 Restart=on-failure
 
 [Install]
