@@ -14,7 +14,6 @@ const emptyFacultyForm = () => ({
   department: "",
 });
 
-const faculty = ref(null)
 const formRef = ref(null);
 const facultyToRemove = ref(null);
 const editingFacultyId = ref(null);
@@ -44,21 +43,6 @@ const retrieveFaculty = async () => {
   } finally {
     loading.value = false;
   }
-};
-
-const openEditDialog = () => {
-  if (!team.value) {
-    return;
-  }
-
-  form.value = {
-    name: team.value.name ?? "",
-    leagueId: team.value.leagueId ?? null,
-    homeField: team.value.homeField ?? "",
-    managerId: team.value.managerId ?? null,
-  };
-  formError.value = "";
-  formDialogOpen.value = true;
 };
 
 const closeFormDialog = () => {
@@ -95,14 +79,6 @@ const addFaculty = async () => {
 const updateFaculty = async () => {
   facultyFormError.value = "";
   savingFaculty.value = true;
-
-  const payload = {
-    facultyId: facultyForm.value?.facultyId,
-    fName: facultyForm.value?.fName,
-    lName: facultyForm.value?.lName,
-    department: facultyForm.value?.department
-  };
-
   try 
   {
     await facultyServices.updateFaculty(
@@ -152,7 +128,6 @@ const openRemoveFacultyDialog = (faculty) => {
 const closeRemoveFacultyDialog = () => {
   facultyToRemove.value = null;
   removeFacultyDialogOpen.value = false;
-
 };
 
 const confirmRemoveFaculty = async () => {
