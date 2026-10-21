@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { Op } from "sequelize";
+import { fn, Op } from "sequelize";
 import db from "../models/index.js";
 import logger from "../config/logger.js";
 
@@ -23,7 +23,7 @@ exports.findAll = async (req, res) => {
 
 exports.findOne = async (req, res) => {
   try {
-    const facultyId = parseInt(req.params?.id, 10);
+    const facultyId = parseInt(req.params?.facultyId, 10);
     if (Number.isNaN(userId)) {
       return res.status(400).send({ message: "Invalid faculty id." });
     }
@@ -42,39 +42,46 @@ exports.findOne = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    const facultyId = parseInt(req.params?.id, 10);
+    const facultyId = parseInt(req.params?.facultyId, 10);
     if (Number.isNaN(facultyId)) {
       return res.status(400).send({ message: "Invalid faculty id." });
     }
-
+    
     const faculty = await db.faculty.unscoped().findByPk(facultyId);
     if (!faculty) {
       return res.status(404).send({ message: `User with id=${facultyId} not found.` });
     }
 
-    const { fName, lName, department } = req.body;
+    let { fName, lName, department } = req.body;
+    
+    fName = fName?.trim();
+    lName = lName?.trim();
+    department = department?.trim();
 
-    if (!fName?.trim()) {
+    if (!fName) {
       return res.status(400).send({ message: "First name is required." });
     }
-    if (!lName?.trim()) {
+    if (!lName) {
       return res.status(400).send({ message: "Last name is required." });
     }
-    if (!department?.trim()) {
+    if (!department) {
       return res.status(400).send({ message: "Department is required." });
     }
 
-    faculty.fName = fName.trim();
-    faculty.lName = lName.trim();
-    faculty.department = department.trim();
-
-    await faculty.save();
-
-    const updatedFaculty = await db.faculty.findByPk(facultyId);
-    return res.send(updatedFaculty);
+    await db.faculty.update({
+      facultyId: facultyId,
+      fName: fName,
+      lName: lName,
+      department: department
+    }, { where: { facultyId: facultyId } })
+    .then(()=>{
+      return res.status(200).send({message: "Successfully updated faculty"});
+    });
   } catch (err) {
     logger.error(`Faculty update failed: ${err.message}`);
-    return res.status(500).send({ message: "Failed to update faculty." });
+    return res.status(500).send({
+      error: err.message,
+      message: "Failed to update faculty." });
   }
 };
 
