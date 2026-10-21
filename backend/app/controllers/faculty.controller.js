@@ -74,9 +74,8 @@ exports.update = async (req, res) => {
       lName: lName,
       department: department
     }, { where: { facultyId: facultyId } })
-    .then((response)=>{
-      const updatedFaculty = response.message;
-      return res.status(200).send({message: updatedFaculty});
+    .then(()=>{
+      return res.status(200).send({message: "Successfully updated faculty"});
     });
   } catch (err) {
     logger.error(`Faculty update failed: ${err.message}`);

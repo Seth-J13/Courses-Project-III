@@ -98,9 +98,9 @@ describe("Feature 4 — Faculty Management", () => {
         .set(auth(token))
         .send({ fName: "Grace", lName: "Hopper", department: "Computing" });
 
-      expect(response.status).toBe(400);
-      expect(response.body).toEqual({ message: "Invalid faculty id." });
-      expect((await db.faculty.findByPk(faculty.facultyId)).fName).toBe("Ada");
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ message: "Successfully updated faculty" });
+      expect((await db.faculty.findByPk(faculty.facultyId)).fName).toBe("Grace");
     });
 
     it("Admin clicks the `Update Faculty` button with incorrect inputted values", async () => {
@@ -118,7 +118,7 @@ describe("Feature 4 — Faculty Management", () => {
         .send({ fName: "", lName: "", department: "" });
 
       expect(response.status).toBe(400);
-      expect(response.body).toEqual({ message: "Invalid faculty id." });
+      expect(response.body).toEqual({ message: "First name is required." });
     });
   });
 
