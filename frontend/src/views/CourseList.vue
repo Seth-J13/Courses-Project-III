@@ -225,7 +225,8 @@ onMounted(retrieveCourses);
                   aria-label="Open course"
                   @click="openCourse(course)"
                 >
-                  mdi-account-group
+                  <!--mdi-account-group-->
+                  mdi-pencil
                 </v-icon>
                 <v-icon
                   v-if="isAdmin"
